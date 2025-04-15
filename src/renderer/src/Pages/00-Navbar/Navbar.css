@@ -83,3 +83,13 @@
   margin-top: auto;
   padding: 10px 20px;
 }
+
+.p-fieldset-legend.p-unselectable-text {
+  margin-left: 20px !important;
+}
+
+.p-password.p-component.p-inputwrapper.p-input-icon-right
+  .p-icon-field.p-icon-field-right
+  .p-input-icon {
+  margin-top: -13px !important;
+}

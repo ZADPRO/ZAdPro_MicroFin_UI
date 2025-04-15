@@ -4,17 +4,34 @@ import { useEffect, useState } from "react"
 import decrypt from "../Helper/Helper";
 import { Button } from "primereact/button";
 import { FloatLabel } from "primereact/floatlabel";
-import { Dropdown } from "primereact/dropdown";
+import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
 import { InputText } from "primereact/inputtext";
 import { Calendar } from "primereact/calendar";
 import { InputNumber } from "primereact/inputnumber";
 import { Slide, toast, ToastContainer } from "react-toastify";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import LoanAudit from "../LoanAudit/LoanAudit";
+import { BsInfoCircle } from "react-icons/bs";
+import { IoCloseCircleOutline } from "react-icons/io5";
+import { Divider } from 'primereact/divider';
+
+interface loanType {
+  name: string;
+  code: string;
+}
 
 const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
 
   console.log(closeSidebarUpdate)
+  const [selectedLoanType, setLoanType] = useState<loanType | null>(null);
+  const loanType: loanType[] = [
+    { name: 'New Loan', code: 'false' },
+    { name: 'Extension', code: 'true' },
+
+  ];
+  const [addLoanOption, setAddLoanOption] = useState([]);
+  const [selectLoanOption, setSelectLoanOption] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [newLoading, setNewLoading] = useState(false);
@@ -22,7 +39,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   const [allBankAccountList, setAllBankAccountList] = useState([]);
   const [productList, setProductList]: any = useState([]);
 
-  const [loanData, setLoadData] = useState([]);
+  const [loanData, setLoadData] = useState<any>([]);
 
 
   const [addInputs, setAddInputs] = useState({
@@ -72,7 +89,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
         setLoadData(data.loanData);
 
         setAllBankAccountList(data.allBankAccountList);
-        setProductList(data.productList);
+        let productList = data.productList
+        data.productList.map((data, index) => {
+          let name = `Name : ${data.refProductName} - Interest : ${data.refProductInterest} - Duration : ${data.refProductDuration}`
+          productList[index] = { ...productList[index], refProductName: name }
+        })
+        setProductList(productList);
+
       }
 
     })
@@ -82,6 +105,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   useEffect(() => {
 
     getLoanData();
+    getLoanDatas(id);
 
   }, []);
 
@@ -129,6 +153,8 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
         isInterestFirst: addInputs.refisInterest,
         interest: (parseFloat(addInputs.productInterest) / 100) * (addInputs.refLoanAmount ? addInputs.refLoanAmount : 0),
         userId: id,
+        refLoanExt: selectedLoanType?.code === "false" ? false : true,
+        refExLoanId: selectedLoanType?.code === "false" ? " " : selectLoanOption
       },
       {
         headers: {
@@ -193,6 +219,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   const [activeIndex, setActiveIndex] = useState(0); // 0 = Loan History, 1 = Create New Loan
 
   const [error, setError] = useState({ status: false, message: "" })
+  const [rePaymentInfo, setRePaymentInfo] = useState(false)
 
 
   const isInterestAmount = (rowData: any) => {
@@ -228,6 +255,70 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   const filteredLoanData = filter === "all"
     ? loanData
     : loanData.filter((loan: any) => loan.refLoanStatus === filter);
+
+  const [loanDetails, setLoanDetails] = useState<any>([])
+
+
+  const getLoanDatas = async (loanId: any) => {
+    axios.post(
+      import.meta.env.VITE_API_URL + '/rePayment/loanDetails',
+      {
+
+        loanId: loanId
+
+      },
+      {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
+        }
+      }
+    ).then((response) => {
+      const data = decrypt(response.data[1], response.data[0], import.meta.env.VITE_ENCRYPTION_KEY);
+      console.log('data line ------ 278', data)
+      localStorage.setItem("token", "Bearer " + data.token);
+
+      if (data.success) {
+        setLoanDetails(data.data);
+      }
+
+    })
+  }
+  function formatToFirstOfMonth(dateString: string): string {
+    const date = new Date(dateString);
+
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // months are 0-indexed
+    const day = '01';
+
+    return `${year}-${month}-${day}`;
+  }
+
+  const loanOptions = () => {
+    axios.post(
+      import.meta.env.VITE_API_URL + '/adminRoutes/addLoanOption',
+      {
+        userId: id
+      },
+      {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
+        }
+      }
+    ).then((response) => {
+      const data = decrypt(response.data[1], response.data[0], import.meta.env.VITE_ENCRYPTION_KEY);
+      localStorage.setItem("token", "Bearer " + data.token);
+
+      if (data.success) {
+        const options = data.data.map((data: any) => ({
+          label: `Loan Amt : ${data.refLoanAmount} - Interest : ${data.refProductInterest} - Duration : ${data.refProductDuration}`,
+          value: data.refLoanId,
+        }));
+        setAddLoanOption(options)
+      }
+    })
+  }
 
   return (
     <>
@@ -295,6 +386,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                   submitAddLoan()
                 }}
               >
+
                 <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
                   <FloatLabel style={{ width: '100%' }}>
                     <Dropdown
@@ -306,35 +398,14 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                       optionValue="refProductId"
                       onChange={(e) => { handleInput(e) }}
                       filter
+                      placeholder="Select Product"
                       required
                     />
                     <label>Select Product</label>
                   </FloatLabel>
 
-                  <FloatLabel style={{ width: '100%' }}>
-                    <InputText
-                      type="text"
-                      id="interest"
-                      name="interest"
-                      value={addInputs.productInterest}
-                      disabled
-                      required
-                    />
-                    <label htmlFor="interest">Interest %</label>
-                  </FloatLabel>
-                </div>
-                <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-                  <FloatLabel style={{ width: '100%' }}>
-                    <InputText
-                      type="text"
-                      id="duration"
-                      name="duration"
-                      value={addInputs.productDuration}
-                      disabled
-                      required
-                    />
-                    <label htmlFor="duration">Duration (Months)</label>
-                  </FloatLabel>
+
+
 
                   <FloatLabel style={{ width: '100%' }}>
                     <InputNumber
@@ -380,6 +451,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                       options={paymentType}
                       optionLabel="label"
                       optionValue="id"
+                      placeholder="Select Payment Type"
                       onChange={(e) => { handleInput(e) }}
                       required
                     />
@@ -402,9 +474,9 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                     <label htmlFor="refBankId"> Choose Bank</label>
                   </FloatLabel>
 
-                  <div style={{ display: 'flex', width: '100%', alignItems: 'start', flexDirection: "column" }}>
-                    <label>Is Interest First:</label>
-                    <div style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                  <div className="flex flex-row justify-around align-items-center w-[100%]" style={{ display: 'flex', width: '100%', alignItems: 'start', flexDirection: "column" }}>
+                    <label className="w-[30%]">Is Interest First:</label>
+                    <div style={{ display: "flex", width: "70%", alignItems: "center", justifyContent: "start", gap: "20px" }}>
                       <div>
                         <input
                           type="radio"
@@ -445,7 +517,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                   </div>
                 </div>
                 <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-                  <FloatLabel style={{ width: '100%' }}>
+                  <FloatLabel style={{ width: '30%' }}>
                     <InputNumber
                       style={{ width: "100%" }}
                       id="refLoanBalance"
@@ -456,6 +528,28 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                       required />
                     <label htmlFor="refLoanBalance">Loan Balance</label>
                   </FloatLabel>
+                  <Dropdown value={selectedLoanType} required onChange={(e: DropdownChangeEvent) => {
+                    setLoanType(e.value)
+                    loanOptions()
+                  }} options={loanType} optionLabel="name"
+                    placeholder="Select a Loan Type" className="w-[30%]" />
+                  {
+                    selectedLoanType?.code === 'true' ? (
+                      <Dropdown
+                        required
+                        value={selectLoanOption}
+                        onChange={(e: DropdownChangeEvent) => setSelectLoanOption(e.value)}
+                        options={addLoanOption}
+                        optionLabel="label"
+                        placeholder="Select a Loan"
+                        className="w-[30%]"
+                      />
+                    ) : null
+                  }
+
+
+
+
 
 
                 </div>
@@ -501,6 +595,89 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                   )}{' '}
                 </div>
               </form>
+            </TabPanel>
+            <TabPanel header="Loan Audit">
+              <>
+
+                {loanData.map((item, index) => (
+                  <>
+                    <Divider align="left">
+                      <div className="inline-flex align-items-center">
+                        <i className="pi pi-wallet mr-2 text-[#007bff]"></i>
+                        <b className="text-[#007bff]">Loan {index + 1}</b>
+                      </div>
+                    </Divider>
+                    <div className="w-full my-3 border-2 border-transparent rounded-md shadow-3">
+                      <div className="m-3 w-full flex ">
+
+                        <div className="w-[30%]">
+                          <p>Loan Name :{loanDetails[index]?.refProductName}</p>
+                        </div>
+                        <div className="w-[30%]">
+                          <p>Total Amount : &#8377; {loanDetails[index]?.refLoanAmount}</p>
+                        </div>
+                        <div className="w-[30%]">
+                          <p>Balance Amount : &#8377; {loanDetails[index]?.refBalanceAmt}</p>
+                        </div>
+                        {
+                          !rePaymentInfo ?
+
+                            <div className="w-[10%]">
+                              <BsInfoCircle size={"1.5rem"} color="blue" onClick={() => { setRePaymentInfo(true) }} />
+                            </div>
+                            :
+                            <div className="w-[10%]">
+                              <IoCloseCircleOutline size={"1.7rem"} color="red" onClick={() => { setRePaymentInfo(false) }} />
+                            </div>
+                        }
+                      </div>
+                      {
+                        rePaymentInfo &&
+                        <>
+                          <div className="m-3 w-full flex ">
+                            <div className="w-[30%]">
+                              <p>Loan Duration : {loanDetails[index]?.refProductDuration}</p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>Interest : {loanDetails[index]?.refProductInterest}%</p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>Interest Paid Initial : {loanDetails[index]?.isInterestFirst === true ? "Yes" : "No"}</p>
+                            </div>
+
+                          </div>
+                          <div className="m-3 w-full flex ">
+                            <div className="w-[30%]">
+                              <p>Loan Get Date : {loanDetails[index]?.refLoanStartDate}</p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>Loan Start Month : {loanDetails[index].refRepaymentStartDate ? formatToFirstOfMonth(loanDetails[index].refRepaymentStartDate) : " -"}</p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>Loan End Month : {loanDetails[index]?.refLoanDueDate}</p>
+                            </div>
+
+                          </div>
+
+                          <div className="m-3 w-full flex ">
+                            <div className="w-[30%]">
+                              <p>Total Interest Paid : &#8377; {loanDetails[index]?.totalInterest}</p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>Total Principal Paid : &#8377; {loanDetails[index]?.totalPrincipal}</p>
+                            </div>
+
+
+                          </div>
+                        </>
+
+                      }
+                    </div>
+                    <LoanAudit loanId={item.refLoanId} />
+
+                  </>
+                ))}
+              </>
             </TabPanel>
           </TabView></>)}
     </>

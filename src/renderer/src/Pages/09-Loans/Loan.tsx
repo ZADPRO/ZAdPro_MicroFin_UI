@@ -6,11 +6,11 @@ import { DataTable } from 'primereact/datatable'
 import { InputText } from 'primereact/inputtext'
 import { Sidebar } from 'primereact/sidebar'
 import { useEffect, useState } from 'react'
-import { ToastContainer } from 'react-toastify'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { FilterMatchMode } from 'primereact/api'
 import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
+import { Slide, toast, ToastContainer } from "react-toastify";
 
 const Loan = () => {
   const [userLists, setUserLists] = useState([])
@@ -116,6 +116,41 @@ const Loan = () => {
 
   //Filter Data - End
 
+  const sendNotification = () => {
+    axios
+      .get(
+        import.meta.env.VITE_API_URL + '/rePayment/Notification',
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      ).then((response: any) => {
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+        console.log('data line ------ 135', data)
+        localStorage.setItem("token", "Bearer " + data.token);
+        if (data.success) {
+          toast.success('Remainder Notification Send Successfully', {
+            position: 'top-right',
+            autoClose: 2999,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+            transition: Slide
+          });
+
+        }
+      })
+  }
+
   return (
     <>
       <ToastContainer />
@@ -135,28 +170,23 @@ const Loan = () => {
         </div>
       ) : (
         <div className="contentPage">
-          {/* New User Button - Start */}
 
-          {/* <Button label="New Loan" onClick={() => { setNewData(true) }} /> */}
-
-          {/* New User Button - End */}
-
-          {/* Search Input - Start */}
           <div
             style={{
               width: '100%',
-              marginBottom: '10px',
-              display: 'flex',
-              justifyContent: 'flex-end'
+              marginBottom: '10px'
             }}
+            className='flex justify-between'
           >
+            <button className='bg-[#007bff] m-1 px-5 hover:bg-[blue] text-white rounded-lg' onClick={(e) => { e.preventDefault(), sendNotification() }}>Send Remainder</button>
+
             <IconField style={{ width: '30%' }} iconPosition="left">
               <InputIcon className="pi pi-search"></InputIcon>
               <InputText
                 placeholder="Search Customers"
                 value={globalFilterValue}
                 onChange={onGlobalFilterChange}
-              />
+                m-1 px-5 text-white rounded-lg />
             </IconField>
           </div>
           {/* Search Input - End */}

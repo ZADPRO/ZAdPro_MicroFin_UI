@@ -7,7 +7,9 @@ import { LuLogOut } from "react-icons/lu";
 import { BsBank2 } from "react-icons/bs";
 import { GiMoneyStack } from "react-icons/gi";
 import { FaPiggyBank } from "react-icons/fa";
+import { GiTakeMyMoney } from "react-icons/gi";
 // import { GrTransaction } from "react-icons/gr";
+import { MdDashboard } from "react-icons/md";
 
 import logo from "../../assets/Logo-1.png";
 
@@ -16,11 +18,12 @@ import { NavLink, useLocation } from "react-router-dom";
 import "./Navbar.css";
 
 const routes = [
-    // {
-    //     path: "/dashboard",
-    //     name: "Dashboard",
-    //     icon: <MdDashboard />,
-    // },
+
+    {
+        path: "/dashboard",
+        name: "DashBoard",
+        icon: <MdDashboard />,
+    },
     {
         path: "/agents",
         name: "Agents",
@@ -36,6 +39,7 @@ const routes = [
         name: "Bank Details",
         icon: <BsBank2 />,
     },
+
     {
         path: "/funds",
         name: "Funds",
@@ -46,10 +50,16 @@ const routes = [
         name: "Products",
         icon: <FaBox />,
     },
+
     {
         path: "/loans",
         name: "Loans",
         icon: <GiMoneyStack />,
+    },
+    {
+        path: "/repayment",
+        name: "Repayment",
+        icon: <GiTakeMyMoney />,
     },
     // {
     //     path: "/loanrepayment",

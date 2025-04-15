@@ -8,6 +8,7 @@ import BankDetails from '../06-BankDetails/BankDetails'
 import Products from '../07-Products/Products'
 import Funds from '../08-Funds/Funds'
 import Loan from '../09-Loans/Loan'
+import Repayments from '../10-Repayments/Repayments'
 
 export const MainRoutes = () => {
     return (
@@ -21,6 +22,7 @@ export const MainRoutes = () => {
                     <Route path="/banks" element={<BankDetails />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/funds" element={<Funds />} />
+                    <Route path="/repayment" element={<Repayments />} />
                     <Route path="/loans" element={<Loan />} />
                 </Routes>
             </Navbar>

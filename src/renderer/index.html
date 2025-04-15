@@ -5,14 +5,24 @@
     <title>ZAdPro MicroFin</title>
     <link rel="icon" type="image/png" href="/Logo.png" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self';connect-src 'self' http://localhost:6201; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
-    />
     <!-- <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self';connect-src 'self' http://192.168.29.167:6201; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+      content="default-src 'self';connect-src 'self' http://localhost:6201; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     /> -->
+    <!-- <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';connect-src 'self' http://192.168.29.236:6201; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    /> -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src * 'unsafe-inline' 'unsafe-eval'; 
+           connect-src * ws://* wss://* http://* https://*;
+           script-src * 'unsafe-inline' 'unsafe-eval'; 
+           style-src * 'unsafe-inline'; 
+           img-src * data:; 
+           font-src *; 
+           media-src *;"
+    />
   </head>
 
   <body>

@@ -233,6 +233,7 @@ const Funds = () => {
               <Column body={TransactionAmount} header="Transaction Amount"></Column>
               <Column field="refBankName" header="Bank Name"></Column>
               <Column field="refFundType" header="Fund Type"></Column>
+              <Column field="refPaymentType" header="Payment In"></Column>
               <Column body={Status} field="refbfTrasactionType" header="Action"></Column>
             </DataTable>
           </div>

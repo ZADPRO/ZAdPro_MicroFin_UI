@@ -6,6 +6,7 @@ import { Password } from "primereact/password";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png"
+import bgimg from "../../assets/Microfin.jpg"
 
 export default function Login() {
 
@@ -54,7 +55,7 @@ export default function Login() {
                     localStorage.setItem("token", "Bearer " + data.token);
                     localStorage.setItem("roleId", data.roleId);
 
-                    navigate("/agents");
+                    navigate("/dashboard");
 
 
                     setLoading(false);
@@ -87,7 +88,7 @@ export default function Login() {
     const navigate = useNavigate();
 
     return (
-        <div className="pagebackground">
+        <div className="pagebackground flex flex-col justify-center items-center h-screen w-screen bg-cover bg-center" style={{ backgroundImage: `url(${bgimg})` }}>
             <div className="login-background">
                 <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "20px 0px" }}>
                     <img src={Logo} alt="Logo" style={{ width: "50%" }} />
@@ -97,17 +98,17 @@ export default function Login() {
                         <div style={{ width: "80%" }}>
                             <div className="input mt-3">
                                 <div className="p-inputgroup flex-1">
-                                    <span className="p-inputgroup-addon">
+                                    {/* <span className="p-inputgroup-addon">
                                         <i className="pi pi-user"></i>
-                                    </span>
+                                    </span> */}
                                     <InputText name="username" onInput={(e) => { handleInput(e) }} value={inputs.username} placeholder="Enter Username" required />
                                 </div>
                             </div>
                             <div className="input mt-3" style={{ width: "100%" }}>
                                 <div className="p-inputgroup flex-1">
-                                    <span className="p-inputgroup-addon">
+                                    {/* <span className="p-inputgroup-addon">
                                         <i className="pi pi-lock"></i>
-                                    </span>
+                                    </span> */}
                                     <Password name="password" onInput={(e) => { handleInput(e) }} value={inputs.password} placeholder="Enter Password" toggleMask feedback={false} required />
                                 </div>
                             </div>
@@ -119,7 +120,7 @@ export default function Login() {
                                 ) : null
                             }
 
-                            <div className="input mt-4" style={{ width: "100%" }}>
+                            <div className="input mt-4" style={{ width: "100%", marginBottom: "1rem" }}>
                                 <Button style={{ width: "100%", background: "#0478df", border: "none", height: "40px" }} label={loading ? "" : "Submit"} icon={loading ? "pi pi-spin pi-spinner" : ""} />
                             </div>
 
