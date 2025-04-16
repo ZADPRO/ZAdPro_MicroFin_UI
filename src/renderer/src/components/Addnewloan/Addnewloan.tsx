@@ -18,16 +18,17 @@ import { Divider } from 'primereact/divider';
 
 interface loanType {
   name: string;
-  code: string;
+  code: number;
 }
 
 const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
 
   console.log(closeSidebarUpdate)
-  const [selectedLoanType, setLoanType] = useState<loanType | null>(null);
+  const [selectedLoanType, setLoanType] = useState<loanType | null>({ name: 'New Loan', code: 1 });
   const loanType: loanType[] = [
-    { name: 'New Loan', code: 'false' },
-    { name: 'Extension', code: 'true' },
+    { name: 'New Loan', code: 1 },
+    { name: 'Top Up', code: 2 },
+    { name: 'Extension', code: 3 },
 
   ];
   const [addLoanOption, setAddLoanOption] = useState([]);
@@ -140,6 +141,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   const submitAddLoan = () => {
     setNewLoading(true);
 
+
     axios.post(
       import.meta.env.VITE_API_URL + '/adminRoutes/addLoan',
       {
@@ -147,14 +149,14 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
         refLoanAmount: addInputs.refLoanAmount,
         refPayementType: addInputs.refPaymentType,
         refRepaymentStartDate: addInputs.refrepaymentStartDate,
-        refLoanStatus: "opened",
+        refLoanStatus: 1,
         refBankId: addInputs.refBankId,
         refLoanBalance: addInputs.refLoanBalance,
         isInterestFirst: addInputs.refisInterest,
         interest: (parseFloat(addInputs.productInterest) / 100) * (addInputs.refLoanAmount ? addInputs.refLoanAmount : 0),
         userId: id,
-        refLoanExt: selectedLoanType?.code === "false" ? false : true,
-        refExLoanId: selectedLoanType?.code === "false" ? " " : selectLoanOption
+        refLoanExt: selectedLoanType?.code,
+        refExLoanId: selectedLoanType?.code === 1 ? null : selectLoanOption
       },
       {
         headers: {
@@ -219,7 +221,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   const [activeIndex, setActiveIndex] = useState(0); // 0 = Loan History, 1 = Create New Loan
 
   const [error, setError] = useState({ status: false, message: "" })
-  const [rePaymentInfo, setRePaymentInfo] = useState(false)
+  const [rePaymentInfo, setRePaymentInfo] = useState({});
+  const toggleRepaymentInfo = (index) => {
+    setRePaymentInfo((prev) => ({
+      ...prev,
+      [index]: !prev[index], // toggle only this index
+    }));
+  };
 
 
   const isInterestAmount = (rowData: any) => {
@@ -237,7 +245,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
     return (
       <>
         {
-          rowData.refLoanStatus === "opened" ? "Opened" : rowData.refLoanStatus === "closed" ? "Closed" : ""
+          rowData.refLoanStatus.charAt(0).toUpperCase() + rowData.refLoanStatus.slice(1).toLowerCase()
         }
       </>
     )
@@ -249,7 +257,9 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   const filterOption = [
     { label: "All Loan", value: "all" },
     { label: "Loan Opened", value: "opened" },
-    { label: "Loan Closed", value: "closed" }
+    { label: "Loan Closed", value: "closed" },
+    { label: "Loan Extended", value: "extended" },
+    { label: "Loan Top Up", value: "topup" },
   ]
 
   const filteredLoanData = filter === "all"
@@ -350,7 +360,6 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
               <div style={{ padding: "20px 0px" }}>
                 <Dropdown
                   id="statusChoose"
-                  // style={{ width: '100%', minWidth: '100%', padding: '0' }}
                   value={filter}
                   options={filterOption}
                   optionLabel="label"
@@ -372,8 +381,12 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                 <Column style={{ minWidth: '8rem' }} field="refLoanStartDate" header="Loan Start Date"></Column>
                 <Column style={{ minWidth: '8rem' }} field="refLoanDueDate" header="Loan Closed Date"></Column>
                 <Column style={{ minWidth: '8rem' }} field="principal" header="Principal Amount"></Column>
-                <Column style={{ minWidth: '8rem' }} field="interestAmount" header="Interest Amount"></Column>
-                <Column style={{ minWidth: '8rem' }} field="refPayableAmount" header="Total Payable Amount"></Column>
+                <Column
+                  style={{ minWidth: '8rem' }}
+                  header="Interest %"
+                  body={(rowData) => rowData.refProductInterest != null ? `${rowData.refProductInterest} %` : '--'}
+                />
+                <Column style={{ minWidth: '8rem' }} body={(rowData) => rowData.refProductDuration != null ? `${rowData.refProductDuration} Months` : '--'} header="Loan Duration"></Column>
                 <Column style={{ minWidth: '8rem' }} body={isInterestAmount} header="Interest First"></Column>
                 <Column style={{ minWidth: '8rem' }} body={Status} header="Status"></Column>
               </DataTable>
@@ -416,7 +429,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                       value={addInputs.refLoanAmount}
                       onChange={(e: any) => {
                         if (addInputs.refisInterest) {
-                          const val = parseFloat(e.value) - (parseFloat(e.value) * (parseFloat(addInputs.productInterest) / 100))
+                          const val = parseFloat(e.value) - (parseFloat(e.value) * (parseFloat(addInputs.productInterest) / 100)) * parseInt(addInputs.productDuration)
                           setAddInputs({ ...addInputs, ["refLoanAmount"]: e.value, ["refLoanBalance"]: val })
                         } else {
                           setAddInputs({ ...addInputs, ["refLoanAmount"]: e.value, ["refLoanBalance"]: e.value })
@@ -485,7 +498,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                           checked={addInputs.refisInterest === true}
                           onChange={() => {
                             if (addInputs.refLoanAmount && addInputs.productId) {
-                              const val = parseFloat(addInputs.refLoanAmount) - (parseFloat(addInputs.refLoanAmount) * (parseFloat(addInputs.productInterest) / 100))
+                              const val = parseFloat(addInputs.refLoanAmount) - (parseFloat(addInputs.refLoanAmount) * ((parseFloat(addInputs.productInterest) / 100))) * parseInt(addInputs.productDuration)
                               setAddInputs({ ...addInputs, ["refisInterest"]: true, ["refLoanBalance"]: val })
                             } else {
                               setAddInputs({ ...addInputs, ["refisInterest"]: true })
@@ -534,7 +547,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                   }} options={loanType} optionLabel="name"
                     placeholder="Select a Loan Type" className="w-[30%]" />
                   {
-                    selectedLoanType?.code === 'true' ? (
+                    selectedLoanType?.code !== 1 && (
                       <Dropdown
                         required
                         value={selectLoanOption}
@@ -544,7 +557,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                         placeholder="Select a Loan"
                         className="w-[30%]"
                       />
-                    ) : null
+                    )
                   }
 
 
@@ -599,7 +612,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
             <TabPanel header="Loan Audit">
               <>
 
-                {loanData.map((item, index) => (
+                {loanDetails.map((item, index) => (
                   <>
                     <Divider align="left">
                       <div className="inline-flex align-items-center">
@@ -620,19 +633,18 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                           <p>Balance Amount : &#8377; {loanDetails[index]?.refBalanceAmt}</p>
                         </div>
                         {
-                          !rePaymentInfo ?
-
+                          !rePaymentInfo[index] ?
                             <div className="w-[10%]">
-                              <BsInfoCircle size={"1.5rem"} color="blue" onClick={() => { setRePaymentInfo(true) }} />
+                              <BsInfoCircle size={"1.5rem"} color="blue" onClick={() => toggleRepaymentInfo(index)} />
                             </div>
                             :
                             <div className="w-[10%]">
-                              <IoCloseCircleOutline size={"1.7rem"} color="red" onClick={() => { setRePaymentInfo(false) }} />
+                              <IoCloseCircleOutline size={"1.7rem"} color="red" onClick={() => toggleRepaymentInfo(index)} />
                             </div>
                         }
                       </div>
                       {
-                        rePaymentInfo &&
+                        rePaymentInfo[index] &&
                         <>
                           <div className="m-3 w-full flex ">
                             <div className="w-[30%]">
@@ -666,14 +678,26 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                             <div className="w-[30%]">
                               <p>Total Principal Paid : &#8377; {loanDetails[index]?.totalPrincipal}</p>
                             </div>
+                            <div className="w-[30%]">
+                              <p>
+                                Loan Status : {loanDetails[index]?.refLoanStatus?.charAt(0).toUpperCase() + loanDetails[index]?.refLoanStatus?.slice(1)}
+                              </p>
+
+                            </div>
 
 
                           </div>
+                          <Divider />
+                          <div className="m-2 border-1 shadow-md border-[#c7c7c7ef]">
+                            <LoanAudit loanId={item.refLoanId} />
+
+                          </div>
+
                         </>
 
                       }
                     </div>
-                    <LoanAudit loanId={item.refLoanId} />
+
 
                   </>
                 ))}

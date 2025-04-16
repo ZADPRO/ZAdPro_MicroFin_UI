@@ -317,7 +317,10 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 name="mobileno"
                 value={inputs.mobileno}
                 onChange={(e: any) => {
-                  handleInput(e)
+                  const value = e.target.value;
+                  if (/^\d{0,10}$/.test(value)) {
+                    handleInput(e); // Only update if it's a number and max 12 digits
+                  }
                 }}
                 required
               />
@@ -327,6 +330,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
               <InputText
                 id="email"
                 name="email"
+                type='email'
                 onChange={(e: any) => {
                   handleInput(e)
                 }}
@@ -342,26 +346,57 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
               <InputText
                 id="aadharno"
                 name="aadharno"
+                keyfilter="pint" // PrimeReact built-in to allow only positive integers
+                maxLength={12}
                 onChange={(e: any) => {
-                  handleInput(e)
+                  const value = e.target.value;
+                  if (/^\d{0,12}$/.test(value)) {
+                    handleInput(e); // Only update if it's a number and max 12 digits
+                  }
                 }}
                 value={inputs.aadharno}
                 required
               />
               <label htmlFor="aadharno">Aadhar Number</label>
             </FloatLabel>
+
             <FloatLabel style={{ width: '100%' }}>
               <InputText
                 id="panno"
                 name="panno"
                 value={inputs.panno}
+                maxLength={10}
                 onChange={(e: any) => {
-                  handleInput(e)
+                  let value = e.target.value.toUpperCase(); // Always uppercase
+                  let valid = true;
+
+                  // Enforce character-by-character format
+                  for (let i = 0; i < value.length; i++) {
+                    const char = value[i];
+
+                    if (i < 5 && !/[A-Z]/.test(char)) {
+                      valid = false; // First 5 should be A-Z
+                      break;
+                    } else if (i >= 5 && i < 9 && !/[0-9]/.test(char)) {
+                      valid = false; // Next 4 should be 0-9
+                      break;
+                    } else if (i === 9 && !/[A-Z]/.test(char)) {
+                      valid = false; // Last one should be A-Z
+                      break;
+                    }
+                  }
+
+                  if (valid && value.length <= 10) {
+                    e.target.value = value;
+                    handleInput(e);
+                  }
                 }}
                 required
               />
               <label htmlFor="panno">Pan Number</label>
             </FloatLabel>
+
+
           </div>
 
           <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
@@ -444,10 +479,16 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
               <InputText
                 type="number"
                 name="pincode"
+                maxLength={6}
                 style={{ width: '100%' }}
                 id="pincode"
                 value={inputs.pincode && null}
-                onChange={(e: any) => handleInput(e)}
+                onChange={(e: any) => {
+                  const value = e.target.value;
+                  if (/^\d{0,6}$/.test(value)) {
+                    handleInput(e); // Only update if it's a number and max 12 digits
+                  }
+                }}
                 required
               />
               <label htmlFor="pincode">Enter Pincode</label>
@@ -481,7 +522,12 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                     <InputText
                       name="refRPhoneNumber"
                       value={reference.refRPhoneNumber}
-                      onChange={(e) => handleReferenceInput(index, e)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^\d{0,10}$/.test(value)) {
+                          handleReferenceInput(index, e)
+                        }
+                      }}
                       required
                     />
                     <label>Enter Phone Number</label>
@@ -502,7 +548,14 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                     <InputText
                       name="refAadharNumber"
                       value={reference.refAadharNumber}
-                      onChange={(e) => handleReferenceInput(index, e)}
+                      onChange={(e) => {
+
+                        const value = e.target.value;
+                        if (/^\d{0,12}$/.test(value)) {
+                          handleReferenceInput(index, e)
+                        }
+
+                      }}
                       required
                     />
                     <label>Enter Aadhar Number</label>
@@ -514,7 +567,32 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                     <InputText
                       name="refPanNumber"
                       value={reference.refPanNumber}
-                      onChange={(e) => handleReferenceInput(index, e)}
+                      onChange={(e) => {
+                        let value = e.target.value.toUpperCase(); // Always uppercase
+                        let valid = true;
+
+                        // Enforce character-by-character format
+                        for (let i = 0; i < value.length; i++) {
+                          const char = value[i];
+
+                          if (i < 5 && !/[A-Z]/.test(char)) {
+                            valid = false; // First 5 should be A-Z
+                            break;
+                          } else if (i >= 5 && i < 9 && !/[0-9]/.test(char)) {
+                            valid = false; // Next 4 should be 0-9
+                            break;
+                          } else if (i === 9 && !/[A-Z]/.test(char)) {
+                            valid = false; // Last one should be A-Z
+                            break;
+                          }
+                        }
+
+                        if (valid && value.length <= 10) {
+                          e.target.value = value;
+                          handleReferenceInput(index, e)
+                        }
+
+                      }}
                       required
                     />
                     <label>Enter PAN Number</label>

@@ -133,7 +133,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
 
             }
             else {
-                toast.error('Error in Updating the Re-Payment', {
+                toast.error(`${data.error}`, {
                     position: 'top-right',
                     autoClose: 2999,
                     hideProgressBar: false,

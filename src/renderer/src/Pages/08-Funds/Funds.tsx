@@ -231,10 +231,10 @@ const Funds = () => {
             >
               <Column field="refbfTransactionDate" header="Transaction Date"></Column>
               <Column body={TransactionAmount} header="Transaction Amount"></Column>
-              <Column field="refBankName" header="Bank Name"></Column>
-              <Column field="refFundType" header="Fund Type"></Column>
-              <Column field="refPaymentType" header="Payment In"></Column>
-              <Column body={Status} field="refbfTrasactionType" header="Action"></Column>
+              <Column field="refBankName" header="Bank Name" filter></Column>
+              <Column field="refFundType" header="Fund Type" filter></Column>
+              <Column field="refPaymentType" header="Payment In" filter></Column>
+              <Column body={Status} field="refbfTrasactionType" filter header="Action"></Column>
             </DataTable>
           </div>
 

@@ -103,9 +103,14 @@ const LoanAudit = ({ loanId }: { loanId: number }) => {
                         key={col.field}
                         field={col.field}
                         header={col.header}
-                        body={col.field === 'followup' ? renderFollowup : undefined}
+                        body={
+                            col.field === 'followup'
+                                ? renderFollowup
+                                : (rowData) => rowData[col.field] ?? 0  // return 0 if null or undefined
+                        }
                     />
                 ))}
+
             </DataTable>
 
         </div>
