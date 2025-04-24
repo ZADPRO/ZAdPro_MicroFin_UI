@@ -5,7 +5,7 @@ import decrypt from "../Helper/Helper";
 import { Button } from "primereact/button";
 import { FloatLabel } from "primereact/floatlabel";
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
-import { InputText } from "primereact/inputtext";
+// import { InputText } from "primereact/inputtext";
 import { Calendar } from "primereact/calendar";
 import { InputNumber } from "primereact/inputnumber";
 import { Slide, toast, ToastContainer } from "react-toastify";
@@ -54,6 +54,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
     refBankId: "",
     refisInterest: false,
     refLoanBalance: 0,
+    refInterestMonth: 0
   });
 
 
@@ -196,6 +197,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
           refBankId: "",
           refisInterest: false,
           refLoanBalance: 0,
+          refInterestMonth: 0
         })
 
         setActiveIndex(0);
@@ -423,13 +425,15 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                   <FloatLabel style={{ width: '100%' }}>
                     <InputNumber
                       style={{ width: "100%" }}
+                      inputId="currency-india"
                       id="refLoanAmount"
                       name="refLoanAmount"
                       useGrouping={true}
+                      mode="currency" currency="INR" currencyDisplay="symbol" locale="en-IN"
                       value={addInputs.refLoanAmount}
                       onChange={(e: any) => {
                         if (addInputs.refisInterest) {
-                          const val = parseFloat(e.value) - (parseFloat(e.value) * (parseFloat(addInputs.productInterest) / 100)) * parseInt(addInputs.productDuration)
+                          const val = parseFloat(e.value) - (parseFloat(e.value) * (parseFloat(addInputs.productInterest) / 100)) * (parseFloat(addInputs.productDuration))
                           setAddInputs({ ...addInputs, ["refLoanAmount"]: e.value, ["refLoanBalance"]: val })
                         } else {
                           setAddInputs({ ...addInputs, ["refLoanAmount"]: e.value, ["refLoanBalance"]: e.value })
@@ -487,9 +491,9 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                     <label htmlFor="refBankId"> Choose Bank</label>
                   </FloatLabel>
 
-                  <div className="flex flex-row justify-around align-items-center w-[100%]" style={{ display: 'flex', width: '100%', alignItems: 'start', flexDirection: "column" }}>
+                  <div className="flex flex-row justify-start align-items-center w-[100%]" style={{ display: 'flex', width: '100%', alignItems: 'start', flexDirection: "column" }}>
                     <label className="w-[30%]">Is Interest First:</label>
-                    <div style={{ display: "flex", width: "70%", alignItems: "center", justifyContent: "start", gap: "20px" }}>
+                    <div style={{ display: "flex", width: "30%", alignItems: "center", justifyContent: "start", gap: "20px" }}>
                       <div>
                         <input
                           type="radio"
@@ -498,8 +502,8 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                           checked={addInputs.refisInterest === true}
                           onChange={() => {
                             if (addInputs.refLoanAmount && addInputs.productId) {
-                              const val = parseFloat(addInputs.refLoanAmount) - (parseFloat(addInputs.refLoanAmount) * ((parseFloat(addInputs.productInterest) / 100))) * parseInt(addInputs.productDuration)
-                              setAddInputs({ ...addInputs, ["refisInterest"]: true, ["refLoanBalance"]: val })
+                              const val = parseFloat(addInputs.refLoanAmount) - (parseFloat(addInputs.refLoanAmount) * ((parseFloat(addInputs.productInterest) / 100))) * (parseFloat(addInputs.productDuration))
+                              setAddInputs({ ...addInputs, ["refisInterest"]: true, ["refInterestMonth"]: 1, ["refLoanBalance"]: val })
                             } else {
                               setAddInputs({ ...addInputs, ["refisInterest"]: true })
                             }
@@ -515,9 +519,10 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                           name="isInterestFirst"
                           checked={addInputs.refisInterest === false}
                           onChange={() => {
+
                             if (addInputs.refLoanAmount && addInputs.productId) {
                               const val = parseFloat(addInputs.refLoanAmount)
-                              setAddInputs({ ...addInputs, ["refisInterest"]: false, ["refLoanBalance"]: val })
+                              setAddInputs({ ...addInputs, ["refisInterest"]: false, ["refInterestMonth"]: 0, ["refLoanBalance"]: val })
                             } else {
                               setAddInputs({ ...addInputs, ["refisInterest"]: false })
                             }
@@ -527,6 +532,40 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                         <label htmlFor="interestFirstNo">No</label>
                       </div>
                     </div>
+                    {/* {
+                      addInputs.refisInterest && <div className="w-[50%]">
+                        <div className="w-full">
+                          <FloatLabel >
+                            <InputNumber
+                              style={{ width: "100%" }}
+                              id="refInterestMonth"
+                              name="refInterestMonth"
+                              useGrouping={true}
+                              value={addInputs.refInterestMonth}
+                              onChange={(e) => {
+                                const loanAmount = addInputs.refLoanAmount || 0;
+                                const interest = parseFloat(addInputs.productInterest) || 0;
+                                const duration = e.value || 0;
+
+                                if (loanAmount && addInputs.productId) {
+                                  const totalInterest = loanAmount * (interest / 100) * duration;
+                                  const loanBalance = loanAmount - totalInterest;
+
+                                  setAddInputs({
+                                    ...addInputs,
+                                    refInterestMonth: duration,
+                                    refLoanBalance: loanBalance
+                                  });
+                                }
+                              }}
+
+                              required />
+                            <label htmlFor="refLoanBalance">Month</label>
+                          </FloatLabel>
+                        </div>
+                      </div>
+                    } */}
+
                   </div>
                 </div>
                 <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
@@ -537,6 +576,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                       name="refLoanBalance"
                       useGrouping={true}
                       value={addInputs.refLoanBalance}
+                      mode="currency" currency="INR" currencyDisplay="symbol" locale="en-IN"
                       disabled
                       required />
                     <label htmlFor="refLoanBalance">Loan Balance</label>

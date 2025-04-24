@@ -9,6 +9,8 @@ import { Nullable } from "primereact/ts-helpers";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import decrypt from "../../components/Helper/Helper";
+import { Link } from "react-router-dom";
+
 
 interface dashboardCount {
     total_loans?: string;
@@ -26,6 +28,7 @@ interface dashboardCount {
 
 
 const Dashboard = () => {
+
     const formatDate = (data) => {
         const date = new Date(data);
         const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -84,71 +87,88 @@ const Dashboard = () => {
                 }} view="month" dateFormat="mm/yy" />
             </div>
             <div className='w-[full] flex flex-row'>
+
                 <div className=' m-5 w-[30%]'><div className="card w-full">
-                    <Fieldset legend="Total Loan Count">
-                        <div className='flex flex-row w-full justify-center p-5'>
-                            <div className='flex flex-col w-auto align-items-center'>
-                                <p><b className='text-[2rem]'>{dashboardCount?.total_loans}</b></p>
-                                <p className='text-[1.2rem] text-[#0478df] my-2'>Count</p>
+                    <Link
+                        to="/loans"
+                        style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                        <Fieldset legend="Total Loan Count">
+                            <div className='flex flex-row w-full justify-center p-5'>
+                                <div className='flex flex-col w-auto align-items-center'>
+                                    <p><b className='text-[2rem]'>{dashboardCount?.total_loans}</b></p>
+                                    <p className='text-[1.2rem] text-[#0478df] my-2'>Count</p>
+                                </div>
+                                <Divider layout="vertical" />
+                                <div className='flex flex-col w-auto align-items-center'>
+                                    <p className='text-[2rem]'><b>&#8377; {dashboardCount?.total_loan_amount}</b></p>
+                                    <p className='text-[1.2rem] text-[#0478df] my-2'>Total Amount</p>
+                                </div>
                             </div>
-                            <Divider layout="vertical" />
-                            <div className='flex flex-col w-auto align-items-center'>
-                                <p className='text-[2rem]'><b>&#8377; {dashboardCount?.total_loan_amount}</b></p>
-                                <p className='text-[1.2rem] text-[#0478df] my-2'>Total Amount</p>
+                        </Fieldset>
+                    </Link>
+                </div>
+                </div>
+
+                <div className=' m-5 w-[30%]'><div className="card w-full">
+                    <Link
+                        to="/loans"
+                        style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                        <Fieldset legend="Loan Paid">
+                            <div className='flex flex-row w-full justify-center align-items-center p-1'>
+                                <div className='flex flex-col w-auto align-items-center'>
+                                    <p><b className='text-[2rem]'>{dashboardCount?.paid_count}</b></p>
+                                    <p className='text-[1.2rem] text-[#0478df] my-2'>Count</p>
+                                </div>
+                                <Divider layout="vertical" />
+                                <div className='flex flex-col w-auto align-items-center'>
+                                    <div>
+                                        <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.total_paid_interest}</b></p>
+                                        <p className='text-[1rem] text-[#0478df] my-2'>Interest Amount</p>
+                                    </div>
+                                    <div>
+                                        <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.total_paid_principal}</b></p>
+                                        <p className='text-[1rem] text-[#0478df] my-2'>Principal Amount</p>
+                                    </div>
+
+                                </div>
                             </div>
-                        </div>
-                    </Fieldset>
+                        </Fieldset>
+                    </Link>
                 </div>
                 </div>
                 <div className=' m-5 w-[30%]'><div className="card w-full">
-                    <Fieldset legend="Loan Paid">
-                        <div className='flex flex-row w-full justify-center align-items-center p-1'>
-                            <div className='flex flex-col w-auto align-items-center'>
-                                <p><b className='text-[2rem]'>{dashboardCount?.paid_count}</b></p>
-                                <p className='text-[1.2rem] text-[#0478df] my-2'>Count</p>
-                            </div>
-                            <Divider layout="vertical" />
-                            <div className='flex flex-col w-auto align-items-center'>
-                                <div>
-                                    <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.total_paid_interest}</b></p>
-                                    <p className='text-[1rem] text-[#0478df] my-2'>Interest Amount</p>
+                    <Link
+                        to="/repayment"
+                        style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                        <Fieldset legend="Loan not Paid">
+                            <div className='flex flex-row w-full justify-center align-items-center p-1'>
+                                <div className='flex flex-col w-auto align-items-center'>
+                                    <p><b className='text-[2rem]'>{dashboardCount?.not_paid_count}</b></p>
+                                    <p className='text-[1.2rem] text-[#0478df] my-2'>Count</p>
                                 </div>
-                                <div>
-                                    <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.total_paid_principal}</b></p>
-                                    <p className='text-[1rem] text-[#0478df] my-2'>Principal Amount</p>
-                                </div>
+                                <Divider layout="vertical" />
+                                <div className='flex flex-col w-auto align-items-center'>
+                                    <div>
+                                        <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.interest_amt}</b></p>
+                                        <p className='text-[1rem] text-[#0478df] my-2'>Interest Amount</p>
+                                    </div>
+                                    <div>
+                                        <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.balance_amt}</b></p>
+                                        <p className='text-[1rem] text-[#0478df] my-2'>Principal Amount</p>
+                                    </div>
 
-                            </div>
-                        </div>
-                    </Fieldset>
-                </div>
-                </div>
-                <div className=' m-5 w-[30%]'><div className="card w-full">
-                    <Fieldset legend="Loan not Paid">
-                        <div className='flex flex-row w-full justify-center align-items-center p-1'>
-                            <div className='flex flex-col w-auto align-items-center'>
-                                <p><b className='text-[2rem]'>{dashboardCount?.not_paid_count}</b></p>
-                                <p className='text-[1.2rem] text-[#0478df] my-2'>Count</p>
-                            </div>
-                            <Divider layout="vertical" />
-                            <div className='flex flex-col w-auto align-items-center'>
-                                <div>
-                                    <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.interest_amt}</b></p>
-                                    <p className='text-[1rem] text-[#0478df] my-2'>Interest Amount</p>
                                 </div>
-                                <div>
-                                    <p className='text-[1.5rem]'><b>&#8377; {dashboardCount?.balance_amt}</b></p>
-                                    <p className='text-[1rem] text-[#0478df] my-2'>Principal Amount</p>
-                                </div>
-
                             </div>
-                        </div>
-                    </Fieldset>
+                        </Fieldset>
+                    </Link>
                 </div>
                 </div>
 
 
-            </div>
+            </div >
         </>
     )
 }

@@ -227,7 +227,7 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="fname">Enter First Name</label>
+              <label htmlFor="fname">Enter First Name *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
@@ -239,7 +239,7 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="lname">Enter Last Name</label>
+              <label htmlFor="lname">Enter Last Name *</label>
             </FloatLabel>
           </div>
 
@@ -256,7 +256,7 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="dob">Enter Date of Birth</label>
+              <label htmlFor="dob">Enter Date of Birth *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <Dropdown
@@ -271,7 +271,7 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="lname">Active Status</label>
+              <label htmlFor="lname">Active Status *</label>
             </FloatLabel>
           </div>
 
@@ -282,16 +282,20 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 name="mobileno"
                 value={inputs.mobileno}
                 onChange={(e: any) => {
-                  handleInput(e)
+                  const value = e.target.value;
+                  if (/^\d{0,10}$/.test(value)) {
+                    handleInput(e); // Only update if it's a number and max 12 digits
+                  }
                 }}
                 required
               />
-              <label htmlFor="mobileno">Mobile Number</label>
+              <label htmlFor="mobileno">Mobile Number *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
                 id="email"
                 name="email"
+                type='email'
                 onChange={(e: any) => {
                   handleInput(e)
                 }}
@@ -307,13 +311,17 @@ const AgentInputNew = ({ closeSidebarNew }) => {
               <InputText
                 id="aadharno"
                 name="aadharno"
+
                 onChange={(e: any) => {
-                  handleInput(e)
+                  const value = e.target.value;
+                  if (/^\d{0,12}$/.test(value)) {
+                    handleInput(e); // Only update if it's a number and max 12 digits
+                  }
                 }}
                 value={inputs.aadharno}
                 required
               />
-              <label htmlFor="aadharno">Aadhar Number</label>
+              <label htmlFor="aadharno">Aadhar Number *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
@@ -321,11 +329,33 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 name="panno"
                 value={inputs.panno}
                 onChange={(e: any) => {
-                  handleInput(e)
+                  let value = e.target.value.toUpperCase(); // Always uppercase
+                  let valid = true;
+
+                  // Enforce character-by-character format
+                  for (let i = 0; i < value.length; i++) {
+                    const char = value[i];
+
+                    if (i < 5 && !/[A-Z]/.test(char)) {
+                      valid = false; // First 5 should be A-Z
+                      break;
+                    } else if (i >= 5 && i < 9 && !/[0-9]/.test(char)) {
+                      valid = false; // Next 4 should be 0-9
+                      break;
+                    } else if (i === 9 && !/[A-Z]/.test(char)) {
+                      valid = false; // Last one should be A-Z
+                      break;
+                    }
+                  }
+
+                  if (valid && value.length <= 10) {
+                    e.target.value = value;
+                    handleInput(e);
+                  }
                 }}
                 required
               />
-              <label htmlFor="panno">Pan Number</label>
+              <label htmlFor="panno">Pan Number *</label>
             </FloatLabel>
           </div>
 
@@ -371,7 +401,7 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">Address *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <Dropdown
@@ -385,7 +415,7 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 onChange={(e) => handleInput(e)}
                 required
               />
-              <label>Select State</label>
+              <label>Select State *</label>
             </FloatLabel>
           </div>
 
@@ -403,19 +433,24 @@ const AgentInputNew = ({ closeSidebarNew }) => {
                 onChange={(e) => handleInput(e)}
                 required
               />
-              <label>Select District</label>
+              <label>Select District *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
-                type="number"
+                type="text"
                 name="pincode"
                 style={{ width: '100%' }}
                 id="pincode"
                 value={inputs.pincode && null}
-                onChange={(e: any) => handleInput(e)}
+                onChange={(e: any) => {
+                  const value = e.target.value;
+                  if (/^\d{0,6}$/.test(value)) {
+                    handleInput(e); // Only update if it's a number and max 12 digits
+                  }
+                }}
                 required
               />
-              <label htmlFor="pincode">Enter Pincode</label>
+              <label htmlFor="pincode">Enter Pincode *</label>
             </FloatLabel>
           </div>
 

@@ -927,16 +927,21 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                                 onChange={(e) => handleReferenceInput(index, e)}
                                 required
                               />
-                              <label>Enter Name</label>
+                              <label>Enter Name *</label>
                             </FloatLabel>
                             <FloatLabel style={{ width: '100%' }}>
                               <InputText
                                 name="refRPhoneNumber"
                                 value={reference.refRPhoneNumber}
-                                onChange={(e) => handleReferenceInput(index, e)}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (/^\d{0,10}$/.test(value)) {
+                                    handleReferenceInput(index, e) // Only update if it's a number and max 12 digits
+                                  }
+                                }}
                                 required
                               />
-                              <label>Enter Phone Number</label>
+                              <label>Enter Phone Number *</label>
                             </FloatLabel>
                           </div>
 
@@ -945,19 +950,26 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                               <InputText
                                 name="refRAddress"
                                 value={reference.refRAddress}
-                                onChange={(e) => handleReferenceInput(index, e)}
+                                onChange={(e) => {
+                                  handleReferenceInput(index, e)
+                                }}
                                 required
                               />
-                              <label>Enter Address</label>
+                              <label>Enter Address *</label>
                             </FloatLabel>
                             <FloatLabel style={{ width: '100%' }}>
                               <InputText
                                 name="refAadharNumber"
                                 value={reference.refAadharNumber}
-                                onChange={(e) => handleReferenceInput(index, e)}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (/^\d{0,12}$/.test(value)) {
+                                    handleReferenceInput(index, e)
+                                  }
+                                }}
                                 required
                               />
-                              <label>Enter Aadhar Number</label>
+                              <label>Enter Aadhar Number *</label>
                             </FloatLabel>
                           </div>
 
@@ -966,10 +978,35 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                               <InputText
                                 name="refPanNumber"
                                 value={reference.refPanNumber}
-                                onChange={(e) => handleReferenceInput(index, e)}
+                                onChange={(e) => {
+                                  let value = e.target.value.toUpperCase(); // Always uppercase
+                                  let valid = true;
+
+                                  // Enforce character-by-character format
+                                  for (let i = 0; i < value.length; i++) {
+                                    const char = value[i];
+
+                                    if (i < 5 && !/[A-Z]/.test(char)) {
+                                      valid = false; // First 5 should be A-Z
+                                      break;
+                                    } else if (i >= 5 && i < 9 && !/[0-9]/.test(char)) {
+                                      valid = false; // Next 4 should be 0-9
+                                      break;
+                                    } else if (i === 9 && !/[A-Z]/.test(char)) {
+                                      valid = false; // Last one should be A-Z
+                                      break;
+                                    }
+                                  }
+
+                                  if (valid && value.length <= 10) {
+                                    e.target.value = value;
+                                    handleReferenceInput(index, e)
+                                  }
+
+                                }}
                                 required
                               />
-                              <label>Enter PAN Number</label>
+                              <label>Enter PAN Number *</label>
                             </FloatLabel>
                           </div>
 

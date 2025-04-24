@@ -10,6 +10,7 @@ import { FaPiggyBank } from "react-icons/fa";
 import { GiTakeMyMoney } from "react-icons/gi";
 // import { GrTransaction } from "react-icons/gr";
 import { MdDashboard } from "react-icons/md";
+import { FaMoneyBillTransfer } from "react-icons/fa6";
 
 import logo from "../../assets/Logo-1.png";
 
@@ -60,6 +61,11 @@ const routes = [
         path: "/repayment",
         name: "Repayment",
         icon: <GiTakeMyMoney />,
+    },
+    {
+        path: "/adminloan",
+        name: "Admin Loan",
+        icon: <FaMoneyBillTransfer />,
     },
     // {
     //     path: "/loanrepayment",

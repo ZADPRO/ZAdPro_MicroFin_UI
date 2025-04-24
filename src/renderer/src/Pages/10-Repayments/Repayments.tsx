@@ -12,7 +12,7 @@ import { ToastContainer } from 'react-toastify'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { FilterMatchMode } from 'primereact/api'
-import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
+// import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
 import RepaymentSideTab from '@renderer/components/Repayment/RepaymentSideTab'
 import { Dropdown } from 'primereact/dropdown';
 import { Calendar } from 'primereact/calendar';

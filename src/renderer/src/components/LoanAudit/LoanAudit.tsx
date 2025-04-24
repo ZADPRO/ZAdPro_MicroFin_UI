@@ -98,7 +98,7 @@ const LoanAudit = ({ loanId }: { loanId: number }) => {
                 scrollHeight="55vh"
                 tableStyle={{ minWidth: '50rem' }}
             >
-                {auditColumns.map((col, i) => (
+                {auditColumns.map((col) => (
                     <Column
                         key={col.field}
                         field={col.field}

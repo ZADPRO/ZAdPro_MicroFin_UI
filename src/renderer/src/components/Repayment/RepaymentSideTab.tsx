@@ -23,11 +23,6 @@ interface FollowUpForm {
     Date: any;
 }
 
-interface followupData {
-    Message: string;
-    date: any;
-    UpdateAt: any;
-}
 
 interface Bank {
     name: string;
@@ -417,7 +412,8 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                         <TabPanel header="Audit">
                             <LoanAudit loanId={loanId} />
                         </TabPanel>
-                    </TabView></>)}
+                    </TabView>
+                    </>)}
         </>
     )
 }

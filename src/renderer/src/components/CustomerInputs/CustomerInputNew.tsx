@@ -262,7 +262,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="fname">Enter First Name</label>
+              <label htmlFor="fname">Enter First Name *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
@@ -274,7 +274,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="lname">Enter Last Name</label>
+              <label htmlFor="lname">Enter Last Name *</label>
             </FloatLabel>
           </div>
 
@@ -291,7 +291,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="dob">Enter Date of Birth</label>
+              <label htmlFor="dob">Enter Date of Birth *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <Dropdown
@@ -306,7 +306,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="lname">Active Status</label>
+              <label htmlFor="lname">Active Status *</label>
             </FloatLabel>
           </div>
 
@@ -324,7 +324,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="mobileno">Mobile Number</label>
+              <label htmlFor="mobileno">Mobile Number *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
@@ -337,7 +337,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 value={inputs.email}
                 required
               />
-              <label htmlFor="email">E-Mail</label>
+              <label htmlFor="email">E-Mail *</label>
             </FloatLabel>
           </div>
 
@@ -357,7 +357,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 value={inputs.aadharno}
                 required
               />
-              <label htmlFor="aadharno">Aadhar Number</label>
+              <label htmlFor="aadharno">Aadhar Number *</label>
             </FloatLabel>
 
             <FloatLabel style={{ width: '100%' }}>
@@ -393,7 +393,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="panno">Pan Number</label>
+              <label htmlFor="panno">Pan Number *</label>
             </FloatLabel>
 
 
@@ -441,7 +441,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">Address *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <Dropdown
@@ -455,7 +455,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 onChange={(e) => handleInput(e)}
                 required
               />
-              <label>Select State</label>
+              <label>Select State *</label>
             </FloatLabel>
           </div>
 
@@ -473,25 +473,26 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 onChange={(e) => handleInput(e)}
                 required
               />
-              <label>Select District</label>
+              <label>Select District *</label>
             </FloatLabel>
             <FloatLabel style={{ width: '100%' }}>
               <InputText
-                type="number"
+                type="text" // Use text instead of number to allow maxlength to work
                 name="pincode"
                 maxLength={6}
                 style={{ width: '100%' }}
                 id="pincode"
-                value={inputs.pincode && null}
-                onChange={(e: any) => {
+                value={inputs.pincode || ""} // Corrected this
+                onChange={(e) => {
                   const value = e.target.value;
                   if (/^\d{0,6}$/.test(value)) {
-                    handleInput(e); // Only update if it's a number and max 12 digits
+                    handleInput(e); // Only update if it's 0-6 digits
                   }
                 }}
                 required
               />
-              <label htmlFor="pincode">Enter Pincode</label>
+
+              <label htmlFor="pincode">Enter Pincode *</label>
             </FloatLabel>
           </div>
 
@@ -516,7 +517,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       onChange={(e) => handleReferenceInput(index, e)}
                       required
                     />
-                    <label>Enter Name</label>
+                    <label>Enter Name *</label>
                   </FloatLabel>
                   <FloatLabel style={{ width: '100%' }}>
                     <InputText
@@ -542,7 +543,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       onChange={(e) => handleReferenceInput(index, e)}
                       required
                     />
-                    <label>Enter Address</label>
+                    <label>Enter Address *</label>
                   </FloatLabel>
                   <FloatLabel style={{ width: '100%' }}>
                     <InputText
@@ -558,7 +559,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       }}
                       required
                     />
-                    <label>Enter Aadhar Number</label>
+                    <label>Enter Aadhar Number *</label>
                   </FloatLabel>
                 </div>
 
@@ -595,7 +596,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       }}
                       required
                     />
-                    <label>Enter PAN Number</label>
+                    <label>Enter PAN Number *</label>
                   </FloatLabel>
                 </div>
 
