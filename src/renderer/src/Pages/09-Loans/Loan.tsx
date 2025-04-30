@@ -10,7 +10,7 @@ import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { FilterMatchMode } from 'primereact/api'
 import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
-import { Slide, toast, ToastContainer } from "react-toastify";
+import { Slide, toast, ToastContainer } from 'react-toastify'
 
 const Loan = () => {
   const [userLists, setUserLists] = useState([])
@@ -22,15 +22,12 @@ const Loan = () => {
   const loadData = () => {
     try {
       axios
-        .get(
-          import.meta.env.VITE_API_URL + '/adminRoutes/getLoanAndUser',
-          {
-            headers: {
-              Authorization: localStorage.getItem('token'),
-              'Content-Type': 'application/json'
-            }
+        .get(import.meta.env.VITE_API_URL + '/adminRoutes/getLoanAndUser', {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
           }
-        )
+        })
         .then((response: any) => {
           const data = decrypt(
             response.data[1],
@@ -38,7 +35,7 @@ const Loan = () => {
             import.meta.env.VITE_ENCRYPTION_KEY
           )
 
-          localStorage.setItem("token", "Bearer " + data.token);
+          localStorage.setItem('token', 'Bearer ' + data.token)
 
           console.log(data)
 
@@ -66,7 +63,6 @@ const Loan = () => {
     )
   }
 
-
   const CustomerId = (rowData: any) => {
     return (
       <>
@@ -83,7 +79,6 @@ const Loan = () => {
     )
   }
 
-
   const [updateData, setUpdateData] = useState(false)
   const [updateUserId, setUpdateUserId] = useState({
     id: '',
@@ -94,7 +89,6 @@ const Loan = () => {
     setUpdateData(false)
     loadData()
   }
-
 
   //   Filter Data - Start
 
@@ -118,22 +112,20 @@ const Loan = () => {
 
   const sendNotification = () => {
     axios
-      .get(
-        import.meta.env.VITE_API_URL + '/rePayment/Notification',
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
+      .get(import.meta.env.VITE_API_URL + '/rePayment/Notification', {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
         }
-      ).then((response: any) => {
+      })
+      .then((response: any) => {
         const data = decrypt(
           response.data[1],
           response.data[0],
           import.meta.env.VITE_ENCRYPTION_KEY
         )
         console.log('data line ------ 135', data)
-        localStorage.setItem("token", "Bearer " + data.token);
+        localStorage.setItem('token', 'Bearer ' + data.token)
         if (data.success) {
           toast.success('Remainder Notification Send Successfully', {
             position: 'top-right',
@@ -145,8 +137,7 @@ const Loan = () => {
             progress: undefined,
             theme: 'light',
             transition: Slide
-          });
-
+          })
         }
       })
   }
@@ -170,15 +161,21 @@ const Loan = () => {
         </div>
       ) : (
         <div className="contentPage">
-
           <div
             style={{
               width: '100%',
               marginBottom: '10px'
             }}
-            className='flex justify-between'
+            className="flex justify-between"
           >
-            <button className='bg-[#007bff] m-1 px-5 hover:bg-[blue] text-white rounded-lg' onClick={(e) => { e.preventDefault(), sendNotification() }}>Send Remainder</button>
+            <button
+              className="bg-[#007bff] m-1 px-5 hover:bg-[blue] text-white rounded-lg"
+              onClick={(e) => {
+                e.preventDefault(), sendNotification()
+              }}
+            >
+              Send Remainder
+            </button>
 
             <IconField style={{ width: '30%' }} iconPosition="left">
               <InputIcon className="pi pi-search"></InputIcon>
@@ -186,7 +183,11 @@ const Loan = () => {
                 placeholder="Search Customers"
                 value={globalFilterValue}
                 onChange={onGlobalFilterChange}
-                m-1 px-5 text-white rounded-lg />
+                m-1
+                px-5
+                text-white
+                rounded-lg
+              />
             </IconField>
           </div>
           {/* Search Input - End */}
@@ -217,8 +218,16 @@ const Loan = () => {
                 header="Phone Number"
               ></Column>
               <Column style={{ minWidth: '10rem' }} body={AddressBody} header="Address"></Column>
-              <Column style={{ minWidth: '8rem' }} field="opened_count" header="Opened Loan"></Column>
-              <Column style={{ minWidth: '8rem' }} field="closed_count" header="Closed Loan"></Column>
+              <Column
+                style={{ minWidth: '8rem' }}
+                field="opened_count"
+                header="Opened Loan"
+              ></Column>
+              <Column
+                style={{ minWidth: '8rem' }}
+                field="closed_count"
+                header="Closed Loan"
+              ></Column>
             </DataTable>
           </div>
 

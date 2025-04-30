@@ -4,11 +4,20 @@ import axios from 'axios'
 import { Column } from 'primereact/column'
 import { DataTable } from 'primereact/datatable'
 import { Sidebar } from 'primereact/sidebar'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 import { Button } from 'primereact/button'
 import AddnewFund from '@renderer/components/FundsInputs/AddnewFund'
 import { Calendar } from 'primereact/calendar'
+
+interface FundData {
+  refbfTransactionDate: string
+  refbfTransactionAmount: number
+  refBankName: string
+  refFundType: string
+  refPaymentType: string
+  refbfTrasactionType: string
+}
 
 const Funds = () => {
   const [userLists, setUserLists] = useState([])
@@ -16,12 +25,16 @@ const Funds = () => {
   const [startdates, setStartDates] = useState<Date | null>(null)
   const [enddates, setEndDates] = useState<Date | null>(null)
   const [username, setUsername] = useState('')
-  const [submitLoading, _setSubmitLoading] = useState(false)
+  const [submitLoading, setSubmitLoading] = useState(false)
+  console.log('setSubmitLoading', setSubmitLoading)
   const [loadingStatus, setLoadingStatus] = useState(true)
   const [isFiltered, setIsFiltered] = useState(false)
 
+  // Datatable ref - to export into csv
+  const dt = useRef<DataTable<FundData[]>>(null)
+
   const loadData = () => {
-    console.log("line --------- 25")
+    console.log('line --------- 25')
     try {
       axios
         .get(import.meta.env.VITE_API_URL + '/adminRoutes/getBankFundList', {
@@ -37,7 +50,7 @@ const Funds = () => {
             import.meta.env.VITE_ENCRYPTION_KEY
           )
 
-          localStorage.setItem("token", "Bearer " + data.token);
+          localStorage.setItem('token', 'Bearer ' + data.token)
 
           if (data.success) {
             setLoadingStatus(false)
@@ -126,6 +139,23 @@ const Funds = () => {
     )
   }
 
+  const exportCSV = (selectionOnly: boolean) => {
+    dt.current?.exportCSV({ selectionOnly })
+  }
+
+  const header = (
+    <div className="flex flex-wrap align-items-center justify-content-end gap-2">
+      {/* <Button icon="pi pi-refresh" rounded raised /> */}
+      <Button
+        icon="pi pi-upload"
+        raised
+        label="Export As"
+        severity="success"
+        onClick={() => exportCSV(false)}
+      />
+    </div>
+  )
+
   return (
     <>
       <ToastContainer />
@@ -155,9 +185,9 @@ const Funds = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'start' }}>
               <Button
-                severity='warning'
+                severity="warning"
                 label="Add Funds"
-                style={{ padding: '10px 20px', fontSize: '1rem', backgroundColor: "#f8d20f" }}
+                style={{ padding: '10px 20px', fontSize: '1rem', backgroundColor: '#f8d20f' }}
                 onClick={() => setNewData(true)}
               />
             </div>
@@ -176,11 +206,12 @@ const Funds = () => {
                   onChange={(e) => {
                     setStartDates(e.value ? e.value : null)
                     setIsFiltered(false)
-                    loadData();
+                    loadData()
                   }}
-                  placeholder='From Date'
+                  placeholder="From Date"
                   readOnlyInput
-                  dateFormat="dd/mm/yy"
+                  // Filter format from data table
+                  dateFormat="yy-mm-dd"
                   style={{ width: '100%' }}
                 />
               </div>
@@ -193,9 +224,10 @@ const Funds = () => {
                     setIsFiltered(false)
                     loadData()
                   }}
-                  placeholder='To Date'
+                  placeholder="To Date"
                   readOnlyInput
-                  dateFormat="dd/mm/yy"
+                  // Filter format from data table
+                  dateFormat="yy-mm-dd"
                   style={{ width: '100%' }}
                 />
               </div>
@@ -208,7 +240,12 @@ const Funds = () => {
                   ></i>
                 ) : (
                   <Button
-                    style={{ padding: '10px 20px', fontSize: '1rem', width: '200px', backgroundColor: isFiltered ? "#dc2626" : "#0478df" }}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: '1rem',
+                      width: '200px',
+                      backgroundColor: isFiltered ? '#dc2626' : '#0478df'
+                    }}
                     type="button"
                     severity={isFiltered ? 'danger' : 'info'}
                     label={isFiltered ? 'Clear' : 'Search'}
@@ -224,13 +261,20 @@ const Funds = () => {
               paginator
               rows={5}
               value={userLists}
+              ref={dt}
+              header={header}
               showGridlines
+              exportFilename="funds_report"
               scrollable
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
               <Column field="refbfTransactionDate" header="Transaction Date"></Column>
-              <Column body={TransactionAmount} header="Transaction Amount"></Column>
+              <Column
+                body={TransactionAmount}
+                field="refbfTransactionAmount"
+                header="Transaction Amount"
+              ></Column>
               <Column field="refBankName" header="Bank Name" filter></Column>
               <Column field="refFundType" header="Fund Type" filter></Column>
               <Column field="refPaymentType" header="Payment In" filter></Column>
