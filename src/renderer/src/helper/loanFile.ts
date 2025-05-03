@@ -1,13 +1,12 @@
-export type LoanType = 1 | 2
-
 export interface LoanDetails {
-  loanType: LoanType
+  loanType: number
   principal: number
   annualInterest: number
   durationInYears: number
 }
 
 export function calculateLoanInterest(details: LoanDetails): number {
+  console.log('details line ----- 9', details)
   const { loanType, principal, annualInterest, durationInYears } = details
 
   if (loanType === 1) {
@@ -93,4 +92,95 @@ export function addMonthsToMonth(startStr: string, durationMonths: number): stri
   const newYear = newDate.getFullYear()
 
   return `${newMonth.toString().padStart(2, '0')}/${newYear}`
+}
+
+export function getRemainingDaysInCurrentMonth(): number {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth()
+
+  const lastDateOfMonth = new Date(year, month + 1, 0)
+
+  const diffTime = lastDateOfMonth.getTime() - today.getTime()
+
+  const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+
+  return remainingDays
+}
+interface CalaulateInterest {
+  principal: number
+  annualInterest: number
+  totalDays: number
+}
+export function CalculateInterest(data: CalaulateInterest): number {
+  try {
+    let Interest = ((data.principal * (data.annualInterest * 12)) / 100 / 365) * data.totalDays
+    console.log('Interest line ----- 118', Interest)
+    return Interest
+  } catch (error) {
+    return 0
+  }
+}
+
+export function getDaysInMonths(dateStr: string, count: number): number[] {
+  const date = new Date(dateStr)
+  const result: number[] = []
+
+  let year = date.getFullYear()
+  let month = date.getMonth()
+
+  for (let i = 0; i < count; i++) {
+    const days = new Date(year, month + 1, 0).getDate()
+    result.push(days)
+
+    month++
+    if (month > 11) {
+      month = 0
+      year++
+    }
+  }
+
+  return result
+}
+
+export interface FirstInterest {
+  Interest: number
+  PrincipalAmt: number
+  monthCount: number
+  rePaymentDate: string
+  rePaymentType: number
+  loanDuration: number
+}
+export const CalculateFirstInterest = (data: FirstInterest): number => {
+  const daysCount = getDaysInMonths(data.rePaymentDate, data.monthCount)
+
+  if (data.rePaymentType === 1) {
+    const totalDays = daysCount.reduce((sum, val) => sum + val, 0)
+    const interestData = {
+      principal: data.PrincipalAmt,
+      annualInterest: data.Interest,
+      totalDays: totalDays
+    }
+    const Interest = CalculateInterest(interestData)
+    return Interest
+  } else if (data.rePaymentType === 2) {
+    const monthPrincipal = data.PrincipalAmt / data.loanDuration
+    let LoanAmount = data.PrincipalAmt
+    let totalInterest = 0
+
+    for (let i = 0; i < data.monthCount; i++) {
+      const interestData = {
+        principal: LoanAmount,
+        annualInterest: data.Interest,
+        totalDays: daysCount[i]
+      }
+      const Interest = CalculateInterest(interestData)
+      totalInterest += Interest
+      LoanAmount -= monthPrincipal
+    }
+
+    return totalInterest
+  } else {
+    throw new Error('Repayment Type Is Wrong') // Better than returning string on wrong type
+  }
 }

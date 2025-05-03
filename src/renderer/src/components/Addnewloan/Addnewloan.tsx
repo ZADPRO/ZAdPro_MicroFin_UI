@@ -23,12 +23,16 @@ interface loanType {
 }
 
 const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
+
+  const [activeIndex, setActiveIndex] = useState(0)
+
   const [selectedLoanType, setLoanType] = useState<loanType | null>({ name: 'New Loan', code: 1 })
   const loanType: loanType[] = [
     { name: 'New Loan', code: 1 },
     { name: 'Top Up', code: 2 },
     { name: 'Extension', code: 3 }
   ]
+
   const [addLoanOption, setAddLoanOption] = useState([])
   const [selectLoanOption, setSelectLoanOption] = useState([])
 
@@ -107,7 +111,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
   useEffect(() => {
     getLoanData()
     getLoanDatas(id)
-  }, [])
+  }, [activeIndex])
 
   const handleInput = (e: any) => {
     const { name, value } = e.target
@@ -220,7 +224,6 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
       })
   }
 
-  const [activeIndex, setActiveIndex] = useState(0) // 0 = Loan History, 1 = Create New Loan
 
   const [error, setError] = useState({ status: false, message: '' })
   const [rePaymentInfo, setRePaymentInfo] = useState({})
@@ -422,7 +425,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
               </DataTable>
             </TabPanel>
             <TabPanel header="Create New Loan">
-              <CreateNewLoan id={id} />
+              <CreateNewLoan id={id} goToHistoryTab={() => setActiveIndex(0)} />
             </TabPanel>
             <TabPanel header="Loan Audit">
               <>

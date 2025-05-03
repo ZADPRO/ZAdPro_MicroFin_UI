@@ -1,34 +1,34 @@
 import React, { useState } from 'react'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { ToastContainer } from 'react-toastify'
 import { Accordion, AccordionTab } from 'primereact/accordion'
 import { Divider } from 'primereact/divider'
 import { InputText } from 'primereact/inputtext'
 import axios from 'axios'
 import decrypt from '../Helper/Helper'
 import { Calendar } from 'primereact/calendar'
+import { Slide, toast, ToastContainer } from 'react-toastify'
+
 import { InputNumber, InputNumberValueChangeEvent } from 'primereact/inputnumber'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
-import { calculateLoanInterest, getRemainingDaysInMonth } from '@renderer/helper/loanFile'
+import {
+  CalculateFirstInterest,
+  CalculateInterest,
+  calculateLoanInterest,
+  FirstInterest,
+  getRemainingDaysInMonth
+} from '@renderer/helper/loanFile'
 import { Nullable } from 'primereact/ts-helpers'
-
-interface LoanType {
-  name: string
-  code: number
-}
-
-interface RepaymentTypeProps {
-  name: string
-  code: number
-}
-
-interface SampleOpenLoansProps {
-  name: string
-  id: number
-}
+import { getRemainingDaysInCurrentMonth } from '../../helper/loanFile'
+import { getDateAfterMonths } from '@renderer/helper/date'
 
 interface CreateNewLoanProps {
   id: number
+  goToHistoryTab: any
+}
+
+interface LoanType {
+  name: string
+  value: number
 }
 
 interface LoadDetailsResponseProps {
@@ -46,92 +46,52 @@ interface LoadDetailsResponseProps {
   finalBalanceAmt: string
 }
 
-interface BankProductListProps {
-  createdAt: string
-  createdBy: string
-  refProductDescription: string
-  refProductDuration: string
-  refProductId: number
-  refProductInterest: string
-  refProductName: string
-  refProductStatus: string
-  updatedAt: string
-  updatedBy: string
-}
-
-interface AllBankListProps {
-  createdAt: string
-  createdBy: string
-  refAccountType: number
-  refBalance: string
-  refBankAccountNo: string
-  refBankAddress: string
-  refBankId: number
-  refBankName: string
-  refDummy1: string
-  refDummy2: string
-  refDummy3: string
-  refDummy4: string
-  refDummy5: string
-  updatedAt: string
-  updatedBy: string
-}
-
-interface BankProduct {
-  refProductId: string
-  refProductName: string
-}
-
-const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id }) => {
-  const [selectedLoanType, setLoanType] = useState<LoanType | null>(null)
-  const [selectedExistingLoan, setSelectedExistingLoan] = useState<SampleOpenLoansProps | null>(
-    null
-  )
-
+const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => {
+  const today = new Date();
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const [rePaymentDate, setRePaymentDate] = useState<Date>(nextMonth);
+  const [newLoanAmt, setNewLoanAmt] = useState<number | null>()
+  const [oldBalanceAmt, setOldBalanceAmt] = useState<number | null>(0)
+  const [FinalLoanAmt, setFinalLoanAmt] = useState<number>(0)
+  const [interestFirst, setInterestFirst] = useState<boolean | null>(false)
+  const [monthCount, setMonthCount] = useState<number>(0)
+  const [bankId, setBankId] = useState<number | null>(null)
+  const [productId, setProductId] = useState<number | null>(null)
+  const [interestFirstAmt, setInterestFirstAmt] = useState<number>(0)
+  const [initialInterestAmt, setInitialInterestAmt] = useState<number>(0)
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
-  const [addLoanOption, setAddLoanOption] = useState([])
-  const [showFullForm, setShowFullForm] = useState<boolean>(false)
-
-  const [selectedBankList, setSelectedBankList] = useState('')
-  const [selectedRepaymentType, setSelectedRepaymentType] = useState('')
-
-  const [selectedProductId, setSelectedProductId] = useState<BankProduct[] | null>(null)
-
-  const [ingredient, setIngredient] = useState<string>('')
-
-  const [finalLoanAmount, SetFinalLoanAmount] = useState<number>(0)
-
-  const [interestMonthDuration, setInterestMonthDuration] = useState<number>(0)
-
+  const [selectedLoanType, setSelectedLoanType] = useState<number>(0)
+  const [showForm, setShowForm] = useState<boolean>(false)
+  const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
   const loanTypeOptions: LoanType[] = [
-    { name: 'New Loan', code: 1 },
-    { name: 'Top Up', code: 2 },
-    { name: 'Extension', code: 3 }
+    { name: 'New Loan', value: 1 },
+    { name: 'Loan TopUp', value: 2 },
+    { name: 'Loan Extension', value: 3 }
   ]
-
-  const repaymentType: RepaymentTypeProps[] = [
-    { name: 'Flat Loan', code: 1 },
-    { name: 'Diminishing Loan', code: 2 }
+  const [selectedRepaymentType, setSelectedRepaymentType] = useState<LoanType | null>(null)
+  const rePaymentTypeOptions: LoanType[] = [
+    { name: 'Flat Loan', value: 1 },
+    { name: 'Diminishing Loan', value: 2 }
   ]
+  const [userLoan, setUserLoan] = useState<any[]>([])
+  const [selectedLoan, setSelectedLoan] = useState<number | null>()
+  const [loanProduct, setLoanProduct] = useState<any[]>([])
+  const [bankList, setBankList] = useState<any[]>([])
+  const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+  const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0)
+  const [step, setStep] = useState(0)
 
-  const [date, setDate] = useState<Nullable<Date>>(null)
+  const handleBack = () => {
+    goToHistoryTab();
+  };
 
-  const isSecondDropdownDisabled = selectedLoanType?.code !== 2 && selectedLoanType?.code !== 3
-
-  const [bankProductList, setBankProductList] = useState<BankProductListProps[] | []>([])
-  const [allBankList, setAllBankList] = useState<AllBankListProps[] | []>([])
-
-  const [newLoanAmount, setNewLoanAmount] = useState<number>()
-
-  const getUserLoanData = () => {
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/adminRoutes/addLoanOption',
-        {
-          userId: id
-        },
+  const getUserLoanData = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/adminRoutes/addLoanOption`,
+        { userId: id },
         {
           headers: {
             Authorization: localStorage.getItem('token'),
@@ -139,28 +99,21 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id }) => {
           }
         }
       )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-        localStorage.setItem('token', 'Bearer ' + data.token)
 
-        if (data.success) {
-          const options = data.data.map((data: any) => ({
-            label: `Loan Amt : ${data.refLoanAmount} - Interest : ${data.refProductInterest} - Duration : ${data.refProductDuration}`,
-            value: data.refLoanId
-          }))
-          console.log('options', options)
-          setAddLoanOption(options)
-        } else {
-          setShowFullForm(false)
-        }
-      })
-      .catch(() => {
-        setShowFullForm(false)
-      })
+      const data = decrypt(response.data[1], response.data[0], import.meta.env.VITE_ENCRYPTION_KEY)
+      localStorage.setItem('token', 'Bearer ' + data.token)
+
+      if (data.success) {
+        const options = data.data.map((d: any) => ({
+          name: `Loan Amt : ${d.refLoanAmount} - Interest : ${d.refProductInterest} - Duration : ${d.refProductDuration}`,
+          value: d.refLoanId
+        }))
+        setUserLoan(options)
+      }
+    } catch (error) {
+      console.error('Error loading loan data', error)
+      setShowForm(false)
+    }
   }
 
   const getAllLoanData = () => {
@@ -192,20 +145,39 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id }) => {
             const name = `Name : ${data.refProductName} - Interest : ${data.refProductInterest} %- Duration : ${data.refProductDuration} Months`
             productList[index] = { ...productList[index], refProductName: name }
           })
-          setBankProductList(productList)
-          setAllBankList(data.allBankAccountList)
+          setLoanProduct(productList)
 
-          // setLoadData(data.loanData)
-
-          // setAllBankAccountList(data.allBankAccountList)
-          // const productList = data.productList
-          // data.productList.map((data, index) => {
-          //   const name = `Name : ${data.refProductName} - Interest : ${data.refProductInterest} - Duration : ${data.refProductDuration}`
-          //   productList[index] = { ...productList[index], refProductName: name }
-          // })
-          // setProductList(productList)
+          const bankList = data.allBankAccountList
+          console.log('bankList line ------ 202', bankList)
+          bankList.map((data, index) => {
+            const name = `Name : ${data.refBankName} | Balance : ₹ ${data.refBalance}`
+            bankList[index] = { ...bankList[index], refBankName: name }
+          })
+          console.log('bankList', bankList)
+          setBankList(bankList)
         }
       })
+  }
+
+  const calculateInterest = async (data: FirstInterest) => {
+    console.log('data', data)
+    const firstInterestAmt = await CalculateFirstInterest(data)
+    console.log('firstInterestAmt line ---- 149', firstInterestAmt)
+    // setNewLoan({ ...newLoan, interestFirstAmt: firstInterestAmt })
+    setInterestFirstAmt(firstInterestAmt)
+  }
+
+  const initialInterest = (Pamt) => {
+    const days = getRemainingDaysInCurrentMonth()
+    console.log('days', days)
+    const amt = CalculateInterest({
+      annualInterest: parseInt(productId?.refProductInterest),
+      principal: Pamt,
+      totalDays: days
+    })
+    console.log('amt line ----- 175', amt)
+    // setNewLoan({ ...newLoan, initialInterestAmt: amt })
+    setInitialInterestAmt(amt)
   }
 
   const getLoanEntireDetails = (value?: number) => {
@@ -214,7 +186,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id }) => {
         import.meta.env.VITE_API_URL + '/newLoan/selectedLoanDetailsV1',
         {
           loanId: value,
-          loanTypeId: selectedLoanType?.code
+          loanTypeId: selectedLoanType
         },
         {
           headers: {
@@ -230,338 +202,518 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id }) => {
           response.data[0],
           import.meta.env.VITE_ENCRYPTION_KEY
         )
-        console.log('data', data.data)
+        console.log('data line ------- 194', data.data)
         localStorage.setItem('token', 'Bearer ' + data.token)
-        setShowFullForm(true)
         setLoanDetailsReponse(data.data)
+        setOldBalanceAmt(data.data.finalBalanceAmt)
+        const balance = data.data.finalBalanceAmt ?? 0;
+        console.log('balance line -------- 201', balance)
+        setFinalLoanAmt(0 + balance);
         getAllLoanData()
       })
       .catch(() => {
-        setShowFullForm(false)
+        setShowForm(false)
       })
   }
 
-  const handleLoanTypeChange = (e: DropdownChangeEvent) => {
-    const selected = e.value
-    setLoanType(selected)
-    setShowFullForm(false)
+  const show = (LoanType: number, Loan: number) => {
 
-    if (selected.code === 2 || selected.code === 3) {
-      getUserLoanData()
-      setSelectedExistingLoan(null)
-      setSelectedExistingLoan(null)
-    } else {
-      setShowFullForm(true)
-      getAllLoanData()
+    console.log('selectedLoanType line ------ 208', LoanType)
+    console.log('selectedLoan line ------ 209', Loan)
+    setShowForm(false)
+    setShowLoanInfo(false)
+    if (LoanType === 1) {
+      setShowForm(true)
     }
+    else if ((LoanType === 2 || LoanType === 3) && Loan !== null && Loan !== undefined) {
+      setShowForm(true)
+      setShowLoanInfo(true)
+    }
+    else {
+      setShowForm(false)
+      setShowLoanInfo(false)
+    }
+
   }
 
-  const handleLoanProductChange = (e: DropdownChangeEvent) => {
-    console.log('e', e.value)
-    setSelectedExistingLoan(e.value)
-    getLoanEntireDetails(e.value)
-  }
+  const handelSubmit = () => {
+    axios
+      .post(
+        import.meta.env.VITE_API_URL + '/newLoan/CreateNewLoan',
+        {
+          refUserId: id,
+          refProductId: productId?.refProductId,
+          refLoanAmount: FinalLoanAmt.toFixed(2),
+          refLoanDueDate: getDateAfterMonths(rePaymentDate, parseInt(productId?.refProductDuration)),
+          refPayementType: "bank",
+          refRepaymentStartDate: rePaymentDate,
+          refBankId: bankId?.refBankId,
+          refLoanBalance: FinalLoanAmt.toFixed(2),
+          isInterestFirst: interestFirst,
+          refExLoanId: selectedLoan?.refLoanId,
+          refLoanExt: selectedLoanType,
+          refLoanStatus: 1,
+          refInterestMonthCount: monthCount,
+          refInitialInterest: initialInterestAmt.toFixed(2),
+          refRepaymentType: selectedRepaymentType,
+          refTotalInterest: ((initialInterestAmt ?? 0) + (interestFirstAmt ?? 0)).toFixed(2),
+          refToUseAmt: parseFloat(
+            ((newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0)).toFixed(2)
+          ),
+          oldBalanceAmt: (oldBalanceAmt ?? 0).toFixed(2)
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then((response) => {
+        console.log('response', response)
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+        console.log('data line ----------- 269', data)
+        localStorage.setItem('token', 'Bearer ' + data.token)
+        if (data.success) {
+          toast.success("Loan Created Successfully", {
+            position: 'top-right',
+            autoClose: 1900,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+            transition: Slide
+          });
 
-  const handleBankListChange = (e: DropdownChangeEvent) => {
-    setSelectedBankList(e.value)
-  }
+          setTimeout(() => {
+            handleBack();
+          }, 1000);
+        }
 
-  const handleRepaymentTypeChange = (e: DropdownChangeEvent) => {
-    setSelectedRepaymentType(e.value)
-  }
+        else {
+          toast.error(data.message, {
+            position: 'top-right',
+            autoClose: 2999,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+            transition: Slide
+          })
+        }
 
-  const handleProductChange = (e: DropdownChangeEvent) => {
-    console.log('e', e.value)
-    setSelectedProductId(e.value)
-  }
-
-  const handleRadioChange = (e: RadioButtonChangeEvent) => {
-    const value = e.value
-    setIngredient(value)
-
-    console.log('selectedProductId', selectedProductId)
-    if (value === 'Yes') {
-      const result = calculateLoanInterest({
-        loanType: 1, // or 2 for diminishing
-        principal: 100000,
-        annualInterest: selectedProductId?.refProductInterest,
-        durationInYears: selectedProductId?.refProductDuration
       })
-      console.log('Interest (Yes selected):', result)
-    } else if (value === 'No') {
-      setInterestMonthDuration(0)
-      const result = calculateLoanInterest({
-        loanType: 2,
-        principal: 100000,
-        annualInterest: selectedProductId?.refProductInterest,
-        durationInYears: selectedProductId?.refProductDuration
-      })
-      console.log('Interest (No selected):', result)
-    }
   }
 
-  const interestCalcualtion = () => {
-    const today = new Date()
-    const remainingDays = getRemainingDaysInMonth(today)
-    console.log(remainingDays)
-    console.log('remainingDays', remainingDays)
-  }
-
-  const initialInterestPerDay = () => {
-    if (
-      newLoanAmount == null ||
-      selectedProductId?.refProductInterest == null ||
-      selectedProductId?.refProductDuration == null
-    ) {
-      console.warn('Missing required loan data.')
-      return
-    }
-
-    const calculateInitialInterestPerDay = calculateLoanInterest({
-      loanType: 1, // or 2
-      principal: newLoanAmount,
-      annualInterest: selectedProductId.refProductInterest,
-      durationInYears: selectedProductId.refProductDuration
-    })
-
-    console.log('calculateInitialInterestPerDay', calculateInitialInterestPerDay)
-  }
 
   return (
     <div>
       <ToastContainer />
-      <div className="flex gap-3">
-        <Dropdown
-          value={selectedLoanType}
-          onChange={handleLoanTypeChange}
-          options={loanTypeOptions}
-          optionLabel="name"
-          placeholder="Select a Loan Type"
-          className="flex-1"
-        />
-
-        <Dropdown
-          value={selectedExistingLoan}
-          onChange={handleLoanProductChange}
-          options={addLoanOption}
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Select Existing Loans"
-          className="flex-1"
-          disabled={isSecondDropdownDisabled}
-        />
-      </div>
-
-      {showFullForm && (selectedLoanType?.code === 2 || selectedLoanType?.code === 3) && (
-        <>
-          <div className="mt-3">
-            <Accordion activeIndex={0}>
-              <AccordionTab header="Loan Details">
-                <div className="flex">
-                  <div className="flex-1">
-                    <p>
-                      Total Loan: <b> {loadDetailsResponse?.totalLoanAmt}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Loan Interest : <b> {loadDetailsResponse?.loanInterest}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Loan Duration : <b> {loadDetailsResponse?.loanDuration}</b>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex mt-3">
-                  <div className="flex-1">
-                    <p>
-                      Interest Paid (First) : <b> {loadDetailsResponse?.interestFirst}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Initial Interest - Amt: <b> {loadDetailsResponse?.initialInterest}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Initial Interest - Month: <b> {loadDetailsResponse?.interestFirstMonth}</b>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex mt-3">
-                  <div className="flex-1">
-                    <p>
-                      Total Principal Amt : <b> {loadDetailsResponse?.totalPrincipal}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Total Interest Amt : <b> {loadDetailsResponse?.totalInterest}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1"></div>
-                </div>
-                <Divider layout="horizontal" className="flex" align="center">
-                  <b>Calculation</b>
-                </Divider>
-                <div className="flex">
-                  <div className="flex-1">
-                    <p>
-                      Total Principal Paid : <b> {loadDetailsResponse?.totalPrincipal}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Total Interest Paid : <b> {loadDetailsResponse?.totalInterestPaid}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Initial Interest Paid : <b> {loadDetailsResponse?.totalInitialInterest}</b>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex mt-3">
-                  <div className="flex-1">
-                    <p>
-                      Loan Duration : <b> {loadDetailsResponse?.loanDuration}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Balance Amt : <b> {loadDetailsResponse?.finalBalanceAmt}</b>
-                    </p>
-                  </div>
-                </div>
-              </AccordionTab>
-            </Accordion>
-          </div>
-        </>
-      )}
-      {showFullForm && (
-        <>
-          <div className="mt-3">
-            <div className="flex gap-3 align-items-center">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handelSubmit();
+        }}>
+        <div className="w-[100%] flex flex-col justify-content-between">
+          <div className="w-full flex justify-content-around my-1">
+            <div className="w-[45%]">
+              <label className="font-bold block mb-2">Select Loan Type</label>
               <Dropdown
-                name="productId"
-                value={selectedProductId}
-                onChange={handleProductChange}
-                optionLabel="refProductName"
-                options={bankProductList}
-                filter
-                className="flex-1"
-                placeholder="Select Product"
+                value={selectedLoanType}
+                className="w-full"
+                onChange={(e: DropdownChangeEvent) => {
+                  setSelectedLoanType(e.value)
+                  getUserLoanData()
+                  getAllLoanData()
+                  setSelectedLoan(null)
+                  show(e.value, selectedLoan)
+                }}
                 required
-              />
-              <InputNumber
-                placeholder="New Loan Amount"
-                className="flex-1"
-                mode="currency"
-                currency="INR"
-                currencyDisplay="symbol"
-                locale="en-IN"
-                value={newLoanAmount}
-                onChange={initialInterestPerDay}
-                onValueChange={(e: InputNumberValueChangeEvent) => setNewLoanAmount(e.value)}
-              />
-              {showFullForm && (selectedLoanType?.code === 2 || selectedLoanType?.code === 3) && (
-                <>
-                  +
-                  <InputText placeholder="Balance Loan Amount" className="flex-1" />
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="flex align-items-center gap-3">
-              {showFullForm && (selectedLoanType?.code === 2 || selectedLoanType?.code === 3) && (
-                <InputText placeholder="Loan Amount" className="flex-1" />
-              )}
-              <Calendar
-                placeholder="Repayment Schedule Date"
-                dateFormat="dd/mm/yy"
-                className="flex-1"
-                value={date}
-                onChange={(e) => setDate(e.value)}
-              />
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="flex gap-3 align-items-center">
-              <Dropdown
-                placeholder="Bank Name"
-                options={allBankList}
-                optionLabel="refBankName"
-                value={selectedBankList}
-                optionValue="refBankId"
-                onChange={handleBankListChange}
-                className="flex-1"
-              />
-              <Dropdown
-                placeholder="Repayment Type"
-                options={repaymentType}
-                value={selectedRepaymentType}
-                onChange={handleRepaymentTypeChange}
+                options={loanTypeOptions}
                 optionLabel="name"
-                optionValue="code"
-                className="flex-1"
+                placeholder="Select Loan Type"
+              />
+            </div>
+            <div className="w-[45%]">
+              <label className="font-bold block mb-2">Select Old Loan</label>
+              <Dropdown
+                value={selectedLoan}
+                disabled={selectedLoanType === 1 || selectedLoanType === 0}
+                className="w-full"
+                onChange={(e: DropdownChangeEvent) => { setSelectedLoan(e.value); getLoanEntireDetails(e.value); show(selectedLoanType, e.value) }}
+                options={userLoan}
+                optionLabel="name"
+                placeholder="Select Old Loan"
               />
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="flex gap-3 align-items-center">
-              <div className="flex gap-3">
-                <div className="flex align-items-center">
-                  <RadioButton
-                    value="Yes"
-                    onChange={handleRadioChange}
-                    checked={ingredient === 'Yes'}
+          {showLoanInfo && (
+            <div className='flex justify-center'>
+              <div className="mt-3 w-[95%]">
+                <Accordion activeIndex={0}>
+                  <AccordionTab header="Loan Details">
+                    <div className="flex">
+                      <div className="flex-1">
+                        <p>
+                          Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Loan Interest : <b> {loadDetailsResponse?.loanInterest}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Loan Duration : <b> {loadDetailsResponse?.loanDuration} Month</b>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex mt-3">
+                      <div className="flex-1">
+                        <p>
+                          Interest Paid (First) : <b> {loadDetailsResponse?.interestFirst === true ? "Yes" : "No"}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Initial Interest - Amt : <b>₹ {loadDetailsResponse?.initialInterest}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Initial Interest : <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex mt-3">
+                      <div className="flex-1">
+                        <p>
+                          Total Principal Amt : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Total Interest Amt : <b>₹ {loadDetailsResponse?.totalInterest}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1"></div>
+                    </div>
+                    <Divider layout="horizontal" className="flex" align="start">
+                      <b>Calculation</b>
+                    </Divider>
+                    <div className="flex">
+                      <div className="flex-1">
+                        <p>
+                          Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Total Interest Paid : <b>₹ {loadDetailsResponse?.totalInterestPaid}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Initial Interest Paid : <b>₹ {loadDetailsResponse?.totalInitialInterest}</b>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex mt-3">
+                      <div className="flex-1">
+                        <p>
+                          Loan Duration : <b> {loadDetailsResponse?.loanDuration} Month</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Balance Amt : <b>₹ {loadDetailsResponse?.finalBalanceAmt}</b>
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionTab>
+                </Accordion>
+              </div>
+            </div>
+          )}
+
+
+
+
+          {showForm && (
+            <div>
+              <Divider layout="horizontal" className="flex" align="start" />
+              <div className="w-full flex justify-content-around my-1">
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Select Loan Duration and Interest</label>
+                  <Dropdown
+                    value={productId}
+                    required
+                    className="w-full"
+                    onChange={(e: DropdownChangeEvent) => {
+                      setProductId(e.value)
+                      setStep(1)
+                      setSelectedRepaymentType(null)
+                    }}
+                    options={loanProduct}
+                    optionLabel="refProductName"
+                    placeholder="Select Product"
                   />
-                  <label htmlFor="ingredient1" className="ml-2">
-                    Yes
-                  </label>
                 </div>
-                <div className="flex align-items-center">
-                  <RadioButton
-                    value="No"
-                    onChange={handleRadioChange}
-                    checked={ingredient === 'No'}
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Select Repayment Type</label>
+                  <Dropdown
+                    value={selectedRepaymentType}
+                    disabled={step < 1}
+                    required
+                    className="w-full"
+                    onChange={(e: DropdownChangeEvent) => {
+                      setSelectedRepaymentType(e.value)
+                      setStep(2)
+                      setNewLoanAmt(null)
+                    }}
+                    options={rePaymentTypeOptions}
+                    optionLabel="name"
+                    placeholder="Select Re-payment Type"
                   />
-                  <label htmlFor="ingredient2" className="ml-2">
-                    No
-                  </label>
                 </div>
               </div>
-              <InputNumber
-                placeholder="Interest Month Duration"
-                className="flex-1"
-                value={interestMonthDuration}
-                onValueChange={(e: InputNumberValueChangeEvent) => {
-                  setInterestMonthDuration(e.value)
-                }}
-                onChange={interestCalcualtion}
-                disabled={ingredient === 'No'}
-              />
-              <InputNumber
-                placeholder="Final Loan Amount"
-                className="flex-1"
-                mode="currency"
-                currency="INR"
-                currencyDisplay="code"
-                locale="en-IN"
-                value={finalLoanAmount}
-                onValueChange={(e: InputNumberValueChangeEvent) => SetFinalLoanAmount(e.value)}
-              />
+              <div className="w-full flex justify-content-around my-1">
+                <div className="w-[45%] flex flex-row justify-content-between gap-x-2">
+                  <div className="w-full">
+                    <label className="font-bold block mb-2">Enter Loan Amount</label>
+                    <InputNumber
+                      className="w-full"
+                      placeholder="Enter Loan Amount"
+                      inputId="currency-india"
+                      required
+                      disabled={step < 2}
+                      value={newLoanAmt}
+                      onChange={(e: any) => {
+                        setNewLoanAmt(e.value)
+                        setStep(3)
+                        setBankId(null)
+                        const value = parseFloat(e.value) || 0;
+                        const balance = oldBalanceAmt ?? 0;
+                        setFinalLoanAmt(value + balance);
+                        initialInterest(value + balance)
+
+                      }}
+                      mode="currency"
+                      currency="INR"
+                      currencyDisplay="symbol"
+                      locale="en-IN"
+                    />
+                  </div>
+                  {(selectedLoanType === 2 || selectedLoanType === 3) && (
+                    <div className="w-full">
+                      <label className="font-bold block mb-2">Balance Amount</label>
+                      <InputNumber
+                        className="w-full"
+                        disabled
+                        placeholder="Old Loan Amount"
+                        inputId="currency-india"
+                        value={oldBalanceAmt}
+                        required
+                        mode="currency"
+                        currency="INR"
+                        currencyDisplay="symbol"
+                        locale="en-IN"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Select Amount Source</label>
+                  <Dropdown
+                    value={bankId}
+                    disabled={step < 3}
+                    className="w-full"
+                    required
+                    onChange={(e: DropdownChangeEvent) => {
+                      setBankId(e.value)
+                      setStep(4)
+                      setRePaymentDate(nextMonth)
+                    }}
+                    options={bankList}
+                    optionLabel="refBankName"
+                    placeholder="Select Amount From"
+                  />
+                </div>
+              </div>
+              <div className="w-full flex flex-row justify-content-around my-1">
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
+                  <Calendar
+                    placeholder="Repayment Schedule Date"
+                    disabled={step < 4}
+                    dateFormat="dd/mm/yy"
+                    className="w-full"
+                    required
+                    value={rePaymentDate}
+                    onChange={(e: any) => {
+                      setRePaymentDate(e.value)
+                      setStep(5)
+                      setInterestFirst(null)
+                    }}
+                    minDate={nextMonthStart}
+                    maxDate={nextMonthEnd}
+                    viewDate={nextMonthStart}
+                  />
+                </div>
+                <div className="w-[45%] flex align-items-center">
+                  <div className="w-[40%]">
+                    <label className="font-bold block mb-2">Interest First</label>
+                    <div className="flex flex-row gap-x-5 w-[100%]">
+                      <div className="flex align-items-center">
+                        <RadioButton
+                          inputId="ingredient1"
+                          name="pizza"
+                          value="true"
+                          required
+                          disabled={step < 5}
+                          onChange={(e: RadioButtonChangeEvent) => {
+                            setInterestFirst(true);
+                            setMonthCount(1)
+                            setStep(6)
+                            calculateInterest({
+                              Interest: parseInt(productId?.refProductInterest),
+                              PrincipalAmt: Number(FinalLoanAmt),
+                              monthCount: 1,
+                              rePaymentDate: rePaymentDate?.toString() || '',
+                              rePaymentType:
+                                (selectedRepaymentType as any)?.value ?? selectedRepaymentType ?? 1,
+                              loanDuration: Number(productId?.refProductDuration)
+                            })
+                          }}
+                          checked={interestFirst === true}
+                        />
+                        <label htmlFor="ingredient1" className="ml-2">
+                          Yes
+                        </label>
+                      </div>
+                      <div className="flex align-items-center">
+                        <RadioButton
+                          inputId="ingredient2"
+                          name="pizza"
+                          disabled={step < 5}
+                          value="Mushroom"
+                          required
+                          onChange={(e: RadioButtonChangeEvent) => {
+                            setInterestFirst(false);
+                            setMonthCount(0)
+                            setInterestFirstAmt(0)
+                            setStep(6)
+                          }}
+                          checked={interestFirst === false}
+                        />
+                        <label htmlFor="ingredient2" className="ml-2">
+                          No
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  {interestFirst && (
+                    <div className="w-[60%]">
+                      <label className="font-bold block mb-2">Enter Number Of Month</label>
+                      <InputNumber
+                        className="w-full"
+                        inputId="expiry"
+                        disabled={step < 6}
+                        value={monthCount}
+                        required
+                        onChange={(e: any) => {
+                          setMonthCount(e.value)
+                          setStep(7)
+                          calculateInterest({
+                            Interest: parseInt(productId?.refProductInterest),
+                            PrincipalAmt: Number(FinalLoanAmt),
+                            monthCount: e.value || 1,
+                            rePaymentDate: rePaymentDate?.toString() || '',
+                            rePaymentType:
+                              (selectedRepaymentType as any)?.value ?? selectedRepaymentType ?? 1,
+                            loanDuration: Number(productId?.refProductDuration)
+                          })
+                        }}
+                        suffix=" Month"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div>
+
+                </div>
+              </div>
+
             </div>
-          </div>
-        </>
-      )}
+          )}
+
+          {step >= 6 && (
+
+            <div className="my-3 shadow-2xl border-0 rounded-lg p-5">
+              <b>Loan Details</b>
+              <div className="flex w-full justify-content-between my-2">
+                <div>
+                  <p>
+                    Total Loan Amount : ₹ <b>{FinalLoanAmt}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    New Loan Amount : ₹ <b>{newLoanAmt}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    Old Loan Amount : ₹ <b>{oldBalanceAmt}</b>
+                  </p>
+                </div>
+              </div>
+              <div className="flex w-full justify-content-between my-2 ">
+                <div>
+                  <p>
+                    Interest For This Month : ₹ <b>{initialInterestAmt.toFixed(2)}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    Interest for {monthCount} Month : ₹ <b>{interestFirstAmt.toFixed(2)}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    Amount to User : ₹ <b>
+                      {
+                        ((newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0))
+                          .toFixed(2)
+                      }
+                    </b>
+                  </p>
+
+
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
+          <div></div>
+        </div>
+        {step >= 6 && (<div className='w-full flex justify-center'>
+          <button className='bg-[green] text-white py-2 px-10 rounded-md shadow-md'>Create Loan</button>
+        </div>)}
+
+      </form>
     </div>
   )
 }
