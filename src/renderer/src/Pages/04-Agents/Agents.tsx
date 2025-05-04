@@ -5,7 +5,7 @@ import { Column } from 'primereact/column'
 import { DataTable } from 'primereact/datatable'
 import { InputText } from 'primereact/inputtext'
 import { Sidebar } from 'primereact/sidebar'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
@@ -16,6 +16,8 @@ import AgentInputNew from '@renderer/components/AgentInputs/AgentInputNew'
 
 const Customers = () => {
   const [userLists, setUserLists] = useState([])
+
+  const dt = useRef(null)
 
   const [username, setUsername] = useState('')
 
@@ -65,8 +67,10 @@ const Customers = () => {
   const AddressBody = (rowData: any) => {
     return (
       <>
-        {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
-        {rowData.refUserPincode}
+        <p className="line-clamp-2">
+          {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
+          {rowData.refUserPincode}
+        </p>
       </>
     )
   }
@@ -149,7 +153,7 @@ const Customers = () => {
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value
-    let _filters = { ...filters }
+    const _filters = { ...filters }
 
     _filters['global'].value = value
 
@@ -158,6 +162,23 @@ const Customers = () => {
   }
 
   //Filter Data - End
+
+  // HEADER
+  const exportCSV = () => {
+    dt.current?.exportCSV()
+  }
+
+  const header = (
+    <div className="flex align-items-center justify-content-end gap-2">
+      <Button
+        type="button"
+        icon="pi pi-file"
+        rounded
+        onClick={() => exportCSV(false)}
+        data-pr-tooltip="CSV"
+      />
+    </div>
+  )
 
   return (
     <>
@@ -217,13 +238,25 @@ const Customers = () => {
             <DataTable
               filters={filters}
               paginator
-              rows={4}
+              rows={5}
+              ref={dt}
+              header={header}
+              rowsPerPageOptions={[5, 10, 25, 50]}
               value={userLists}
               showGridlines
               scrollable
+              exportFilename="Agents Details"
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
+              <Column
+                header="S.No"
+                body={(_rowData, options) => options.rowIndex + 1}
+                exportable
+                exportField="sno"
+                style={{ minWidth: '3rem', textAlign: 'center' }}
+              />
+
               <Column style={{ minWidth: '3rem' }} body={CustomerId} header="User ID"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
@@ -232,19 +265,24 @@ const Customers = () => {
               ></Column>
               <Column style={{ minWidth: '8rem' }} field="refUserLname" header="Last Name"></Column>
               <Column
-                style={{ minWidth: '8rem' }}
+                style={{ minWidth: '10rem' }}
                 field="refUserMobileNo"
                 header="Phone Number"
               ></Column>
-              <Column style={{ minWidth: '10rem' }} field="refUserEmail" header="Email"></Column>
-              <Column style={{ minWidth: '10rem' }} body={AddressBody} header="Address"></Column>
+              <Column style={{ minWidth: '14rem' }} field="refUserEmail" header="Email"></Column>
               <Column
-                style={{ minWidth: '8rem' }}
+                style={{ minWidth: '20rem' }}
+                exportField="address"
+                body={AddressBody}
+                header="Address"
+              ></Column>
+              <Column
+                style={{ minWidth: '12rem' }}
                 field="refAadharNo"
                 header="Aadhar Number"
               ></Column>
               <Column style={{ minWidth: '8rem' }} field="refPanNo" header="Pan Number"></Column>
-              <Column body={StatusBody} header="Status"></Column>
+              <Column body={StatusBody} header="Status" exportField="Status"></Column>
             </DataTable>
           </div>
 

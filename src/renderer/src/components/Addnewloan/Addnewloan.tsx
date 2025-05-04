@@ -16,6 +16,7 @@ import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import { Divider } from 'primereact/divider'
 import CreateNewLoan from '../CreateNewLoan/CreateNewLoan'
+import CloseLoan from '../CloseLoan/CloseLoan'
 
 interface loanType {
   name: string
@@ -23,7 +24,6 @@ interface loanType {
 }
 
 const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
-
   const [activeIndex, setActiveIndex] = useState(0)
 
   const [selectedLoanType, setLoanType] = useState<loanType | null>({ name: 'New Loan', code: 1 })
@@ -223,7 +223,6 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
         }
       })
   }
-
 
   const [error, setError] = useState({ status: false, message: '' })
   const [rePaymentInfo, setRePaymentInfo] = useState({})
@@ -528,6 +527,9 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                   </>
                 ))}
               </>
+            </TabPanel>
+            <TabPanel header="Loan Closing">
+              <CloseLoan id={id} goToHistoryTab={() => setActiveIndex(0)} />
             </TabPanel>
           </TabView>
         </>

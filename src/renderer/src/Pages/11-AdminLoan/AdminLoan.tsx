@@ -1,58 +1,54 @@
+import AdminNewLoan from '@renderer/components/AdminNewLoan/AdminNewLoan'
+import AdminSupplierLoan from '@renderer/components/AdminSupplierLoan/AdminSupplierLoan'
 import Header from '@renderer/components/Header/Header'
-import { FilterMatchMode } from 'primereact/api'
-import { Calendar } from 'primereact/calendar'
-import { Dropdown } from 'primereact/dropdown'
-import { IconField } from 'primereact/iconfield'
-import { InputIcon } from 'primereact/inputicon'
-import { InputText } from 'primereact/inputtext'
+import decrypt from '@renderer/components/Helper/Helper'
+import axios from 'axios'
 import { TabPanel, TabView } from 'primereact/tabview'
-import { Nullable } from 'primereact/ts-helpers'
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 
-interface addSupplier {
-  supplierFNAme?: string
-  supplierLName?: string
-  supplierAccNo?: string
-  supplierIFSC?: string
-  supplierMobile?: number
-  supplierEmail?: string
-  supplierBankName?: string
-}
+const AdminLoan: React.FC = () => {
+  const [username, setUsername] = useState('')
+  const [loadingStatus, setLoadingStatus] = useState(true)
 
-const AdminLoan = () => {
-  const [loadingStatus, setLoadingStatus] = useState(false)
-  console.log('setLoadingStatus', setLoadingStatus)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [userListType, setUserListType] = useState({ name: 'Over All', code: 0 })
-  const [startDate, setStartDate] = useState<Nullable<Date>>(null)
-  const [endDate, setEndDate] = useState<Nullable<Date>>(null)
-  const userType = [
-    { name: 'Over All', code: 0 },
-    { name: 'Month', code: 1 }
-  ]
+  const loadData = () => {
+    try {
+      axios
+        .get(import.meta.env.VITE_API_URL + '/adminRoutes/getLoanAndUser', {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        })
+        .then((response: any) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
 
-  const [filters, setFilters] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS }
-  })
+          localStorage.setItem('token', 'Bearer ' + data.token)
 
-  const [globalFilterValue, setGlobalFilterValue] = useState('')
+          console.log(data)
 
-  const onGlobalFilterChange = (e) => {
-    const value = e.target.value
-    let _filters = { ...filters }
-
-    _filters['global'].value = value
-
-    setFilters(_filters)
-    setGlobalFilterValue(value)
+          if (data.success) {
+            setLoadingStatus(false)
+            setUsername(data.name[0].refUserFname + ' ' + data.name[0].refUserLname)
+          }
+        })
+    } catch (e: any) {
+      console.log(e)
+    }
   }
 
-  const [SupplierDetails, setSupplierDetails] = useState<addSupplier>()
+  useEffect(() => {
+    loadData()
+  }, [])
+
   return (
-    <>
+    <div>
       <ToastContainer />
-      <Header userName={'vijay'} pageName={'Admin Loan'} />
+      <Header userName={username} pageName={'Admin Loan'} />
       {loadingStatus ? (
         <div
           style={{
@@ -67,97 +63,19 @@ const AdminLoan = () => {
           <i className="pi pi-spin pi-spinner" style={{ fontSize: '5rem' }}></i>
         </div>
       ) : (
-        <>
-          <div className="my-2 px-2 flex flex-row align-items-center justify-end w-full">
-            <div className="w-[50%] flex flex-row gap-x-10">
-              <Dropdown
-                value={userListType}
-                onChange={(e) => {
-                  if (e.value.code === 1) {
-                    setStartDate(new Date())
-                    setEndDate(new Date())
-                  } else {
-                    setEndDate(null)
-                    setStartDate(null)
-                  }
-                  setUserListType(e.value)
-                }}
-                options={userType}
-                optionLabel="name"
-                placeholder="Select Filter"
-                className="w-full md:w-14rem"
-              />
-              {userListType.code === 1 && (
-                <>
-                  <Calendar
-                    value={startDate}
-                    placeholder="Select Start Range"
-                    onChange={(e) => {
-                      setStartDate(e.value)
-                      if (endDate && e.value && endDate < e.value) {
-                        setEndDate(e.value)
-                      }
-                    }}
-                    view="month"
-                    dateFormat="mm/yy"
-                  />
-                  <Calendar
-                    value={endDate}
-                    placeholder="Select End Range"
-                    onChange={(e) => setEndDate(e.value)}
-                    view="month"
-                    dateFormat="mm/yy"
-                    minDate={startDate || undefined}
-                    disabled={!startDate}
-                  />{' '}
-                </>
-              )}
-            </div>
-            <div className="w-[50%] flex justify-end">
-              <IconField style={{ width: '50%' }} iconPosition="left">
-                <InputIcon className="pi pi-search"></InputIcon>
-                <InputText
-                  placeholder="Search Supplier Name"
-                  value={globalFilterValue}
-                  onChange={onGlobalFilterChange}
-                />
-              </IconField>
-            </div>
-          </div>
-          <TabView
-            activeIndex={activeIndex}
-            className="mx-1"
-            onTabChange={(e) => {
-              console.log(e.index)
-              setActiveIndex(e.index)
-            }}
-            style={{ marginTop: '1rem' }}
-          >
-            <TabPanel header="Re-Payment"></TabPanel>
-            <TabPanel header="Loan"></TabPanel>
-            <TabPanel header="Supplier Details">
-              <div>
-                <form>
-                  <div>
-                    <div>
-                      <InputText
-                        value={SupplierDetails?.supplierFNAme}
-                        onChange={(e) => {
-                          setSupplierDetails({
-                            ...SupplierDetails,
-                            supplierFNAme: e.target.value ?? ''
-                          })
-                        }}
-                      />
-                    </div>
-                  </div>
-                </form>
-              </div>
+        <div className="contentPage">
+          <TabView>
+            <TabPanel header="Repayment"></TabPanel>
+            <TabPanel header="Loan">
+              <AdminNewLoan />
+            </TabPanel>
+            <TabPanel header="Supplier">
+              <AdminSupplierLoan />
             </TabPanel>
           </TabView>
-        </>
+        </div>
       )}
-    </>
+    </div>
   )
 }
 

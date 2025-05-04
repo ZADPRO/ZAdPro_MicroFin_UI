@@ -99,3 +99,13 @@ input[type='file'] {
 .p-tabview .p-tabview-nav li .p-tabview-nav-link {
   padding: 0.8rem !important;
 }
+
+/* BUTTON STYLE - THIRU */
+
+.p-button {
+  padding: 7px 20px;
+}
+
+* {
+  scrollbar-width: thin;
+}

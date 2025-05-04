@@ -1,21 +1,28 @@
-import React, { useState } from 'react'
+import axios from 'axios'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
+import React, { useState } from 'react'
+import decrypt from '../Helper/Helper'
+import { toast, ToastContainer } from 'react-toastify'
 import { Accordion, AccordionTab } from 'primereact/accordion'
 import { Divider } from 'primereact/divider'
-import axios from 'axios'
-import decrypt from '../Helper/Helper'
-import { Calendar } from 'primereact/calendar'
-import { Slide, toast, ToastContainer } from 'react-toastify'
-
 import { InputNumber } from 'primereact/inputnumber'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
-import { CalculateFirstInterest, CalculateInterest, FirstInterest } from '@renderer/helper/loanFile'
-import { getRemainingDaysInCurrentMonth } from '../../helper/loanFile'
 import { getDateAfterMonths } from '@renderer/helper/date'
+import {
+  CalculateFirstInterest,
+  CalculateInterest,
+  FirstInterest,
+  getRemainingDaysInCurrentMonth
+} from '@renderer/helper/loanFile'
+import { Calendar } from 'primereact/calendar'
 
-interface CreateNewLoanProps {
-  id: number
-  goToHistoryTab: any
+interface AddNewSupplierProps {
+  closeSidebarNew: () => void
+}
+
+interface LoanType {
+  name: string
+  value: number
 }
 
 interface LoanType {
@@ -38,7 +45,7 @@ interface LoadDetailsResponseProps {
   finalBalanceAmt: string
 }
 
-const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => {
+const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) => {
   const today = new Date()
   const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
   const [rePaymentDate, setRePaymentDate] = useState<Date>(nextMonth)
@@ -83,7 +90,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/adminRoutes/addLoanOption`,
-        { userId: id },
+        { userId: 2 },
         {
           headers: {
             Authorization: localStorage.getItem('token'),
@@ -113,7 +120,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
       .post(
         import.meta.env.VITE_API_URL + '/adminRoutes/getLoan',
         {
-          userId: id
+          userId: 2
         },
         {
           headers: {
@@ -230,7 +237,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
       .post(
         import.meta.env.VITE_API_URL + '/newLoan/CreateNewLoan',
         {
-          refUserId: id,
+          refUserId: 2,
           refProductId: productId?.refProductId,
           refLoanAmount: FinalLoanAmt.toFixed(2),
           refLoanDueDate: getDateAfterMonths(
@@ -312,6 +319,27 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         }}
       >
         <div className="w-[100%] flex flex-col justify-content-between">
+          <div className="w-full flex justify-content-around my-1">
+            <div className="w-[45%]">
+              <label className="font-bold block mb-2">Select Loan Type</label>
+              <Dropdown
+                value={selectedLoanType}
+                className="w-full"
+                onChange={(e: DropdownChangeEvent) => {
+                  setSelectedLoanType(e.value)
+                  getUserLoanData()
+                  getAllLoanData()
+                  setSelectedLoan(null)
+                  show(e.value, selectedLoan)
+                }}
+                required
+                options={loanTypeOptions}
+                optionLabel="name"
+                placeholder="Select Supplier"
+              />
+            </div>
+            <div className="w-[45%]"></div>
+          </div>
           <div className="w-full flex justify-content-around my-1">
             <div className="w-[45%]">
               <label className="font-bold block mb-2">Select Loan Type</label>
@@ -706,4 +734,4 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   )
 }
 
-export default CreateNewLoan
+export default AdminLoanCreation

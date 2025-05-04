@@ -3,42 +3,49 @@ import { useEffect } from 'react'
 import { Button } from 'primereact/button'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
 import { FloatLabel } from 'primereact/floatlabel'
-import { InputText } from 'primereact/inputtext'
 import { useState } from 'react'
 import decrypt from '../Helper/Helper'
-import { Slide, toast } from 'react-toastify'
+import { Slide, toast, ToastContainer } from 'react-toastify'
 
 import { TabView, TabPanel } from 'primereact/tabview'
+import { InputNumber, InputNumberChangeEvent } from 'primereact/inputnumber'
 
 // interface for mode of payment
 interface MoneyType {
   name: string
-  id: string
+  id: number
 }
 
 interface BankOptions {
-  bankname: string
-  id: number
+  refBankName: string
+  refBankId: number
+  label: string
+  refAccountType: number
+  refAccountTypeName: string
+  refBalance: string
 }
 
 const AddnewFund = ({ closeSidebarNew }) => {
   const [submitLoading, setSubmitLoading] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+
   const [moneyType, setMoneyType] = useState<MoneyType | null>(null)
   // Need to maintain that the input amount was from in hand (liquid cash) or from bank
   const moneyOptions: MoneyType[] = [
-    { name: 'Bank', id: '1' },
-    { name: 'Cash', id: '2' }
+    { name: 'Bank', id: 1 },
+    { name: 'Cash', id: 2 }
   ]
   // Handle the from and to account with validation
-  const [handleSelfTransferFrom, setHandleSelfTransferFrom] = useState<BankOptions | null>(null)
+  const [handleSelfTransferFrom, setHandleSelfTransferFrom] = useState<number | null>(null)
   console.log('handleSelfTransferFrom', handleSelfTransferFrom)
   const [handleSelfTransferTo, setHandleSelfTransferTo] = useState<BankOptions[] | []>([])
-  const [transferAmount, setTransferAmount] = useState('')
+  const [transferAmount, setTransferAmount] = useState<number | null>(null)
 
   const [bankOptions, setBankOptions] = useState<BankOptions[] | []>([])
 
-  const filteredToOptions = bankOptions.filter((bank) => bank?.id !== handleSelfTransferFrom?.id)
+  const filteredToOptions = bankOptions.filter((bank) => bank?.refBankId !== handleSelfTransferFrom)
   console.log('bankOptions', bankOptions)
+  console.log('filteredToOptions', filteredToOptions)
 
   const [inputs, setInputs]: any = useState({
     refBankId: '',
@@ -114,6 +121,41 @@ const AddnewFund = ({ closeSidebarNew }) => {
     }
   }
 
+  const fetchBankDetails = async (e: any) => {
+    console.log('e', e)
+    setMoneyType(e.value)
+    try {
+      const response = await axios.get(import.meta.env.VITE_API_URL + '/adminRoutes/getBankList', {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = decrypt(response.data[1], response.data[0], import.meta.env.VITE_ENCRYPTION_KEY)
+
+      localStorage.setItem('token', 'Bearer ' + data.token)
+
+      console.log('data', data)
+      console.log('moneyType', moneyType)
+      if (data.success) {
+        console.log('moneyType', moneyType)
+
+        const filteredBankData = data.BankFund.filter(
+          (item: any) => item.refAccountType === e.value
+        ).map((item: any) => ({
+          ...item,
+          label: `Name: ${item.refBankName} | ₹ ${item.refBalance ?? 0}`
+        }))
+
+        console.log('Filtered Bank Data:', filteredBankData)
+        setBankOptions(filteredBankData)
+      }
+    } catch (error) {
+      console.log('Error fetching bank details:', error)
+    }
+  }
+
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     setInputs((prevState) => ({
@@ -121,7 +163,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
       refbfTransactionDate: today
     }))
 
-    const fetchBankDetails = async () => {
+    const selfTransferAccAPI = async () => {
       try {
         const response = await axios.get(
           import.meta.env.VITE_API_URL + '/adminRoutes/getBankList',
@@ -141,21 +183,26 @@ const AddnewFund = ({ closeSidebarNew }) => {
 
         localStorage.setItem('token', 'Bearer ' + data.token)
 
+        console.log('data', data)
+        console.log('moneyType', moneyType)
         if (data.success) {
-          const bankData = data.BankFund.map((item: any) => ({
-            bankname: item.refBankName,
-            id: item.refBankId
+          console.log('moneyType', moneyType)
+
+          const filteredBankData = data.BankFund.map((item: any) => ({
+            ...item,
+            label: `Name:  ${item.refBankName} | ₹ ${item.refBalance ?? 0}`
           }))
-          console.log('bankData', bankData)
-          setBankOptions(bankData)
+
+          console.log('Filtered Bank Data:', filteredBankData)
+          setBankOptions(filteredBankData)
         }
       } catch (error) {
         console.log('Error fetching bank details:', error)
       }
     }
 
-    fetchBankDetails()
-  }, [])
+    selfTransferAccAPI()
+  }, [activeIndex])
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -165,8 +212,55 @@ const AddnewFund = ({ closeSidebarNew }) => {
     }))
   }, [])
 
+  const handleSelfTransferFunds = () => {
+    axios
+      .post(
+        import.meta.env.VITE_API_URL + '/fund/selfTransfer',
+        {
+          fromId: handleSelfTransferFrom,
+          toId: handleSelfTransferTo?.refBankId,
+          amt: transferAmount
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then((response: any) => {
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+
+        localStorage.setItem('token', 'Bearer ' + data.token)
+
+        console.log(data)
+      })
+  }
+
+  const handleAmountChange = (e: InputNumberChangeEvent) => {
+    const selectedBank = bankOptions.find((bank: any) => bank.refBankId === handleSelfTransferFrom)
+
+    const balance = parseFloat(selectedBank?.refBalance ?? '0')
+    console.log('balance', balance)
+    const enteredAmount = e.value ?? 0
+    console.log('enteredAmount', enteredAmount)
+
+    if (enteredAmount > balance) {
+      toast.warn(`You cannot transfer more than ₹${balance.toLocaleString('en-IN')}`)
+      return
+    }
+
+    setTransferAmount(enteredAmount)
+  }
+
   return (
     <>
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <div
         style={{
           display: 'flex',
@@ -178,7 +272,14 @@ const AddnewFund = ({ closeSidebarNew }) => {
         <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#000' }}>Add New Fund</div>
       </div>
 
-      <TabView className="mt-3">
+      <TabView
+        className="mt-3"
+        activeIndex={activeIndex}
+        onTabChange={(e) => {
+          console.log(e.index)
+          setActiveIndex(e.index)
+        }}
+      >
         <TabPanel header="Add Funds">
           <form
             onSubmit={(e) => {
@@ -196,10 +297,12 @@ const AddnewFund = ({ closeSidebarNew }) => {
                     options={moneyOptions}
                     optionLabel="name"
                     optionValue="id"
-                    onChange={(e: DropdownChangeEvent) => setMoneyType(e.target.value)}
+                    onChange={(e: DropdownChangeEvent) => {
+                      fetchBankDetails(e)
+                    }}
                     required
                   />
-                  <label htmlFor="refBankId">Choose Bank ID</label>
+                  <label htmlFor="refBankId">Choose Bank Type</label>
                 </FloatLabel>
               </div>
             </div>
@@ -211,18 +314,23 @@ const AddnewFund = ({ closeSidebarNew }) => {
                     style={{ width: '100%', minWidth: '100%' }}
                     value={inputs.refBankId}
                     options={bankOptions}
-                    optionLabel="bankname"
-                    optionValue="id"
+                    optionLabel="label"
+                    optionValue="refBankId"
                     onChange={(e: any) => handleInput(e)}
                     required
                   />
-                  <label htmlFor="refBankId">Choose Bank ID</label>
+                  <label htmlFor="refBankId">Choose Bank</label>
                 </FloatLabel>
 
                 <FloatLabel style={{ width: '100%', marginTop: '' }}>
-                  <InputText
+                  <InputNumber
                     id="refbfTransactionAmount"
                     name="refbfTransactionAmount"
+                    mode="currency"
+                    currency="INR"
+                    currencyDisplay="symbol"
+                    className="w-full"
+                    locale="en-IN"
                     value={inputs.refbfTransactionAmount}
                     onChange={(e: any) => handleInput(e)}
                     required
@@ -282,7 +390,8 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 value={handleSelfTransferFrom}
                 onChange={(e: DropdownChangeEvent) => setHandleSelfTransferFrom(e.value)}
                 options={bankOptions}
-                optionLabel="bankname"
+                optionLabel="label"
+                optionValue="refBankId"
                 className="w-full"
                 placeholder="Select from"
               />
@@ -294,7 +403,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 value={handleSelfTransferTo}
                 onChange={(e: DropdownChangeEvent) => setHandleSelfTransferTo(e.value)}
                 options={filteredToOptions}
-                optionLabel="bankname"
+                optionLabel="label"
                 className="w-full"
                 placeholder="Select to"
                 disabled={!handleSelfTransferFrom}
@@ -304,12 +413,17 @@ const AddnewFund = ({ closeSidebarNew }) => {
           </div>
           <div className="card flex flex-column md:flex-row gap-3 mt-5 mx-[5px]">
             <FloatLabel className="w-full flex-1">
-              <InputText
+              <InputNumber
                 id="username"
                 value={transferAmount}
+                mode="currency"
+                currency="INR"
+                currencyDisplay="symbol"
+                locale="en-IN"
                 className="w-full"
-                onChange={(e) => setTransferAmount(e.target.value)}
+                onChange={handleAmountChange}
               />
+
               <label htmlFor="username">Transfer Amount</label>
             </FloatLabel>
           </div>
@@ -337,7 +451,12 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 marginTop: '35px'
               }}
             >
-              <Button style={{ width: '20%' }} type="submit" label="Submit" />
+              <Button
+                style={{ width: '20%' }}
+                type="submit"
+                label="Submit"
+                onClick={handleSelfTransferFunds}
+              />
             </div>
           )}
         </TabPanel>

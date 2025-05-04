@@ -17,6 +17,7 @@ interface FundData {
   refFundType: string
   refPaymentType: string
   refbfTrasactionType: string
+  refAccountTypeName: string
 }
 
 const Funds = () => {
@@ -277,7 +278,7 @@ const Funds = () => {
               ></Column>
               <Column field="refBankName" header="Bank Name" filter></Column>
               <Column field="refFundType" header="Fund Type" filter></Column>
-              <Column field="refPaymentType" header="Payment In" filter></Column>
+              <Column field="refAccountTypeName" header="Payment In" filter></Column>
               <Column body={Status} field="refbfTrasactionType" filter header="Action"></Column>
             </DataTable>
           </div>
