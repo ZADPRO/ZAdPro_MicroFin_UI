@@ -197,7 +197,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         console.log('data line ------- 194', data.data)
         localStorage.setItem('token', 'Bearer ' + data.token)
         setLoanDetailsReponse(data.data)
-        setOldBalanceAmt(data.data.finalBalanceAmt)
+        setOldBalanceAmt(Number(data.data.finalBalanceAmt))
         const balance = data.data.finalBalanceAmt ?? 0
         console.log('balance line -------- 201', balance)
         setFinalLoanAmt(0 + Number(balance))
@@ -224,8 +224,28 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     }
   }
 
+  const getFixedTimeUTCISOString = (date: Date): string => {
+    const fixedHour = 10
+    const fixedMinute = 30
+
+    // Create a new Date with selected date + fixed time (in local time)
+    const localDateWithFixedTime = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      fixedHour,
+      fixedMinute,
+      0,
+      0
+    )
+
+    // Convert to ISO string (this will be in UTC with Z suffix)
+    return localDateWithFixedTime.toISOString()
+  }
+
   const handelSubmit = () => {
     console.log('selectedLoan', selectedLoan)
+    console.log('rePaymentDate', rePaymentDate)
     axios
       .post(
         import.meta.env.VITE_API_URL + '/newLoan/CreateNewLoan',
@@ -238,7 +258,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             parseInt(productId?.refProductDuration)
           ),
           refPayementType: 'bank',
-          refRepaymentStartDate: rePaymentDate,
+          refRepaymentStartDate: rePaymentDate.toLocaleDateString('en-CA'),
           refBankId: bankId?.refBankId,
           refLoanBalance: FinalLoanAmt.toFixed(2),
           isInterestFirst: interestFirst,
@@ -252,7 +272,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           refToUseAmt: parseFloat(
             ((newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0)).toFixed(2)
           ),
-          oldBalanceAmt: (oldBalanceAmt ?? 0).toFixed(2)
+          oldBalanceAmt: oldBalanceAmt ?? 0
         },
         {
           headers: {
@@ -387,7 +407,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
 
                       <div className="flex-1">
                         <p>
-                          Interest Paid (First) : <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
+                          Interest Paid (First) :{' '}
+                          <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
                         </p>
                       </div>
                     </div>
@@ -450,7 +471,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 <div className="w-[45%]">
                   <label className="font-bold block mb-2">Select Loan Duration and Interest</label>
                   <Dropdown
-                  filter
+                    filter
                     value={productId}
                     required
                     className="w-full"
@@ -556,6 +577,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     required
                     value={rePaymentDate}
                     onChange={(e: any) => {
+                      console.log('e', e)
                       setRePaymentDate(e.value)
                       setStep(5)
                       setInterestFirst(null)
@@ -655,7 +677,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
               <div className="flex w-full justify-content-between my-2">
                 <div>
                   <p>
-                    Total Loan Amount : ₹ <b>{FinalLoanAmt}</b>
+                    Total Loan Amount : ₹ <b>{FinalLoanAmt.toFixed(2)}</b>
                   </p>
                 </div>
                 <div>
@@ -685,7 +707,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     Amount to User : ₹{' '}
                     <b>
                       {(
-                        (FinalLoanAmt ?? 0) -
+                        (newLoanAmt ?? 0) -
                         (initialInterestAmt ?? 0) -
                         (interestFirstAmt ?? 0)
                       ).toFixed(2)}

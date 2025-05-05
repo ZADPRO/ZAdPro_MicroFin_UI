@@ -58,7 +58,10 @@ const AddnewFund = ({ closeSidebarNew }) => {
   })
 
   const handleInput = (e: any) => {
+    console.log('e', e)
     const { name, value } = e.target
+    console.log('value', value)
+    console.log('name', name)
 
     setInputs((prevState) => ({
       ...prevState,
@@ -69,6 +72,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
   const Addnewback = async () => {
     setSubmitLoading(true)
 
+    console.log('inputs.refbfTransactionAmount', inputs.refbfTransactionAmount)
     try {
       axios
         .post(
@@ -77,7 +81,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
             refBankId: inputs.refBankId,
             refbfTransactionDate: inputs.refbfTransactionDate,
             refbfTransactionType: inputs.refbfTransactionType,
-            refbfTransactionAmount: parseInt(inputs.refbfTransactionAmount),
+            refbfTransactionAmount: Number(inputs.refbfTransactionAmount),
             refTxnId: null,
             refFundType: inputs.refFundType
           },
@@ -332,7 +336,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
                     className="w-full"
                     locale="en-IN"
                     value={inputs.refbfTransactionAmount}
-                    onChange={(e: any) => handleInput(e)}
+                    onValueChange={(e: any) => handleInput(e)}
                     required
                   />
                   <label htmlFor="refbfTransactionAmount">Transaction Amount</label>
