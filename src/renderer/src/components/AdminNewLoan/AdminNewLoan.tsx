@@ -5,9 +5,11 @@ import { Dropdown } from 'primereact/dropdown'
 import { Sidebar } from 'primereact/sidebar'
 import React, { useState } from 'react'
 import AdminLoanCreation from './AdminLoanCreation'
+import AdminLoanDetails from '../AdminLoanDetails/AdminLoanDetails'
 
 const AdminNewLoan: React.FC = () => {
   const [newData, setNewData] = useState(false)
+  const [loanDetailsSidebar, setLoanDetailsSidebar] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
 
   const [filter, setFilter] = useState('all')
@@ -58,7 +60,7 @@ const AdminNewLoan: React.FC = () => {
     <span
       style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
       onClick={() => {
-        setNewData(true)
+        setLoanDetailsSidebar(true)
       }}
     >
       {rowData.name}
@@ -67,6 +69,7 @@ const AdminNewLoan: React.FC = () => {
 
   const closeSidebarNew = () => {
     setNewData(false)
+    setLoanDetailsSidebar(false)
     setSelectedSupplier(null)
   }
 
@@ -110,6 +113,14 @@ const AdminNewLoan: React.FC = () => {
         onHide={closeSidebarNew}
       >
         <AdminLoanCreation closeSidebarNew={closeSidebarNew} />
+      </Sidebar>
+      <Sidebar
+        visible={loanDetailsSidebar}
+        style={{ width: '80vw' }}
+        position="right"
+        onHide={closeSidebarNew}
+      >
+        <AdminLoanDetails closeSidebarNew={closeSidebarNew} />
       </Sidebar>
     </div>
   )
