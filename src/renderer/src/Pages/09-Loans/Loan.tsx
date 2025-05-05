@@ -227,7 +227,7 @@ const Loan = () => {
               <Column
                 style={{ minWidth: '8rem' }}
                 field="closed_count"
-                header="Closed Loan"
+                header="Other Loan"
               ></Column>
             </DataTable>
           </div>

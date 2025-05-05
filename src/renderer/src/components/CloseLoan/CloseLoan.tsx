@@ -29,6 +29,12 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   const [userLoan, setUserLoan] = useState<setUserLoanProps[]>([])
   const [selectedLoan, setSelectedLoan] = useState<number | null>()
   const [checked, setChecked] = useState<boolean>(false)
+  const [loanDetails, setLoanDetails] = useState<any>()
+  const [showCard, setShowCard] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string>()
+  const [errorShow, setErrorShow] = useState(false)
+  const [loanAmt, setLoanAmt] = useState<number | null>()
+
 
   const getUserLoanData = async () => {
     try {
@@ -59,7 +65,63 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
     }
   }
 
+  const getLoanDatas = async (LoanId: number) => {
+    axios
+      .post(
+        import.meta.env.VITE_API_URL + '/rePayment/loanDetails',
+        {
+          loanId: id
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then((response) => {
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+        console.log('data line ------ 278', data)
+        localStorage.setItem('token', 'Bearer ' + data.token)
+
+        if (data.success) {
+          const matchedLoan = data.data.find(item => item.refLoanId === LoanId);
+          setLoanDetails(matchedLoan);
+          setShowCard(true)
+        }
+      })
+  }
+  function formatToFirstOfMonth(dateString: string): string {
+    const date = new Date(dateString)
+
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0') // months are 0-indexed
+    const day = '01'
+
+    return `${year}-${month}-${day}`
+  }
+
+
+
+  const loanUpdate = () => {
+    if (loanAmt ?? 0 > loanDetails?.refBalanceAmt) {
+      setErrorMessage("Loan Amount is Higher that Balance Amount")
+      setErrorShow(true)
+    }
+    else {
+      setErrorShow(false)
+
+    }
+  }
+
   useEffect(() => {
+    setShowCard(false)
+    setErrorShow(false)
+    setSelectedLoan(null)
     getUserLoanData()
   }, [])
 
@@ -73,7 +135,11 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
             filter
             className="w-full"
             onChange={(e: DropdownChangeEvent) => {
+              setShowCard(false)
+              setErrorShow(false)
+
               setSelectedLoan(e.value)
+              getLoanDatas(e.value)
             }}
             options={userLoan}
             optionLabel="name"
@@ -82,75 +148,112 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
         </div>
         <div className="flex-1"></div>
       </div>
-      <div className="mt-3">
-        <Accordion>
-          <AccordionTab header="Loan Details">
-            <div className="flex">
-              <div className="flex-1">
-                <p>Total Loan :</p>
-              </div>
-              <div className="flex-1">
-                <p>Loan Interest : </p>
-              </div>
-              <div className="flex-1">
-                <p>Loan Duration : </p>
-              </div>
-            </div>
-            <div className="flex">
-              <div className="flex-1">Initial Interest Paid (First) :</div>
-              <div className="flex-1">Initial Interest Amount :</div>
-              <div className="flex-1">Initial Interest Month :</div>
-            </div>
-            <Divider />
-            <div className="flex">
-              <div className="flex-1">
-                <p>Loan Amount Paid :</p>
-              </div>
-              <div className="flex-1">
-                <p>Loan Balance Month : </p>
-              </div>
-            </div>
-            <div className="flex">
-              <div className="flex-1">
-                <p>Loan Paid Duration : </p>
-              </div>
-              <div className="flex-1">
-                <p>Loan Balance Duration : </p>
-              </div>
-            </div>
-          </AccordionTab>
-        </Accordion>
-      </div>
+      {showCard &&
+        (
+          <><div className="mt-3">
 
-      <div className="flex mt-3 gap-3">
-        <div className="flex-1">
-          <label className="font-bold block mb-2">Enter Balance Amount</label>
-          <InputNumber
-            placeholder="Enter Balance Amount"
-            mode="currency"
-            currency="INR"
-            className="w-full"
-            currencyDisplay="symbol"
-            locale="en-IN"
-          />
-        </div>
-        <div className="flex-1">
-          <label className="font-bold block mb-2">Cash Collected</label>
-          <InputSwitch
-            checked={checked}
-            style={{ marginTop: '5px' }}
-            onChange={(e: InputSwitchChangeEvent) => setChecked(e.value)}
-          />
-        </div>
-      </div>
-      <div className="flex mt-3 ">
-        <div className="flex-1">
-          <Message text="Error Message" />
-        </div>
-      </div>
-      <div className="flex mt-3 justify-content-end">
-        <Button label="Close Loan" severity="success" disabled />
-      </div>
+            <Accordion activeIndex={0}>
+              <AccordionTab header="Loan Details" >
+                <div className="flex m-3">
+                  <div className="flex-1">
+                    <p>Loan Name : <b>{loanDetails?.refProductName}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Loan Amount : <b>₹ {loanDetails?.refProductInterest}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Balance Amount : <b>₹ {loanDetails?.refBalanceAmt}</b></p>
+                  </div>
+                </div>
+                <div className="flex m-3">
+                  <div className="flex-1">
+                    <p>Loan Duration :<b> {loanDetails?.refProductDuration} Month </b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Loan Interest : <b>{loanDetails?.refProductInterest} %</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Re-Payment Type : <b>{loanDetails?.refRepaymentTypeName}</b></p>
+                  </div>
+                </div>
+                <div className="flex m-3">
+                  <div className="flex-1">
+                    <p>Interest Paid First :<b> {loanDetails?.isInterestFirst === true ? "Yes" : "No"}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>No of Month Paid First : <b>{loanDetails?.refInterestMonthCount === null ? 0 : loanDetails?.refInterestMonthCount} %</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Initial Interest : ₹ <b>{loanDetails?.refInitialInterest === null ? 0 : loanDetails?.refInitialInterest} </b></p>
+                  </div>
+                </div>
+                <div className="flex m-3">
+                  <div className="flex-1">
+                    <p>Loan Get Date :<b> {loanDetails?.refLoanStartDate}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Loan Start Month : <b>{loanDetails?.refRepaymentStartDate
+                      ? formatToFirstOfMonth(loanDetails?.refRepaymentStartDate)
+                      : ' -'}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Loan End Month : <b>{loanDetails?.refLoanDueDate} </b></p>
+                  </div>
+                </div>
+                <div className="flex m-3">
+                  <div className="flex-1">
+                    <p>Total Interest Paid : ₹ <b> {loanDetails?.totalInterest}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Total Principal Paid : ₹ <b> {loanDetails?.totalPrincipal}</b></p>
+                  </div>
+                  <div className="flex-1">
+                    <p>Loan Status : <b>{loanDetails?.refLoanStatus} </b></p>
+                  </div>
+                </div>
+
+
+              </AccordionTab>
+            </Accordion>
+          </div>
+
+            <div className="flex mt-3 gap-3">
+              <div className="flex-1">
+                <label className="font-bold block mb-2">Enter Balance Amount</label>
+                <InputNumber
+                  placeholder="Enter Balance Amount"
+                  mode="currency"
+                  value={loanAmt}
+                  currency="INR"
+                  className="w-full"
+                  currencyDisplay="symbol"
+                  locale="en-IN"
+                  onChange={(e: any) => { setLoanAmt(e.value); console.log(e.value) }}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="font-bold block mb-2">Cash Collected</label>
+                <InputSwitch
+                  checked={checked}
+                  style={{ marginTop: '5px' }}
+                  onChange={(e: InputSwitchChangeEvent) => setChecked(e.value)}
+                />
+              </div>
+            </div>
+            {errorShow &&
+              <div className="flex mt-3 ">
+                <div className="flex-1">
+                  <Message text={errorMessage} />
+                </div>
+              </div>
+            }
+
+            <div className="flex mt-3 justify-content-end">
+              <Button label="Update Loan" severity="success" onClick={loanUpdate} />
+            </div>
+          </>
+        )}
+
     </div>
   )
 }

@@ -73,13 +73,18 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
             if (data.success) {
                 setLoading(false)
                 setLoanDetails(data.data[0])
+
+                console.log('line ---- 7777',)
+                console.log('data.data[0].refInterestStatus', data.data[0].refInterestStatus)
                 setRePaymentForm({
                     ...rePaymentForm,
-                    interestAmt: data.data[0].refInteresePay,
+                    interestAmt: data.data[0].refInterestStatus === 'paid' ? 0 : Number(data.data[0].InteresePay),
+                    BalanceAmount: data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal)
                 });
 
+
                 const options = data.bank.map((data: any) => ({
-                    label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo}`,
+                    label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo} - IFSC Code : ${data.refIFSCsCode}`,
                     value: data.refBankId,
                 }));
                 console.log('options', options)
@@ -93,13 +98,14 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
     }
 
     const updateRepayment = () => {
+        console.log('paymentType line ----- 101', paymentType)
         axios.post(
             import.meta.env.VITE_API_URL + '/rePayment/updateRePayment',
             {
                 priAmt: rePaymentForm.BalanceAmount,
                 interest: rePaymentForm.interestAmt,
                 bankId: selectBank,
-                paymentType: paymentType,
+                paymentType: paymentType === "online" ? 1 : 2,
                 rePayId: rePayId
             },
             {
@@ -277,13 +283,25 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                             <>
                                 <div className="m-3 w-full flex ">
                                     <div className="w-[30%]">
-                                        <p>Loan Duration : {loanDetails?.refProductDuration}</p>
+                                        <p>Loan Duration : {loanDetails?.refProductDuration} Month</p>
                                     </div>
                                     <div className="w-[30%]">
                                         <p>Interest : {loanDetails?.refProductInterest}%</p>
                                     </div>
                                     <div className="w-[30%]">
+                                        <p>Re-Payment Type : {loanDetails?.refRepaymentTypeName}</p>
+                                    </div>
+
+                                </div>
+                                <div className="m-3 w-full flex ">
+                                    <div className="w-[30%]">
                                         <p>Interest Paid Initial : {loanDetails?.isInterestFirst === true ? "Yes" : "No"}</p>
+                                    </div>
+                                    <div className="w-[30%]">
+                                        <p>No of Month Paid First : {loanDetails?.refInterestMonthCount} Month</p>
+                                    </div>
+                                    <div className="w-[30%]">
+                                        <p>Initial Interest : ₹ {loanDetails?.refInitialInterest}</p>
                                     </div>
 
                                 </div>
@@ -332,8 +350,8 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                                     className="w-full">
 
                                     <div className="w-[100%] flex flex-col align-items-center gap-3">
-                                        <div className="flex flex-row w-[60%] justify-between">
-                                            <div className="w-[45%]">
+                                        <div className="flex flex-row w-[80%] justify-between">
+                                            <div className="w-[30%]">
                                                 <label htmlFor="Interest" className="font-bold block mb-2">Interest Amount</label>
                                                 <InputNumber disabled className="w-full" inputId="percent" value={rePaymentForm.interestAmt} onValueChange={(e) =>
                                                     setRePaymentForm({
@@ -341,7 +359,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                                                         interestAmt: e.value ?? 0
                                                     })
                                                 } prefix="&#8377; " /></div>
-                                            <div className="w-[45%]">
+                                            <div className="w-[30%]">
                                                 <label htmlFor="Principal" className="font-bold block mb-2">Principal Amount</label>
                                                 <InputNumber required className="w-full" inputId="percent" value={rePaymentForm.BalanceAmount} onValueChange={(e) =>
                                                     setRePaymentForm({
@@ -349,6 +367,9 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                                                         BalanceAmount: e.value ?? 0
                                                     })
                                                 } prefix="&#8377; " /></div>
+                                            <div className="w-[30%]">
+                                                <label htmlFor="Principal" className="font-bold block mb-2">Total Amount</label>
+                                                <InputNumber required className="w-full" inputId="percent" value={rePaymentForm.BalanceAmount + rePaymentForm.interestAmt} disabled prefix="&#8377; " /></div>
 
                                         </div>
                                         {/* <div className="flex-auto w-[60%]">
@@ -373,7 +394,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                                             <div className="w-[60%]">
                                                 <label htmlFor="Interest" className="font-bold block mb-2">Select Bank</label>
 
-                                                <Dropdown required value={selectBank} onChange={(e: DropdownChangeEvent) => {
+                                                <Dropdown filter required value={selectBank} onChange={(e: DropdownChangeEvent) => {
 
                                                     console.log('line --------------------- 452', e.value)
                                                     setSelectBank(e.value)
@@ -413,7 +434,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                             <LoanAudit loanId={loanId} />
                         </TabPanel>
                     </TabView>
-                    </>)}
+                </>)}
         </>
     )
 }

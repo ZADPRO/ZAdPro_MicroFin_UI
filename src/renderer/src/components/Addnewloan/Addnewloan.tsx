@@ -439,13 +439,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                     <div className="w-full my-3 border-2 border-transparent rounded-md shadow-3">
                       <div className="m-3 w-full flex ">
                         <div className="w-[30%]">
-                          <p>Loan Name :{loanDetails[index]?.refProductName}</p>
+                          <p>Loan Name : <b>{loanDetails[index]?.refProductName}</b></p>
                         </div>
                         <div className="w-[30%]">
-                          <p>Total Amount : &#8377; {loanDetails[index]?.refLoanAmount}</p>
+                          <p>Total Amount :<b> &#8377; {loanDetails[index]?.refLoanAmount}</b> </p>
                         </div>
                         <div className="w-[30%]">
-                          <p>Balance Amount : &#8377; {loanDetails[index]?.refBalanceAmt}</p>
+                          <p>Balance Amount :<b> &#8377; {loanDetails[index]?.refBalanceAmt}</b> </p>
                         </div>
                         {!rePaymentInfo[index] ? (
                           <div className="w-[10%]">
@@ -469,51 +469,67 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                         <>
                           <div className="m-3 w-full flex ">
                             <div className="w-[30%]">
-                              <p>Loan Duration : {loanDetails[index]?.refProductDuration}</p>
+                              <p>Loan Duration : <b>{loanDetails[index]?.refProductDuration} Month</b></p>
                             </div>
                             <div className="w-[30%]">
-                              <p>Interest : {loanDetails[index]?.refProductInterest}%</p>
+                              <p>Interest : <b>{loanDetails[index]?.refProductInterest} %</b></p>
                             </div>
+                            <div className="w-[30%]">
+                              <p>Re-Payment Type : <b>{loanDetails[index]?.refRepaymentTypeName}</b> </p>
+                            </div>
+
+                          </div>
+                          <div className="m-3 w-full flex ">
                             <div className="w-[30%]">
                               <p>
                                 Interest Paid Initial :{' '}
-                                {loanDetails[index]?.isInterestFirst === true ? 'Yes' : 'No'}
+                                <b>{loanDetails[index]?.isInterestFirst === true ? 'Yes' : 'No'}</b>
+
                               </p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>
+                                No of Month Paid First :{' '}
+                                <b>{loanDetails[index]?.refInterestMonthCount} Month</b>
+                              </p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>Initial Interest : <b>₹ {loanDetails[index]?.refInitialInterest}</b>  </p>
                             </div>
                           </div>
                           <div className="m-3 w-full flex ">
                             <div className="w-[30%]">
-                              <p>Loan Get Date : {loanDetails[index]?.refLoanStartDate}</p>
+                              <p>Loan Get Date : <b>{loanDetails[index]?.refLoanStartDate}</b></p>
                             </div>
                             <div className="w-[30%]">
                               <p>
                                 Loan Start Month :{' '}
-                                {loanDetails[index].refRepaymentStartDate
+                                <b>{loanDetails[index].refRepaymentStartDate
                                   ? formatToFirstOfMonth(loanDetails[index].refRepaymentStartDate)
-                                  : ' -'}
+                                  : ' -'}</b>
                               </p>
                             </div>
                             <div className="w-[30%]">
-                              <p>Loan End Month : {loanDetails[index]?.refLoanDueDate}</p>
+                              <p>Loan End Month : <b>{loanDetails[index]?.refLoanDueDate}</b></p>
                             </div>
                           </div>
 
                           <div className="m-3 w-full flex ">
                             <div className="w-[30%]">
                               <p>
-                                Total Interest Paid : &#8377; {loanDetails[index]?.totalInterest}
+                                Total Interest Paid : <b>&#8377; {loanDetails[index]?.totalInterest}</b>
                               </p>
                             </div>
                             <div className="w-[30%]">
                               <p>
-                                Total Principal Paid : &#8377; {loanDetails[index]?.totalPrincipal}
+                                Total Principal Paid : <b>&#8377; {loanDetails[index]?.totalPrincipal}</b>
                               </p>
                             </div>
                             <div className="w-[30%]">
                               <p>
                                 Loan Status :{' '}
-                                {loanDetails[index]?.refLoanStatus?.charAt(0).toUpperCase() +
-                                  loanDetails[index]?.refLoanStatus?.slice(1)}
+                                <b>{loanDetails[index]?.refLoanStatus?.charAt(0).toUpperCase() +
+                                  loanDetails[index]?.refLoanStatus?.slice(1)}</b>
                               </p>
                             </div>
                           </div>

@@ -200,7 +200,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         setOldBalanceAmt(data.data.finalBalanceAmt)
         const balance = data.data.finalBalanceAmt ?? 0
         console.log('balance line -------- 201', balance)
-        setFinalLoanAmt(0 + balance)
+        setFinalLoanAmt(0 + Number(balance))
         getAllLoanData()
       })
       .catch(() => {
@@ -323,7 +323,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   getUserLoanData()
                   getAllLoanData()
                   setSelectedLoan(null)
-                  show(e.value, selectedLoan)
+                  show(e.value, null)
                 }}
                 required
                 options={loanTypeOptions}
@@ -342,6 +342,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   getLoanEntireDetails(e.value)
                   show(selectedLoanType, e.value)
                 }}
+                filter
                 options={userLoan}
                 optionLabel="name"
                 placeholder="Select Old Loan"
@@ -362,7 +363,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                       </div>
                       <div className="flex-1">
                         <p>
-                          Loan Interest : <b> {loadDetailsResponse?.loanInterest}</b>
+                          Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
                         </p>
                       </div>
                       <div className="flex-1">
@@ -374,18 +375,19 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     <div className="flex mt-3">
                       <div className="flex-1">
                         <p>
-                          Interest Paid (First) :{' '}
-                          <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
                           Initial Interest - Amt : <b>₹ {loadDetailsResponse?.initialInterest}</b>
                         </p>
                       </div>
                       <div className="flex-1">
                         <p>
-                          Initial Interest : <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
+                          Interest Paid (First) :{' '}
+                          <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
+                        </p>
+                      </div>
+
+                      <div className="flex-1">
+                        <p>
+                          Interest Paid (First) : <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
                         </p>
                       </div>
                     </div>
@@ -448,6 +450,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 <div className="w-[45%]">
                   <label className="font-bold block mb-2">Select Loan Duration and Interest</label>
                   <Dropdown
+                  filter
                     value={productId}
                     required
                     className="w-full"
@@ -496,8 +499,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         setBankId(null)
                         const value = parseFloat(e.value) || 0
                         const balance = oldBalanceAmt ?? 0
-                        setFinalLoanAmt(value + balance)
-                        initialInterest(value + balance)
+                        setFinalLoanAmt(value + Number(balance))
+                        initialInterest(value + Number(balance))
                       }}
                       mode="currency"
                       currency="INR"
@@ -527,6 +530,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   <label className="font-bold block mb-2">Select Amount Source</label>
                   <Dropdown
                     value={bankId}
+                    filter
                     disabled={step < 3}
                     className="w-full"
                     required
@@ -681,7 +685,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     Amount to User : ₹{' '}
                     <b>
                       {(
-                        (newLoanAmt ?? 0) -
+                        (FinalLoanAmt ?? 0) -
                         (initialInterestAmt ?? 0) -
                         (interestFirstAmt ?? 0)
                       ).toFixed(2)}

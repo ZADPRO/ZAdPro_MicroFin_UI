@@ -96,7 +96,7 @@ const Funds = () => {
   }
 
   const TransactionAmount = (rowData: any) => {
-    return <div>{rowData.refbfTransactionAmount} ₹</div>
+    return <div>₹ {rowData.refbfTransactionAmount}</div>
   }
 
   const [newData, setNewData] = useState(false)

@@ -18,6 +18,8 @@ interface AuditData {
     Month: string;
     Interest: number;
     Principal: number;
+    PrincipalStatus: string;
+    InterestStatus: string;
     followup: followupData[]
 }
 
@@ -59,7 +61,9 @@ const LoanAudit = ({ loanId }: { loanId: number }) => {
     const auditColumns = [
         { field: 'Month', header: 'Month' },
         { field: 'Interest', header: 'Interest' },
+        { field: 'InterestStatus', header: 'Interest Status' },
         { field: 'Principal', header: 'Principal Amount' },
+        { field: 'PrincipalStatus', header: 'Principal Status' },
         { field: 'followup', header: 'Follow Up' }
     ];
 
