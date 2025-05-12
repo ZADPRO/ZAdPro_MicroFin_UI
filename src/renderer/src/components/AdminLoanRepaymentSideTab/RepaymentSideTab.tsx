@@ -12,6 +12,7 @@ import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import LoanAudit from '../LoanAudit/LoanAudit'
+import AdminLoanAudit from '../adminLoanAudit/AdminLoanAudit'
 
 interface RePaymentForm {
   interestAmt: number
@@ -27,17 +28,19 @@ interface FollowUpForm {
 
 interface Bank {
   name: string
-  code: string
+  value: number
+  type: number
+  balance: number
 }
 
-const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) => {
+const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) => {
   console.log('id', id)
   console.log('rePayId', rePayId)
   console.log('loanId', loanId)
-  const [priamt, setPriAmt] = useState<number>(0)
 
   const [loading, setLoading] = useState(false)
   const [rePaymentInfo, setRePaymentInfo] = useState(false)
+  const [priamt, setPriAmt] = useState<number>(0)
   const [rePaymentForm, setRePaymentForm] = useState<RePaymentForm>({
     interestAmt: 0,
     BalanceAmount: 0
@@ -48,14 +51,14 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   })
   const [loanDetails, setLoanDetails] = useState<any>()
 
-  const [selectBank, setSelectBank] = useState<Bank | null>(null)
-  const [bankOption, setBankOption] = useState([])
+  const [selectBank, setSelectBank] = useState<number | null>(null)
+  const [bankOption, setBankOption] = useState<Bank[]>([])
   const [paymentType, setPaymentType] = useState<string>('')
 
   const getLoanData = () => {
     axios
       .post(
-        import.meta.env.VITE_API_URL + '/rePayment/rePaymentCalculation',
+        import.meta.env.VITE_API_URL + '/AdminRePayment/rePaymentCalculation',
         {
           loanId: loanId,
           rePayId: rePayId
@@ -88,13 +91,14 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
             BalanceAmount: Number(data.data[0].refPrincipal),
             BalanceStatus: data.data[0].refPrincipalStatus === 'paid' ? true : false,
             interestStatus: data.data[0].refInterestStatus === 'paid' ? true : false,
-
           })
           setPriAmt(data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal))
 
           const options = data.bank.map((data: any) => ({
-            label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo} - IFSC Code : ${data.refIFSCsCode}`,
-            value: data.refBankId
+            label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo} - Balance : ₹ ${data.refBalance}`,
+            value: data.refBankId,
+            type: data.refAccountType,
+            balance: data.refBalance
           }))
           console.log('options', options)
           setBankOption(options)
@@ -103,66 +107,90 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   }
 
   const updateRepayment = () => {
-    console.log('paymentType line ----- 101', paymentType)
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/rePayment/updateRePayment',
-        {
-          priAmt: rePaymentForm.BalanceAmount,
-          interest: rePaymentForm.interestAmt,
-          bankId: selectBank,
-          paymentType: paymentType === 'online' ? 1 : 2,
-          rePayId: rePayId
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-        console.log('data line ------ 246', data)
-        localStorage.setItem('token', 'Bearer ' + data.token)
+    const selectedBank = bankOption.find(bank => bank.value === selectBank)
 
-        if (data.success) {
-          toast.success('Re-Payment Updated Successfully', {
-            position: 'top-right',
-            autoClose: 2999,
-            hideProgressBar: false,
-            closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: 'light',
-            transition: Slide
-          })
-          closeSidebarUpdate()
-        } else {
-          toast.error(`${data.error}`, {
-            position: 'top-right',
-            autoClose: 2999,
-            hideProgressBar: false,
-            closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: 'light',
-            transition: Slide
-          })
-        }
+    if (Number(rePaymentForm.BalanceAmount) > Number(selectedBank?.balance)) {
+      console.log("Selected Amount Source with less Balance")
+      toast.error(`Selected Amount Source with less Balance`, {
+        position: 'top-right',
+        autoClose: 2999,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+        transition: Slide
       })
+    }
+    else {
+      axios
+        .post(
+          import.meta.env.VITE_API_URL + '/AdminRePayment/updateRePayment',
+          {
+            priAmt: rePaymentForm.BalanceAmount,
+            interest: rePaymentForm.interestAmt,
+            bankId: selectBank,
+            paymentType: paymentType === 'online' ? 1 : 2,
+            rePayId: rePayId
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          console.log('data line ------ 246', data)
+          localStorage.setItem('token', 'Bearer ' + data.token)
+
+          if (data.success) {
+            toast.success('Re-Payment Updated Successfully', {
+              position: 'top-right',
+              autoClose: 2999,
+              hideProgressBar: false,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: 'light',
+              transition: Slide
+            })
+            closeSidebarUpdate()
+          } else {
+            toast.error(`${data.error}`, {
+              position: 'top-right',
+              autoClose: 2999,
+              hideProgressBar: false,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: 'light',
+              transition: Slide
+            })
+          }
+        })
+    }
+
   }
+
+  const filteredBankOptions = bankOption.filter((bank) => {
+    if (paymentType === 'online') return bank?.type === 1
+    if (paymentType === 'cash') return bank?.type === 2
+    return false
+  })
 
   const updateFollowUp = () => {
     axios
       .post(
-        import.meta.env.VITE_API_URL + '/rePayment/updateFollowUp',
+        import.meta.env.VITE_API_URL + '/AdminRePayment/updateFollowUp',
         {
           rePayId: rePayId,
           message: followUpForm.Message,
@@ -385,12 +413,12 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                           className="w-full"
                           inputId="percent"
                           value={rePaymentForm.BalanceStatus ? 0 : rePaymentForm.BalanceAmount}
-                          min={priamt}
+                          min={rePaymentForm.BalanceAmount}
                           max={loanDetails?.refBalanceAmt}
                           onChange={(e) => {
                             let val = e.value ?? 0
 
-                            const min = rePaymentForm.BalanceAmount
+                            const min = priamt
                             const max = loanDetails?.refBalanceAmt ?? Number.MAX_SAFE_INTEGER
 
                             if (val < min) val = min
@@ -455,7 +483,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                         </div>
                       </div>
                     </div>
-                    {paymentType === 'online' && (
+                    {(paymentType === 'online' || paymentType === 'cash') && (
                       <div className="w-[60%]">
                         <label htmlFor="Interest" className="font-bold block mb-2">
                           Select Bank
@@ -466,10 +494,10 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                           required
                           value={selectBank}
                           onChange={(e: DropdownChangeEvent) => {
-                            console.log('line --------------------- 452', e.value)
+                            console.log('Selected Bank:', e.value)
                             setSelectBank(e.value)
                           }}
-                          options={bankOption}
+                          options={filteredBankOptions}
                           optionLabel="label"
                           placeholder="Select a Bank"
                           className="w-full"
@@ -539,7 +567,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
               </form>
             </TabPanel>
             <TabPanel header="Audit">
-              <LoanAudit loanId={loanId} />
+              <AdminLoanAudit loanId={loanId} />
             </TabPanel>
           </TabView>
         </>
@@ -548,4 +576,4 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   )
 }
 
-export default RepaymentSideTab
+export default AdminLoanRepaymentSideTab

@@ -1,4 +1,6 @@
 export function getDateAfterMonths(dateStr: string, monthRange: number): string {
+  console.log('monthRange', monthRange)
+  console.log('dateStr', dateStr)
   const date = new Date(dateStr)
   const originalDay = date.getDate()
 
@@ -14,5 +16,6 @@ export function getDateAfterMonths(dateStr: string, monthRange: number): string 
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
 
+  console.log('${year}-${month}-${day}', year, '-', month, '-', day)
   return `${year}-${month}-${day}`
 }

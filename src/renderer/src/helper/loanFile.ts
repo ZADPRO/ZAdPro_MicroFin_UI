@@ -114,7 +114,8 @@ interface CalaulateInterest {
 }
 export function CalculateInterest(data: CalaulateInterest): number {
   try {
-    let Interest = ((data.principal * (data.annualInterest * 12)) / 100 / 365) * data.totalDays
+    let Interest =
+      ((Number(data.principal) * (Number(data.annualInterest) * 12)) / 100 / 365) * data.totalDays
     console.log('Interest line ----- 118', Interest)
     return Interest
   } catch (error) {
@@ -123,13 +124,16 @@ export function CalculateInterest(data: CalaulateInterest): number {
 }
 
 export function getDaysInMonths(dateStr: string, count: number): number[] {
+  console.log('count line ---- 127', count)
+  console.log('dateStr line ---- 128', dateStr)
   const date = new Date(dateStr)
   const result: number[] = []
 
   let year = date.getFullYear()
   let month = date.getMonth()
-
+  console.log(' -> Line Number ----------------------------------- 134')
   for (let i = 0; i < count; i++) {
+    console.log(' -> Line Number ----------------------------------- 136')
     const days = new Date(year, month + 1, 0).getDate()
     result.push(days)
 
@@ -139,7 +143,9 @@ export function getDaysInMonths(dateStr: string, count: number): number[] {
       year++
     }
   }
+  console.log(' -> Line Number ----------------------------------- 146')
 
+  console.log('result line ---- 148', result)
   return result
 }
 
@@ -152,9 +158,11 @@ export interface FirstInterest {
   loanDuration: number
 }
 export const CalculateFirstInterest = (data: FirstInterest): number => {
+  console.log('data line ---- 156', data)
   const daysCount = getDaysInMonths(data.rePaymentDate, data.monthCount)
+  console.log('daysCount line ---- 163', daysCount)
 
-  if (data.rePaymentType === 1) {
+  if (data.rePaymentType === 1 || data.rePaymentType === 3) {
     const totalDays = daysCount.reduce((sum, val) => sum + val, 0)
     const interestData = {
       principal: data.PrincipalAmt,

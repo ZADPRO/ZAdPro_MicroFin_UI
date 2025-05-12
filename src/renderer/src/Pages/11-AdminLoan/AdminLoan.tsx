@@ -6,6 +6,7 @@ import axios from 'axios'
 import { TabPanel, TabView } from 'primereact/tabview'
 import React, { useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
+import AdminRepayments from '../12-AdminRepayments/AdminRepayments'
 
 const AdminLoan: React.FC = () => {
   const [username, setUsername] = useState('')
@@ -65,11 +66,13 @@ const AdminLoan: React.FC = () => {
       ) : (
         <div className="contentPage">
           <TabView>
-            <TabPanel header="Repayment"></TabPanel>
+            <TabPanel header="Repayment">
+              <AdminRepayments />
+            </TabPanel>
             <TabPanel header="Loan">
               <AdminNewLoan />
             </TabPanel>
-            <TabPanel header="Supplier">
+            <TabPanel header="Vendor">
               <AdminSupplierLoan />
             </TabPanel>
           </TabView>

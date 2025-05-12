@@ -47,8 +47,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [FinalLoanAmt, setFinalLoanAmt] = useState<number>(0)
   const [interestFirst, setInterestFirst] = useState<boolean | null>(false)
   const [monthCount, setMonthCount] = useState<number>(0)
-  const [bankId, setBankId] = useState<number | null>(null)
-  const [productId, setProductId] = useState<number | null>(null)
+  const [bankId, setBankId] = useState<number | null | any>(null)
+  const [productId, setProductId] = useState<number | null | any>(null)
   const [interestFirstAmt, setInterestFirstAmt] = useState<number>(0)
   const [initialInterestAmt, setInitialInterestAmt] = useState<number>(0)
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
@@ -65,10 +65,11 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [selectedRepaymentType, setSelectedRepaymentType] = useState<LoanType | null>(null)
   const rePaymentTypeOptions: LoanType[] = [
     { name: 'Flat Loan', value: 1 },
-    { name: 'Diminishing Loan', value: 2 }
+    { name: 'Diminishing Loan', value: 2 },
+    { name: 'Monthly Interest', value: 3 }
   ]
   const [userLoan, setUserLoan] = useState<any[]>([])
-  const [selectedLoan, setSelectedLoan] = useState<any[]>([])
+  const [selectedLoan, setSelectedLoan] = useState<any[] | null>([])
   const [loanProduct, setLoanProduct] = useState<any[]>([])
   const [bankList, setBankList] = useState<any[]>([])
   const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1)
@@ -208,7 +209,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
       })
   }
 
-  const show = (LoanType: number, Loan: number) => {
+  const show = (LoanType: number, Loan: number | null) => {
     console.log('selectedLoanType line ------ 208', LoanType)
     console.log('selectedLoan line ------ 209', Loan)
     setShowForm(false)
@@ -254,7 +255,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           refProductId: productId?.refProductId,
           refLoanAmount: FinalLoanAmt.toFixed(2),
           refLoanDueDate: getDateAfterMonths(
-            rePaymentDate,
+            String(rePaymentDate),
             parseInt(productId?.refProductDuration)
           ),
           refPayementType: 'bank',
@@ -425,7 +426,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                       </div>
                       <div className="flex-1"></div>
                     </div>
-                    <Divider layout="horizontal" className="flex" align="start">
+                    <Divider layout="horizontal" className="flex">
                       <b>Calculation</b>
                     </Divider>
                     <div className="flex">
@@ -466,7 +467,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
 
           {showForm && (
             <div>
-              <Divider layout="horizontal" className="flex" align="start" />
+              <Divider layout="horizontal" className="flex" />
               <div className="w-full flex justify-content-around my-1">
                 <div className="w-[45%]">
                   <label className="font-bold block mb-2">Select Loan Duration and Interest</label>

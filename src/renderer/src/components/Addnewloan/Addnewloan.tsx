@@ -386,6 +386,11 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
               >
                 <Column
                   style={{ minWidth: '8rem' }}
+                  field="refCustLoanId"
+                  header="Loan Id"
+                ></Column>
+                <Column
+                  style={{ minWidth: '8rem' }}
                   field="refLoanStartDate"
                   header="Loan Start Date"
                 ></Column>
@@ -433,7 +438,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                     <Divider align="left">
                       <div className="inline-flex align-items-center">
                         <i className="pi pi-wallet mr-2 text-[#007bff]"></i>
-                        <b className="text-[#007bff]">Loan {index + 1}</b>
+                        <b className="text-[#007bff]">Loan {loanDetails[index].refCustLoanId}</b>
                       </div>
                     </Divider>
                     <div className="w-full my-3 border-2 border-transparent rounded-md shadow-3">

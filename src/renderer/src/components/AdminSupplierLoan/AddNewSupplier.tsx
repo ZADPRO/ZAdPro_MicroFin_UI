@@ -1,46 +1,81 @@
 import { Button } from 'primereact/button'
 import { Divider } from 'primereact/divider'
+import { Dropdown } from 'primereact/dropdown'
 import { InputText } from 'primereact/inputtext'
 import React, { useEffect, useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import axios from 'axios'
+import decrypt from '../Helper/Helper'
+
 
 interface AddNewSupplierProps {
   closeSidebarNew: () => void
   supplierData?: {
-    name: string
-    contactNumber: string
-    notes: string
-    bankDetails: { acNumber: string; ifsc: string }[]
+    vendorId: number
+    vendorName: string
+    mobileNo: string
+    emailId: string
+    address: string
+    vendorType: number
+    description: string
+    vendorBank: { refAccountNo: string; refIFSCCode: string; refBankName: string; refUPICode: string, refBankId: number }[]
   }
 }
 
+const vendorTypeOptions = [
+  { label: 'Outside Vendor', value: 1 },
+  { label: 'Bank', value: 2 },
+  { label: 'Depositor ', value: 3 }
+]
+
 const AddNewSupplier: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, supplierData }) => {
-  const [accountDetails, setAccountDetails] = useState([{ acNumber: '', ifsc: '' }])
+  const [accountDetails, setAccountDetails] = useState([
+    { refAccountNo: '', refIFSCCode: '', refBankName: '', upiCode: '', refBankId: '' }
+  ])
+  const [vendorId, setVendorId] = useState<number | null>()
   const [name, setName] = useState('')
   const [contactNumber, setContactNumber] = useState('')
-  const [notes, setNotes] = useState('')
+  const [email, setEmail] = useState('')
+  const [address, setAddress] = useState('')
+  const [vendorType, setVendorType] = useState<number | null>(null)
+  const [description, setDescription] = useState('')
 
   useEffect(() => {
     if (supplierData) {
-      setName(supplierData.name)
-      setContactNumber(supplierData.contactNumber)
-      setNotes(supplierData.notes)
+      setVendorId(supplierData.vendorId)
+      setName(supplierData.vendorName || '')
+      setContactNumber(supplierData.mobileNo || '')
+      setEmail(supplierData.emailId || '')
+      setAddress(supplierData.address || '')
+      setDescription(supplierData.description || '')
+      setVendorType(supplierData.vendorType || 1)
+
       setAccountDetails(
-        supplierData.bankDetails.length > 0
-          ? supplierData.bankDetails
-          : [{ acNumber: '', ifsc: '' }]
+        supplierData.vendorBank && supplierData.vendorBank.length > 0
+          ? supplierData.vendorBank.map((detail) => ({
+            refAccountNo: detail.refAccountNo || '',
+            refIFSCCode: detail.refIFSCCode || '',
+            refBankName: detail.refBankName || '',
+            upiCode: detail.refUPICode || '',
+            refBankId: String(detail.refBankId) || ''
+          }))
+          : [{ refAccountNo: '', refIFSCCode: '', refBankName: '', upiCode: '', refBankId: '' }]
       )
     } else {
       setName('')
       setContactNumber('')
-      setNotes('')
-      setAccountDetails([{ acNumber: '', ifsc: '' }])
+      setEmail('')
+      setAddress('')
+      setDescription('')
+      setVendorType(1)
+      setAccountDetails([{ refAccountNo: '', refIFSCCode: '', refBankName: '', upiCode: '', refBankId: '' }])
     }
   }, [supplierData])
 
+
   const handleAddBankField = () => {
-    setAccountDetails([...accountDetails, { acNumber: '', ifsc: '' }])
+    setAccountDetails([...accountDetails, { refAccountNo: '', refIFSCCode: '', refBankName: '', upiCode: '', refBankId: '' }])
   }
 
   const handleClearBankField = (index: number) => {
@@ -55,28 +90,126 @@ const AddNewSupplier: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, suppli
     setAccountDetails(updated)
   }
 
-  const handleSubmit = () => {
-    if (!name || !contactNumber) {
-      toast.error('Name and Contact Number are required!')
+  const handleSubmit = async () => {
+    if (!name || !contactNumber || !email || !address || !vendorType) {
+      toast.error('Please fill all required fields!')
       return
     }
 
-    const hasEmptyBankField = accountDetails.some((item) => !item.acNumber || !item.ifsc)
+    const hasEmptyBankField = accountDetails.some(
+      (item) => !item.refAccountNo || !item.refIFSCCode || !item.refBankName || !item.upiCode
+    )
+
     if (hasEmptyBankField) {
       toast.error('All bank details must be filled!')
       return
     }
 
-    const data = {
-      name,
-      contactNumber,
-      notes,
-      bankDetails: accountDetails
+    try {
+      const response = await axios.post(
+        import.meta.env.VITE_API_URL + '/adminLoan/Vendor/add',
+        {
+          vendorName: name,
+          mobileNo: contactNumber,
+          emailId: email,
+          vendorType: vendorType,
+          address: address,
+          description: description,
+          vendorBank: accountDetails
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      const data = decrypt(
+        response.data[1],
+        response.data[0],
+        import.meta.env.VITE_ENCRYPTION_KEY
+      )
+      localStorage.setItem('token', 'Bearer ' + data.token)
+
+      if (data.success) {
+        toast.success('Supplier added successfully!')
+        // closeSidebarNew()
+      } else {
+        toast.error('Failed to add supplier!')
+      }
+    } catch (error) {
+      toast.error('Failed to add supplier!')
+      console.error(error)
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!name || !contactNumber || !email || !address || !vendorType) {
+      toast.error('Please fill all required fields!')
+      return
     }
 
-    console.log('Submitted Data:', data)
-    toast.success('Supplier added successfully!')
+    const hasEmptyBankField = accountDetails.some(
+      (item) => !item.refAccountNo || !item.refIFSCCode || !item.refBankName || !item.upiCode
+    )
+
+    if (hasEmptyBankField) {
+      toast.error('All bank details must be filled!')
+      return
+    }
+
+    try {
+      const response = await axios.post(
+        import.meta.env.VITE_API_URL + '/adminLoan/vendor/update',
+        {
+          refVendorId: vendorId,
+          vendorName: name,
+          mobileNo: contactNumber,
+          emailId: email,
+          vendorType: vendorType,
+          address: address,
+          description: description,
+          vendorBank: accountDetails.map((detail) => ({
+            refBankId: detail.refBankId || null,
+            refBankName: detail.refBankName || '',
+            refAccountNo: detail.refAccountNo || '',
+            refIFSCCode: detail.refIFSCCode || '',
+            refUPICode: detail.upiCode || ''
+          }))
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      const data = decrypt(
+        response.data[1],
+        response.data[0],
+        import.meta.env.VITE_ENCRYPTION_KEY
+      )
+      localStorage.setItem('token', 'Bearer ' + data.token)
+
+      console.log('data line ----- 195', data)
+      if (data.success) {
+        toast.success('Supplier updated successfully!')
+
+        setTimeout(() => {
+          closeSidebarNew();
+        }, 3000);
+
+      } else {
+        toast.error('Failed to update supplier!')
+      }
+    } catch (error) {
+      toast.error('Failed to update supplier!')
+      console.error(error)
+    }
   }
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -111,12 +244,39 @@ const AddNewSupplier: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, suppli
             />
           </div>
         </div>
+
         <div className="flex gap-3 mt-3">
           <div className="flex-1">
             <InputText
-              placeholder="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="flex-1">
+            <InputText
+              placeholder="Address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-3">
+          <div className="flex-1">
+            <Dropdown
+              value={vendorType}
+              options={vendorTypeOptions}
+              onChange={(e) => setVendorType(e.value)}
+              placeholder="Select Vendor Type"
+              className="w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <InputText
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
         </div>
@@ -129,32 +289,70 @@ const AddNewSupplier: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, suppli
 
         {accountDetails.map((detail, index) => (
           <div className="accountDetails mt-3" key={index}>
-            <div className="flex gap-3 align-items-center">
+            <Divider align="left">
+              <div className="inline-flex align-items-center">
+                <i className="pi pi-wallet mr-2 text-[#007bff]"></i>
+                <b className="text-[#007bff]">Bank {index + 1}</b>
+              </div>
+            </Divider>
+            <div className="flex gap-3 align-items-center mb-2">
               <div className="flex-1">
                 <InputText
                   placeholder="A/C Number"
-                  value={detail.acNumber}
-                  onChange={(e) => handleInputChange(index, 'acNumber', e.target.value)}
+                  value={detail.refAccountNo}
+                  onChange={(e) => handleInputChange(index, 'refAccountNo', e.target.value)}
                 />
               </div>
               <div className="flex-1">
                 <InputText
                   placeholder="IFSC Code"
-                  value={detail.ifsc}
-                  onChange={(e) => handleInputChange(index, 'ifsc', e.target.value)}
+                  value={detail.refIFSCCode}
+                  onChange={(e) => handleInputChange(index, 'refIFSCCode', e.target.value)}
                 />
               </div>
-              <Button label="Clear" severity="danger" onClick={() => handleClearBankField(index)} />
+            </div>
+            <div className="flex gap-3 align-items-center">
+              <div className="flex-1">
+                <InputText
+                  placeholder="Bank Name"
+                  value={detail.refBankName}
+                  onChange={(e) => handleInputChange(index, 'refBankName', e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <InputText
+                  placeholder="UPI Code"
+                  value={detail.upiCode}
+                  onChange={(e) => handleInputChange(index, 'upiCode', e.target.value)}
+                />
+              </div>
+              {!vendorId && (
+                <Button
+                  label="Clear"
+                  severity="danger"
+                  onClick={() => handleClearBankField(index)}
+                />
+              )}
+
             </div>
           </div>
         ))}
 
-        <Divider />
       </div>
 
-      <div className="flex justify-content-end mt-3" style={{ paddingTop: '10px' }}>
-        <Button label="Submit" severity="success" onClick={handleSubmit} />
-      </div>
+      {vendorId ?
+        <>
+          <div className="flex justify-content-end mt-3" style={{ paddingTop: '10px' }}>
+            <Button label="Update" severity="success" onClick={handleUpdate} />
+          </div>
+        </>
+        :
+        <>
+          <div className="flex justify-content-end mt-3" style={{ paddingTop: '10px' }}>
+            <Button label="Submit" severity="success" onClick={handleSubmit} />
+          </div>
+        </>}
+
     </div>
   )
 }

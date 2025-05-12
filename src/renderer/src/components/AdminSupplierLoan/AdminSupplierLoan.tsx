@@ -2,77 +2,175 @@ import { Button } from 'primereact/button'
 import { Column } from 'primereact/column'
 import { DataTable } from 'primereact/datatable'
 import { Sidebar } from 'primereact/sidebar'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import AddNewSupplier from './AddNewSupplier'
+import axios from 'axios'
+import decrypt from '../Helper/Helper'
+import { IconField } from 'primereact/iconfield'
+import { InputIcon } from 'primereact/inputicon'
+import { InputText } from 'primereact/inputtext'
+import { FilterMatchMode } from 'primereact/api';
+
+
+interface Vendor {
+  refVendorId: number;
+  refVendorName: string | null;
+  refVendorMobileNo: string | null;
+  refVenderType: number | null;
+  refVendorEmailId: string | null;
+  refDescription: string | null;
+  vendorBank?: Bank[];  // Optional field for storing associated bank details
+}
+
+interface Bank {
+  refBankId?: number;  // Optional, as it might be null or not available when creating a new bank entry
+  refBankName: string;
+  refAccountNo: string;
+  refIFSCCode: string;
+  refUPICode: string;
+}
 
 const AdminSupplierLoan: React.FC = () => {
   const [newData, setNewData] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
+  const [selectedVendorId, setSelectedVendorId] = useState<number | null>()
+  const [vendorList, setVendorList] = useState<Vendor[]>([])
 
-  const sampleData = [
-    {
-      sno: 1,
-      name: 'ABC Traders',
-      contactNumber: '9876543210',
-      openLoans: '3',
-      closedLoans: '0',
-      notes: 'Payment pending for 2 months',
-      bankDetails: [
-        { acNumber: '1234567890', ifsc: 'ABC0001234' },
-        { acNumber: '2345678901', ifsc: 'XYZ0005678' },
-        { acNumber: '3456789012', ifsc: 'LMN0009999' }
-      ]
-    },
-    {
-      sno: 2,
-      name: 'XYZ Supplies',
-      contactNumber: '8765432109',
-      openLoans: '5',
-      closedLoans: '2',
-      notes: 'Partial payment received',
-      bankDetails: [{ acNumber: '1111222233', ifsc: 'XYZ0001122' }]
-    },
-    {
-      sno: 3,
-      name: 'LMN Distributors',
-      contactNumber: '7654321098',
-      openLoans: '10',
-      closedLoans: '5',
-      notes: 'Cleared last month',
-      bankDetails: []
-    }
-  ]
+  const [globalFilterValue, setGlobalFilterValue] = useState('')
+
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+  })
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value
+    let _filters = { ...filters }
+
+    _filters['global'].value = value
+
+    setFilters(_filters)
+    setGlobalFilterValue(value)
+  }
+
+
+  const getVendorList = () => {
+    axios
+      .get(
+        import.meta.env.VITE_API_URL + '/adminLoan/vendor/list',
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then((response) => {
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+        localStorage.setItem('token', 'Bearer ' + data.token)
+
+        if (data.success) {
+          console.log(data)
+          setVendorList(data.data)
+
+
+        }
+      })
+  }
+
+  const getVendorDetails = (id: number): any => {
+    console.log('id line ------ 65', id)
+    axios
+      .post(
+        import.meta.env.VITE_API_URL + '/adminLoan/vendor/details',
+        {
+          refVendorId: id
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then((response) => {
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+        localStorage.setItem('token', 'Bearer ' + data.token)
+
+        if (data.success) {
+          console.log("line ------- 87", data)
+          setSelectedSupplier(data.data)
+
+        }
+      })
+  }
+
 
   const closeSidebarNew = () => {
     setNewData(false)
     setSelectedSupplier(null)
+    getVendorList()
+
   }
+
+  useEffect(() => {
+    getVendorList()
+
+  }, [])
 
   const nameBodyTemplate = (rowData: any) => (
     <span
       style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
       onClick={() => {
-        setSelectedSupplier(rowData)
+        console.log('rowData line ----- 110', rowData)
+        setSelectedVendorId(rowData.refVendorId)
+        getVendorDetails(rowData.refVendorId)
         setNewData(true)
       }}
     >
-      {rowData.name}
+      {rowData.refVendorName}
     </span>
   )
 
   return (
     <div>
-      <Button
-        label="Add New Supplier"
-        severity="warning"
-        style={{ backgroundColor: '#f8d20f' }}
-        onClick={() => {
-          setSelectedSupplier(null)
-          setNewData(true)
-        }}
-      />
+
+
+      <div className='flex justify-content-between'>
+        <Button
+          label="Add New Vendor"
+          severity="warning"
+          style={{ backgroundColor: '#f8d20f' }}
+          onClick={() => {
+            setSelectedSupplier(null)
+            setNewData(true)
+          }}
+        />
+        <IconField style={{ width: '30%' }} iconPosition="left">
+          <InputIcon className="pi pi-search"></InputIcon>
+          <InputText
+            placeholder="Search Vendor"
+            value={globalFilterValue}
+            onChange={onGlobalFilterChange}
+            m-1
+            px-5
+            text-white
+            rounded-lg
+          />
+        </IconField>
+      </div>
+
+
       <DataTable
-        value={sampleData}
+        value={vendorList}
+        filters={filters}
+
         className="mt-4"
         showGridlines
         stripedRows
@@ -81,16 +179,22 @@ const AdminSupplierLoan: React.FC = () => {
         rows={5}
         rowsPerPageOptions={[5, 10, 25, 50]}
       >
-        <Column field="sno" header="S.No" />
-        <Column field="name" header="Name" body={nameBodyTemplate} />
-        <Column field="openLoans" header="Open Loans" />
-        <Column field="closedLoans" header="Closed Loans" />
-        <Column field="notes" header="Notes" />
+        <Column
+          header="S.No"
+          body={(_rowData, options) => options.rowIndex + 1}
+        />
+        <Column field="refVendorName" header="Name" body={nameBodyTemplate} />
+        <Column field="refVendorMobileNo" header="Mobile No" />
+        <Column
+          body={(rowData) => rowData.refVenderType === 1 ? 'Outside Vendor' : rowData.refVenderType === 2 ? 'Bank' : "Depositor"}
+          header="Vendor Type"
+        />
+        <Column field="refDescription" header="Description" />
       </DataTable>
 
       <Sidebar
         visible={newData}
-        style={{ width: '60vw' }}
+        style={{ width: '70vw' }}
         position="right"
         onHide={closeSidebarNew}
       >
