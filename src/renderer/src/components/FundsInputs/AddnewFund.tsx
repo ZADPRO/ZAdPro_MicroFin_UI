@@ -240,6 +240,34 @@ const AddnewFund = ({ closeSidebarNew }) => {
         )
 
         localStorage.setItem('token', 'Bearer ' + data.token)
+        if (data.success) {
+          toast.success('Amount Transfered Successfully', {
+            position: 'top-right',
+            autoClose: 2999,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+            transition: Slide
+          })
+          closeSidebarNew()
+
+        }
+        else {
+          toast.error('Error in Making SelfTransfer', {
+            position: 'top-right',
+            autoClose: 2999,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'light',
+            transition: Slide
+          })
+        }
 
         console.log(data)
       })

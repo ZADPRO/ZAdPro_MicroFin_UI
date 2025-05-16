@@ -9,8 +9,10 @@ import { GiMoneyStack } from "react-icons/gi";
 import { FaPiggyBank } from "react-icons/fa";
 import { GiTakeMyMoney } from "react-icons/gi";
 // import { GrTransaction } from "react-icons/gr";
+import { GiWallet } from "react-icons/gi";
 import { MdDashboard } from "react-icons/md";
 import { FaMoneyBillTransfer } from "react-icons/fa6";
+import { AiFillFolderOpen } from "react-icons/ai";
 
 import logo from "../../assets/Logo-1.png";
 
@@ -47,6 +49,11 @@ const routes = [
         icon: <FaPiggyBank />,
     },
     {
+        path: "/expense",
+        name: "Expense",
+        icon: <GiWallet />,
+    },
+    {
         path: "/products",
         name: "Products",
         icon: <FaBox />,
@@ -67,11 +74,11 @@ const routes = [
         name: "Admin Loan",
         icon: <FaMoneyBillTransfer />,
     },
-    // {
-    //     path: "/loanrepayment",
-    //     name: "Loan Repayment",
-    //     icon: <GrTransaction />,
-    // },
+    {
+        path: "/report",
+        name: "Report",
+        icon: <AiFillFolderOpen />,
+    },
     {
         path: "/",
         name: "Logout",

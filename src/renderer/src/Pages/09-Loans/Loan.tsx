@@ -11,6 +11,7 @@ import { InputIcon } from 'primereact/inputicon'
 import { FilterMatchMode } from 'primereact/api'
 import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
 import { Slide, toast, ToastContainer } from 'react-toastify'
+import CreateNewLoan from '@renderer/components/CreateNewLoan/CreateNewLoan'
 
 const Loan = () => {
   const [userLists, setUserLists] = useState([])
@@ -22,7 +23,7 @@ const Loan = () => {
   const loadData = () => {
     try {
       axios
-        .get(import.meta.env.VITE_API_URL + '/adminRoutes/getLoanAndUser', {
+        .get(import.meta.env.VITE_API_URL + '/adminRoutes/getAllLoan', {
           headers: {
             Authorization: localStorage.getItem('token'),
             'Content-Type': 'application/json'
@@ -42,7 +43,7 @@ const Loan = () => {
           if (data.success) {
             setLoadingStatus(false)
             setUsername(data.name[0].refUserFname + ' ' + data.name[0].refUserLname)
-            setUserLists(data.getLoanAndUser)
+            setUserLists(data.AllLoanData)
           }
         })
     } catch (e: any) {
@@ -73,13 +74,14 @@ const Loan = () => {
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
         >
-          {rowData.refCustId}
+          {rowData.refCustLoanId}
         </div>
       </>
     )
   }
 
   const [updateData, setUpdateData] = useState(false)
+  const [newLoan, setNewLoan] = useState(false)
   const [updateUserId, setUpdateUserId] = useState({
     id: '',
     custId: ''
@@ -88,6 +90,7 @@ const Loan = () => {
   const closeSidebarUpdate = () => {
     setUpdateData(false)
     loadData()
+    setNewLoan(false)
   }
 
   //   Filter Data - Start
@@ -166,29 +169,41 @@ const Loan = () => {
               width: '100%',
               marginBottom: '10px'
             }}
-            className="flex justify-between"
+            className="flex justify-between align-items-center"
           >
-            <button
-              className="bg-[#007bff] m-1 px-5 hover:bg-[blue] text-white rounded-lg"
-              onClick={(e) => {
-                e.preventDefault(), sendNotification()
-              }}
-            >
-              Send Remainder
-            </button>
+            <div className='w-[50%]'>
+              <button
+                className="bg-[#007bff] py-2 px-5 hover:bg-[blue] text-white rounded-lg"
+                onClick={(e) => {
+                  e.preventDefault(), sendNotification()
+                }}
+              >
+                Send Remainder
+              </button>
+            </div>
 
-            <IconField style={{ width: '30%' }} iconPosition="left">
-              <InputIcon className="pi pi-search"></InputIcon>
-              <InputText
-                placeholder="Search Customers"
-                value={globalFilterValue}
-                onChange={onGlobalFilterChange}
-                m-1
-                px-5
-                text-white
-                rounded-lg
-              />
-            </IconField>
+            <div className='flex w-[50%] align-items-center justify-around'>
+              <IconField style={{ width: '60%' }} iconPosition="left">
+                <InputIcon className="pi pi-search"></InputIcon>
+                <InputText
+                  placeholder="Search Customers"
+                  value={globalFilterValue}
+                  onChange={onGlobalFilterChange}
+                  m-1
+                  px-5
+                  text-white
+                  rounded-lg
+                />
+              </IconField>
+              <div>
+                <button className='bg-[green] hover:bg-[#008000ec] px-7 text-[white] rounded-md py-2'
+                  onClick={() => {
+                    setNewLoan(true)
+                  }}>New Loan</button>
+              </div>
+            </div>
+
+
           </div>
           {/* Search Input - End */}
 
@@ -198,7 +213,7 @@ const Loan = () => {
             <DataTable
               filters={filters}
               paginator
-              rows={5}
+              rows={10}
               rowsPerPageOptions={[5, 10, 25, 50]}
               value={userLists}
               showGridlines
@@ -206,28 +221,41 @@ const Loan = () => {
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
-              <Column style={{ minWidth: '3rem' }} body={CustomerId} header="User ID"></Column>
+              <Column header="S.No" body={(_, options) => options.rowIndex + 1} />
+              <Column style={{ minWidth: '3rem' }} body={CustomerId} header="Loan ID"></Column>
+              <Column style={{ minWidth: '3rem' }} field="refCustId" header="User ID"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
-                field="refUserFname"
-                header="First Name"
+                header="Customer Name"
+                body={(rowData) => {
+                  return `${rowData.refUserFname} ${rowData.refUserLname}`;
+                }}
               ></Column>
-              <Column style={{ minWidth: '8rem' }} field="refUserLname" header="Last Name"></Column>
+
+              <Column style={{ minWidth: '8rem' }} field="refLoanStartDate" header="Loan Date"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
-                field="refUserMobileNo"
-                header="Phone Number"
-              ></Column>
-              <Column style={{ minWidth: '10rem' }} body={AddressBody} header="Address"></Column>
-              <Column
-                style={{ minWidth: '8rem' }}
-                field="opened_count"
-                header="Opened Loan"
+                field="refLoanAmount"
+                header="Loan Amount"
               ></Column>
               <Column
                 style={{ minWidth: '8rem' }}
-                field="closed_count"
-                header="Other Loan"
+                field="refProductDuration"
+                body={(rowData) => { return (<><p>{rowData.refProductDuration} Months</p></>) }}
+
+                header="Loan Duration"
+              ></Column>
+              <Column
+                style={{ minWidth: '8rem' }}
+                field="refProductInterest"
+                body={(rowData) => { return (<><p>{rowData.refProductInterest} %</p></>) }}
+                header="Loan Interest"
+              ></Column>
+              <Column
+                style={{ minWidth: '8rem' }}
+                filter
+                field="refLoanStatus"
+                header="Status"
               ></Column>
             </DataTable>
           </div>
@@ -247,6 +275,14 @@ const Loan = () => {
               id={updateUserId.id}
               closeSidebarUpdate={closeSidebarUpdate}
             />
+          </Sidebar>
+
+          <Sidebar
+            visible={newLoan}
+            style={{ width: '80vw' }}
+            position="right"
+            onHide={() => { setNewLoan(false) }}>
+            <CreateNewLoan goToHistoryTab={closeSidebarUpdate} />
           </Sidebar>
 
           {/* Update Side Bar - End */}

@@ -234,7 +234,7 @@ const AdminNewLoan: React.FC = () => {
           field="refVenderType"
           header="Vendor Type"
           body={(rowData) =>
-            rowData.refVenderType === 1 ? 'Outside Vendor' : rowData.refVenderType === 2  ? 'Bank' : "Depositor"
+            rowData.refVenderType === 1 ? 'Outside Vendor' : rowData.refVenderType === 2 ? 'Bank' : "Depositor"
           }
         />
         <Column field="refLoanStartDate" header="Date" />

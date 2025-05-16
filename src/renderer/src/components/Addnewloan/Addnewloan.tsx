@@ -445,7 +445,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                       <div className="m-3 w-full flex ">
                         <div className="w-[30%]">
                           <p>
-                            Loan Name : <b>{loanDetails[index]?.refProductName}</b>
+                            Product Name : <b>{loanDetails[index]?.refProductName}</b>
                           </p>
                         </div>
                         <div className="w-[30%]">
@@ -562,6 +562,21 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
                                 </b>
                               </p>
                             </div>
+                          </div>
+                          <div className="m-3 w-full flex ">
+                            <div className="w-[30%]">
+                              <p>
+                                Documentation Fees :{' '}
+                                <b>&#8377; {loanDetails[index]?.refDocFee === null ? 0.00 : loanDetails[index]?.refDocFee}</b>
+                              </p>
+                            </div>
+                            <div className="w-[60%]">
+                              <p>
+                                Security :{' '}
+                                <b> {loanDetails[index]?.refSecurity === null ? "No Security Provide" : loanDetails[index]?.refSecurity}</b>
+                              </p>
+                            </div>
+
                           </div>
                           <Divider />
                           <div className="m-2 border-1 shadow-md border-[#c7c7c7ef]">

@@ -12,9 +12,10 @@ import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 import { CalculateFirstInterest, CalculateInterest, FirstInterest } from '@renderer/helper/loanFile'
 import { getRemainingDaysInCurrentMonth } from '../../helper/loanFile'
 import { getDateAfterMonths } from '@renderer/helper/date'
+import { InputTextarea } from 'primereact/inputtextarea'
 
 interface CreateNewLoanProps {
-  id: number
+  id?: number
   goToHistoryTab: any
 }
 
@@ -51,6 +52,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [productId, setProductId] = useState<number | null | any>(null)
   const [interestFirstAmt, setInterestFirstAmt] = useState<number>(0)
   const [initialInterestAmt, setInitialInterestAmt] = useState<number>(0)
+  const [docFee, setDocFee] = useState<number | null>()
+  const [security, setSecurity] = useState<string>()
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
@@ -163,8 +166,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const initialInterest = (Pamt) => {
     const days = getRemainingDaysInCurrentMonth()
     console.log('days', days)
-    const amt = CalculateInterest({
-      annualInterest: parseInt(productId?.refProductInterest),
+    const amt: number = CalculateInterest({
+      annualInterest: Number(productId?.refProductInterest),
       principal: Pamt,
       totalDays: days
     })
@@ -273,7 +276,9 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           refToUseAmt: parseFloat(
             ((newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0)).toFixed(2)
           ),
-          oldBalanceAmt: oldBalanceAmt ?? 0
+          oldBalanceAmt: oldBalanceAmt ?? 0,
+          refDocFee: docFee,
+          refSecurity: security
         },
         {
           headers: {
@@ -333,6 +338,27 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         }}
       >
         <div className="w-[100%] flex flex-col justify-content-between">
+          <div className='w-full flex justify-center'>
+            <div className="w-[95%]">
+              <label className="font-bold block mb-2">Select Customer</label>
+              <Dropdown
+                value={selectedLoanType}
+                className="w-full"
+                filter
+                onChange={(e: DropdownChangeEvent) => {
+                  setSelectedLoanType(e.value)
+                  getUserLoanData()
+                  getAllLoanData()
+                  setSelectedLoan(null)
+                  show(e.value, null)
+                }}
+                required
+                options={loanTypeOptions}
+                optionLabel="name"
+                placeholder="Select Loan Type"
+              />
+            </div>
+          </div>
           <div className="w-full flex justify-content-around my-1">
             <div className="w-[45%]">
               <label className="font-bold block mb-2">Select Loan Type</label>
@@ -604,7 +630,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                             setMonthCount(1)
                             setStep(6)
                             calculateInterest({
-                              Interest: parseInt(productId?.refProductInterest),
+                              Interest: Number(productId?.refProductInterest),
                               PrincipalAmt: Number(FinalLoanAmt),
                               monthCount: 1,
                               rePaymentDate: rePaymentDate?.toString() || '',
@@ -651,9 +677,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         required
                         onChange={(e: any) => {
                           setMonthCount(e.value)
-                          setStep(7)
                           calculateInterest({
-                            Interest: parseInt(productId?.refProductInterest),
+                            Interest: Number(productId?.refProductInterest),
                             PrincipalAmt: Number(FinalLoanAmt),
                             monthCount: e.value || 1,
                             rePaymentDate: rePaymentDate?.toString() || '',
@@ -669,10 +694,45 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 </div>
                 <div></div>
               </div>
+
+              <div className="w-full flex justify-content-around my-1">
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Enter Documentation Fee</label>
+                  <InputNumber
+                    className="w-full"
+                    placeholder="Document Fee"
+                    inputId="currency-india"
+                    disabled={step < 6}
+                    value={docFee}
+                    required
+                    mode="currency"
+                    currency="INR"
+                    currencyDisplay="symbol"
+                    locale="en-IN"
+                    onChange={(e: any) => {
+                      setDocFee(e.value)
+                      setSecurity("")
+                      setStep(7)
+
+
+                    }}
+                  />
+                </div>
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Security</label>
+                  <InputTextarea className='w-full' value={security}
+                    disabled={step < 7}
+                    onChange={(e) => {
+                      setSecurity(e.target.value); setStep(8)
+                    }} />
+
+                </div>
+              </div>
+
             </div>
           )}
 
-          {step >= 6 && (
+          {step >= 7 && (
             <div className="my-3 shadow-2xl border-0 rounded-lg p-5">
               <b>Loan Details</b>
               <div className="flex w-full justify-content-between my-2">

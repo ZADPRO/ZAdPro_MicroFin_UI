@@ -16,6 +16,7 @@ import {
   getRemainingDaysInCurrentMonth
 } from '@renderer/helper/loanFile'
 import { Calendar } from 'primereact/calendar'
+import { InputTextarea } from 'primereact/inputtextarea'
 
 interface AddNewSupplierProps {
   closeSidebarNew: () => void
@@ -68,6 +69,8 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
+  const [docFee, setDocFee] = useState<number | null>()
+  const [security, setSecurity] = useState<string>()
   const [selectedLoanType, setSelectedLoanType] = useState<number>(0)
   const [showForm, setShowForm] = useState<boolean>(false)
   const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
@@ -268,7 +271,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
           refToUseAmt: parseFloat(
             ((newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0)).toFixed(2)
           ),
-          oldBalanceAmt: (Number(oldBalanceAmt) ?? 0).toFixed(2)
+          oldBalanceAmt: (Number(oldBalanceAmt) ?? 0).toFixed(2),
+          refDocFee: docFee,
+          refSecurity: security
         },
         {
           headers: {
@@ -745,6 +750,39 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                   )}
                 </div>
                 <div></div>
+              </div>
+              <div className="w-full flex justify-content-around my-1">
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Enter Documentation Fee</label>
+                  <InputNumber
+                    className="w-full"
+                    placeholder="Document Fee"
+                    inputId="currency-india"
+                    disabled={step < 6}
+                    value={docFee}
+                    required
+                    mode="currency"
+                    currency="INR"
+                    currencyDisplay="symbol"
+                    locale="en-IN"
+                    onChange={(e: any) => {
+                      setDocFee(e.value)
+                      setSecurity("")
+                      setStep(7)
+
+
+                    }}
+                  />
+                </div>
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Security</label>
+                  <InputTextarea className='w-full' value={security}
+                    disabled={step < 7}
+                    onChange={(e) => {
+                      setSecurity(e.target.value); setStep(8)
+                    }} />
+
+                </div>
               </div>
             </div>
           )}
