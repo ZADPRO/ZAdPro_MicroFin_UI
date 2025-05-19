@@ -23,7 +23,7 @@ interface loanType {
   code: number
 }
 
-const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
+const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const [selectedLoanType, setLoanType] = useState<loanType | null>({ name: 'New Loan', code: 1 })
@@ -281,11 +281,20 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
           response.data[0],
           import.meta.env.VITE_ENCRYPTION_KEY
         )
-        console.log('data line ------ 278', data)
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          setLoanDetails(data.data)
+
+          console.log('data.data -------> 288', data.data)
+          console.log('loanId line ------- 289', loanNo)
+          data.data.map((audit) => {
+            if (audit.refLoanId === loanNo) {
+              console.log(' -> Line Number ----------------------------------- 289 \n\n\n',);
+              console.log('data ------------ > 291', data.data)
+              console.log('audit line ------ 290', audit)
+              setLoanDetails([audit])
+            }
+          })
         }
       })
   }
@@ -360,7 +369,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
             }}
             style={{ marginTop: '1rem' }}
           >
-            <TabPanel header="Loan History">
+            {/* <TabPanel header="Loan History">
               <div style={{ padding: '20px 0px' }}>
                 <Dropdown
                   id="statusChoose"
@@ -430,7 +439,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
             </TabPanel>
             <TabPanel header="Create New Loan">
               <CreateNewLoan id={id} goToHistoryTab={() => setActiveIndex(0)} />
-            </TabPanel>
+            </TabPanel> */}
             <TabPanel header="Loan Audit">
               <>
                 {loanDetails.map((item, index) => (
@@ -579,18 +588,22 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate }) => {
 
                           </div>
                           <Divider />
-                          <div className="m-2 border-1 shadow-md border-[#c7c7c7ef]">
-                            <LoanAudit loanId={item.refLoanId} />
-                          </div>
+
                         </>
                       )}
+
+                    </div>
+                    <div className="m-2 border-1 shadow-md border-[#c7c7c7ef]">
+                      <LoanAudit loanId={item.refLoanId} />
                     </div>
                   </>
+
                 ))}
+
               </>
             </TabPanel>
             <TabPanel header="Loan Closing">
-              <CloseLoan id={id} goToHistoryTab={() => setActiveIndex(0)} />
+              <CloseLoan id={id} LoanId={loanNo} goToHistoryTab={() => setActiveIndex(0)} />
             </TabPanel>
           </TabView>
         </>

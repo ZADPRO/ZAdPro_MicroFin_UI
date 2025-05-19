@@ -13,6 +13,7 @@ import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 interface CloseLoanProps {
   id: number
   goToHistoryTab: any
+  LoanId: number
 }
 
 interface setUserLoanProps {
@@ -31,7 +32,7 @@ interface BankDetailsReponseProps {
   refIFSCsCode: string
 }
 
-const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
+const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => {
   const handleBack = () => {
     goToHistoryTab()
   }
@@ -40,7 +41,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   const [selectedLoan, setSelectedLoan] = useState<number | null>()
   const [bankModeType, setBankModeType] = useState<string>('')
   const [loanDetails, setLoanDetails] = useState<any>()
-  const [showCard, setShowCard] = useState(false)
+  const [showCard, setShowCard] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string>()
   const [errorShow, setErrorShow] = useState(false)
   const [loanAmt, setLoanAmt] = useState<number | null>()
@@ -161,16 +162,17 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   }
 
   useEffect(() => {
-    setShowCard(false)
+    setShowCard(true)
     setErrorShow(false)
-    setSelectedLoan(null)
+    setSelectedLoan(LoanId)
+    getLoanDatas(LoanId)
     getUserLoanData()
   }, [])
 
   return (
     <div>
       <div className="flex gap-4">
-        <div className="flex-1">
+        {/* <div className="flex-1">
           <label className="font-bold block mb-2">Select Old Loan</label>
           <Dropdown
             value={selectedLoan}
@@ -187,7 +189,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
             optionLabel="name"
             placeholder="Select Old Loan"
           />
-        </div>
+        </div> */}
         <div className="flex-1"></div>
       </div>
       {showCard && (

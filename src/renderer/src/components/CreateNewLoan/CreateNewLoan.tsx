@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
 import { Accordion, AccordionTab } from 'primereact/accordion'
 import { Divider } from 'primereact/divider'
@@ -39,8 +39,28 @@ interface LoadDetailsResponseProps {
   finalBalanceAmt: string
 }
 
+interface UserDetails {
+  refAadharNo: string;
+  refCustId: string;
+  refPanNo: string;
+  refUserAddress: string;
+  refUserDistrict: string;
+  refUserEmail: string;
+  refUserFname: string;
+  refUserId: number;
+  refUserLname: string;
+  refUserMobileNo: string;
+  refUserPincode: string;
+  refUserState: string;
+  label: string;
+  value: number;
+}
+
+
 const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => {
   const today = new Date()
+  const [customerId, setCustomerId] = useState<number>()
+  const [customerList, setCustomerList] = useState<UserDetails[]>([])
   const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
   const [rePaymentDate, setRePaymentDate] = useState<Date>(nextMonth)
   const [newLoanAmt, setNewLoanAmt] = useState<number | null>()
@@ -87,7 +107,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/adminRoutes/addLoanOption`,
-        { userId: id },
+        { userId: customerId },
         {
           headers: {
             Authorization: localStorage.getItem('token'),
@@ -117,7 +137,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
       .post(
         import.meta.env.VITE_API_URL + '/adminRoutes/getLoan',
         {
-          userId: id
+          userId: customerId
         },
         {
           headers: {
@@ -254,7 +274,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
       .post(
         import.meta.env.VITE_API_URL + '/newLoan/CreateNewLoan',
         {
-          refUserId: id,
+          refUserId: customerId,
           refProductId: productId?.refProductId,
           refLoanAmount: FinalLoanAmt.toFixed(2),
           refLoanDueDate: getDateAfterMonths(
@@ -327,6 +347,42 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         }
       })
   }
+  const getUserList = () => {
+    axios
+      .get(
+        import.meta.env.VITE_API_URL + '/newLoan/userListOption',
+        {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then((response) => {
+        console.log('response', response)
+        const data = decrypt(
+          response.data[1],
+          response.data[0],
+          import.meta.env.VITE_ENCRYPTION_KEY
+        )
+        localStorage.setItem('token', 'Bearer ' + data.token)
+        console.log('data line ------ 350 ', data)
+        if (data.success) {
+          let userList = data.data
+          userList.map((data, index) => {
+            const name = `Name : ${data.refUserFname} ${data.refUserLname} | Mobile : ${data.refUserMobileNo} | Aadhar Card : ${data.refAadharNo}`
+            userList[index] = { ...userList[index], label: name, value: data.refUserId }
+          })
+          setCustomerList(userList)
+        }
+
+      })
+  }
+
+  useEffect(() => {
+    setCustomerId(id);
+    getUserList()
+  }, [])
 
   return (
     <div>
@@ -346,16 +402,13 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 className="w-full"
                 filter
                 onChange={(e: DropdownChangeEvent) => {
-                  setSelectedLoanType(e.value)
-                  getUserLoanData()
-                  getAllLoanData()
-                  setSelectedLoan(null)
-                  show(e.value, null)
+                  console.log('e line ----------- 405', e)
+                  setCustomerId(e.target.value)
                 }}
                 required
-                options={loanTypeOptions}
-                optionLabel="name"
-                placeholder="Select Loan Type"
+                options={customerList}
+                optionLabel="label"
+                placeholder="Select Customer To Provide Loan"
               />
             </div>
           </div>

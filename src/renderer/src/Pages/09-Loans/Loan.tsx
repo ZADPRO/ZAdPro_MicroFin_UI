@@ -19,6 +19,7 @@ const Loan = () => {
   const [username, setUsername] = useState('')
 
   const [loadingStatus, setLoadingStatus] = useState(true)
+  const [loanId, setLoanId] = useState<number>()
 
   const loadData = () => {
     try {
@@ -71,6 +72,8 @@ const Loan = () => {
           onClick={() => {
             setUpdateData(true)
             setUpdateUserId({ id: rowData.refUserId, custId: rowData.refCustId })
+            setLoanId(rowData.refLoanId)
+            console.log('rowData.refLoanId line -------- 76', rowData.refLoanId)
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
         >
@@ -273,6 +276,7 @@ const Loan = () => {
             <Addnewloan
               custId={updateUserId.custId}
               id={updateUserId.id}
+              loanNo={loanId}
               closeSidebarUpdate={closeSidebarUpdate}
             />
           </Sidebar>
