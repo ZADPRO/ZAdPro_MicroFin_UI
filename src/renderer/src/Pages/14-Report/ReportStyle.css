@@ -1,0 +1,34 @@
+.invoice-icon {
+  color: #0478df;
+  font-size: 4rem;
+  transition: font-size 0.5s ease;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 8px 0 rgba(0, 0, 0, 0.2),
+    0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.monthCard {
+  color: #0478df;
+  font-size: 3rem;
+  transition: font-size 0.5s ease;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 8px 0 rgba(0, 0, 0, 0.2),
+    0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  font-weight: bold;
+}
+
+.monthCard:hover {
+  font-size: 3.5rem;
+  background-color: #0478df;
+  color: white;
+}
+
+.invoice-icon:hover {
+  font-size: 4.5rem !important;
+  background-color: #0478df;
+  color: white;
+}
