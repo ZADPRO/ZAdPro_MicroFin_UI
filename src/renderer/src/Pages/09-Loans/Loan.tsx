@@ -91,6 +91,7 @@ const Loan = () => {
   })
 
   const closeSidebarUpdate = () => {
+    console.log(' -> Line Number ----------------- clossing side bar------------------ 94')
     setUpdateData(false)
     loadData()
     setNewLoan(false)
@@ -148,10 +149,16 @@ const Loan = () => {
       })
   }
 
+  const reLoadPage = () => {
+    setUpdateData(false)
+    loadData()
+    setNewLoan(false)
+  }
+
   return (
     <>
       <ToastContainer />
-      <Header userName={username} pageName={'Loan'} />
+      <Header userName={username} pageName={'Loan'} reLoad={reLoadPage} />
       {loadingStatus ? (
         <div
           style={{
@@ -174,7 +181,7 @@ const Loan = () => {
             }}
             className="flex justify-between align-items-center"
           >
-            <div className='w-[50%]'>
+            <div className="w-[50%]">
               <button
                 className="bg-[#007bff] py-2 px-5 hover:bg-[blue] text-white rounded-lg"
                 onClick={(e) => {
@@ -185,7 +192,7 @@ const Loan = () => {
               </button>
             </div>
 
-            <div className='flex w-[50%] align-items-center justify-around'>
+            <div className="flex w-[50%] align-items-center justify-around">
               <IconField style={{ width: '60%' }} iconPosition="left">
                 <InputIcon className="pi pi-search"></InputIcon>
                 <InputText
@@ -199,14 +206,16 @@ const Loan = () => {
                 />
               </IconField>
               <div>
-                <button className='bg-[green] hover:bg-[#008000ec] px-7 text-[white] rounded-md py-2'
+                <button
+                  className="bg-[green] hover:bg-[#008000ec] px-7 text-[white] rounded-md py-2"
                   onClick={() => {
                     setNewLoan(true)
-                  }}>New Loan</button>
+                  }}
+                >
+                  New Loan
+                </button>
               </div>
             </div>
-
-
           </div>
           {/* Search Input - End */}
 
@@ -225,17 +234,27 @@ const Loan = () => {
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
               <Column header="S.No" body={(_, options) => options.rowIndex + 1} />
-              <Column style={{ minWidth: '3rem' }} body={CustomerId} header="Loan ID"></Column>
+              <Column
+                field="refCustLoanId"
+                style={{ minWidth: '3rem' }}
+                body={CustomerId}
+                header="Loan ID"
+              ></Column>
               <Column style={{ minWidth: '3rem' }} field="refCustId" header="User ID"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 header="Customer Name"
+                field="refUserFname"
                 body={(rowData) => {
-                  return `${rowData.refUserFname} ${rowData.refUserLname}`;
+                  return `${rowData.refUserFname} ${rowData.refUserLname}`
                 }}
               ></Column>
 
-              <Column style={{ minWidth: '8rem' }} field="refLoanStartDate" header="Loan Date"></Column>
+              <Column
+                style={{ minWidth: '8rem' }}
+                field="refLoanStartDate"
+                header="Loan Date"
+              ></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refLoanAmount"
@@ -244,14 +263,25 @@ const Loan = () => {
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refProductDuration"
-                body={(rowData) => { return (<><p>{rowData.refProductDuration} Months</p></>) }}
-
+                body={(rowData) => {
+                  return (
+                    <>
+                      <p>{rowData.refProductDuration} Months</p>
+                    </>
+                  )
+                }}
                 header="Loan Duration"
               ></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refProductInterest"
-                body={(rowData) => { return (<><p>{rowData.refProductInterest} %</p></>) }}
+                body={(rowData) => {
+                  return (
+                    <>
+                      <p>{rowData.refProductInterest} %</p>
+                    </>
+                  )
+                }}
                 header="Loan Interest"
               ></Column>
               <Column
@@ -271,7 +301,7 @@ const Loan = () => {
             visible={updateData}
             style={{ width: '80vw' }}
             position="right"
-            onHide={() => setUpdateData(false)}
+            onHide={() => closeSidebarUpdate()}
           >
             <Addnewloan
               custId={updateUserId.custId}
@@ -285,7 +315,10 @@ const Loan = () => {
             visible={newLoan}
             style={{ width: '80vw' }}
             position="right"
-            onHide={() => { setNewLoan(false) }}>
+            onHide={() => {
+              closeSidebarUpdate()
+            }}
+          >
             <CreateNewLoan goToHistoryTab={closeSidebarUpdate} />
           </Sidebar>
 

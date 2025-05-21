@@ -43,7 +43,9 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
   const [priamt, setPriAmt] = useState<number>(0)
   const [rePaymentForm, setRePaymentForm] = useState<RePaymentForm>({
     interestAmt: 0,
-    BalanceAmount: 0
+    BalanceAmount: 0,
+    BalanceStatus: false,
+    interestStatus: false
   })
   const [followUpForm, setFollowUpForm] = useState<FollowUpForm>({
     Message: '',
@@ -90,9 +92,11 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
             interestAmt: Number(data.data[0].InteresePay),
             BalanceAmount: Number(data.data[0].refPrincipal),
             BalanceStatus: data.data[0].refPrincipalStatus === 'paid' ? true : false,
-            interestStatus: data.data[0].refInterestStatus === 'paid' ? true : false,
+            interestStatus: data.data[0].refInterestStatus === 'paid' ? true : false
           })
-          setPriAmt(data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal))
+          setPriAmt(
+            data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal)
+          )
 
           const options = data.bank.map((data: any) => ({
             label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo} - Balance : ₹ ${data.refBalance}`,
@@ -107,10 +111,10 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
   }
 
   const updateRepayment = () => {
-    const selectedBank = bankOption.find(bank => bank.value === selectBank)
+    const selectedBank = bankOption.find((bank) => bank.value === selectBank)
 
     if (Number(rePaymentForm.BalanceAmount) > Number(selectedBank?.balance)) {
-      console.log("Selected Amount Source with less Balance")
+      console.log('Selected Amount Source with less Balance')
       toast.error(`Selected Amount Source with less Balance`, {
         position: 'top-right',
         autoClose: 2999,
@@ -122,8 +126,7 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
         theme: 'light',
         transition: Slide
       })
-    }
-    else {
+    } else {
       axios
         .post(
           import.meta.env.VITE_API_URL + '/AdminRePayment/updateRePayment',
@@ -178,7 +181,6 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
           }
         })
     }
-
   }
 
   const filteredBankOptions = bankOption.filter((bank) => {
@@ -394,7 +396,9 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
                           disabled
                           className="w-full"
                           inputId="percent"
-                          value={rePaymentForm.interestStatus ? 0 : Number(rePaymentForm.interestAmt)}
+                          value={
+                            rePaymentForm.interestStatus ? 0 : Number(rePaymentForm.interestAmt)
+                          }
                           onValueChange={(e) =>
                             setRePaymentForm({
                               ...rePaymentForm,
@@ -440,7 +444,10 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
                           required
                           className="w-full"
                           inputId="percent"
-                          value={rePaymentForm.BalanceAmount + rePaymentForm.interestAmt}
+                          value={
+                            rePaymentForm.BalanceAmount +
+                            (rePaymentForm.interestStatus ? 0 : rePaymentForm.interestAmt)
+                          }
                           disabled
                           prefix="&#8377; "
                         />

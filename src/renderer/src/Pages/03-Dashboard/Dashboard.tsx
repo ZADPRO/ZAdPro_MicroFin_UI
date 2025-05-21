@@ -86,7 +86,6 @@ const Dashboard = () => {
             admin_total_not_paid_principal: data.adminLoanNotPaidData[0].total_not_paid_principal,
             admin_total_not_paid_interest: data.adminLoanNotPaidData[0].total_not_paid_interest,
             admin_Total_initial_interest: data.adminLoanCountData[0].Total_initial_interest
-
           })
         }
       })
@@ -96,10 +95,14 @@ const Dashboard = () => {
     DashBoardData()
   }, [date])
 
+  const reLoadPage = () => {
+    DashBoardData()
+  }
+
   return (
     <>
       <ToastContainer />
-      <Header userName={'ZAdPro Admin'} pageName={'DashBoard'} />
+      <Header userName={'ZAdPro Admin'} pageName={'DashBoard'} reLoad={reLoadPage} />
       <div className="card flex justify-content-start mx-5 mt-3 gap-x-3 align-items-center">
         <Calendar
           placeholder="select Month"
@@ -208,9 +211,10 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <Divider align="left"><div className="">
-        <b className='text-[1.2rem] text-[#0478df]'>Admin Loan</b>
-      </div>
+      <Divider align="left">
+        <div className="">
+          <b className="text-[1.2rem] text-[#0478df]">Admin Loan</b>
+        </div>
       </Divider>
       <div className="w-[full] flex flex-row">
         <div className=" mx-5 mt-0 w-[30%]">

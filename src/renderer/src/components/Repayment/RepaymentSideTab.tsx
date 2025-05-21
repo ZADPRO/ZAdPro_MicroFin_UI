@@ -40,7 +40,9 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   const [rePaymentInfo, setRePaymentInfo] = useState(false)
   const [rePaymentForm, setRePaymentForm] = useState<RePaymentForm>({
     interestAmt: 0,
-    BalanceAmount: 0
+    BalanceAmount: 0,
+    BalanceStatus: false,
+    interestStatus: false
   })
   const [followUpForm, setFollowUpForm] = useState<FollowUpForm>({
     Message: '',
@@ -87,10 +89,11 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
             interestAmt: Number(data.data[0].InteresePay),
             BalanceAmount: Number(data.data[0].refPrincipal),
             BalanceStatus: data.data[0].refPrincipalStatus === 'paid' ? true : false,
-            interestStatus: data.data[0].refInterestStatus === 'paid' ? true : false,
-
+            interestStatus: data.data[0].refInterestStatus === 'paid' ? true : false
           })
-          setPriAmt(data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal))
+          setPriAmt(
+            data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal)
+          )
 
           const options = data.bank.map((data: any) => ({
             label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo} - IFSC Code : ${data.refIFSCsCode}`,
@@ -366,7 +369,9 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                           disabled
                           className="w-full"
                           inputId="percent"
-                          value={rePaymentForm.interestStatus ? 0 : Number(rePaymentForm.interestAmt)}
+                          value={
+                            rePaymentForm.interestStatus ? 0 : Number(rePaymentForm.interestAmt)
+                          }
                           onValueChange={(e) =>
                             setRePaymentForm({
                               ...rePaymentForm,
@@ -412,7 +417,10 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                           required
                           className="w-full"
                           inputId="percent"
-                          value={rePaymentForm.BalanceAmount + rePaymentForm.interestAmt}
+                          value={
+                            rePaymentForm.BalanceAmount +
+                            (rePaymentForm.interestStatus ? 0 : rePaymentForm.interestAmt)
+                          }
                           disabled
                           prefix="&#8377; "
                         />

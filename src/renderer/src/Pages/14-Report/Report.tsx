@@ -11,6 +11,7 @@ import './ReportStyle.css'
 import { Sidebar } from 'primereact/sidebar'
 import OverallReport from '@renderer/components/OverallReport/OverallReport'
 import MonthlyReport from '@renderer/components/MonthlyReport/MonthlyReport'
+import ExpenseReport from '@renderer/components/ExpenseReport/ExpenseReport'
 
 type Props = {}
 
@@ -20,6 +21,7 @@ export default function Report({}: Props) {
   const monthName = new Date().toLocaleString('default', { month: 'short' })
   const [overallReport, setOverallReport] = useState<boolean>(false)
   const [monthlyReport, setMonthlyReport] = useState<boolean>(false)
+  const [expenseReport, setExpenseReport] = useState<boolean>(false)
 
   const loadData = () => {
     console.log('line --------- 25')
@@ -58,6 +60,7 @@ export default function Report({}: Props) {
   const closeSidebarNew = () => {
     setOverallReport(false)
     setMonthlyReport(false)
+    setExpenseReport(false)
   }
   return (
     <>
@@ -110,7 +113,12 @@ export default function Report({}: Props) {
                 </p>
               </div>
             </div>
-            <div className="w-[10%] flex flex-col align-items-center">
+            <div
+              className="w-[10%] flex flex-col align-items-center"
+              onClick={() => {
+                setExpenseReport(true)
+              }}
+            >
               <div className="m-3 invoice-icon p-5 w-[100%] flex justify-center flex-col align-items-center ">
                 <LiaChartBar />
               </div>
@@ -136,6 +144,14 @@ export default function Report({}: Props) {
             onHide={closeSidebarNew}
           >
             <MonthlyReport />
+          </Sidebar>
+          <Sidebar
+            visible={expenseReport}
+            style={{ width: '90vw' }}
+            position="right"
+            onHide={closeSidebarNew}
+          >
+            <ExpenseReport />
           </Sidebar>
         </div>
       )}

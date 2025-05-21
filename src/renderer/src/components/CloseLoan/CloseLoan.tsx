@@ -157,6 +157,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
           setBankModeType('')
           setBankid(null)
           setLoanAmt(null)
+          handleBack()
         }
       })
   }

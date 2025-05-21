@@ -69,6 +69,10 @@ const BankDetails = () => {
     loadData()
   }, [])
 
+  const reLoadPage = () => {
+    loadData()
+  }
+
   const CustomerId = (rowData: any) => {
     return (
       <>
@@ -160,7 +164,7 @@ const BankDetails = () => {
   return (
     <>
       <ToastContainer />
-      <Header userName={username} pageName={'Bank Details'} />
+      <Header userName={username} pageName={'Bank Details'} reLoad={reLoadPage} />
       {loadingStatus ? (
         <div
           style={{

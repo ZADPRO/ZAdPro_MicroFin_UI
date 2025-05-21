@@ -105,6 +105,9 @@ const Funds = () => {
     setNewData(false)
     loadData()
   }
+  const reLoadPage = () => {
+    loadData()
+  }
 
   const Status = (rowData: any) => {
     return (
@@ -160,7 +163,7 @@ const Funds = () => {
   return (
     <>
       <ToastContainer />
-      <Header userName={username} pageName={'Funds'} />
+      <Header userName={username} pageName={'Funds'} reLoad={reLoadPage} />
       {loadingStatus ? (
         <div
           style={{

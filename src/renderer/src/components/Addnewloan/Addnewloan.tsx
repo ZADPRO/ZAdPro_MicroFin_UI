@@ -26,6 +26,10 @@ interface loanType {
 const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   const [activeIndex, setActiveIndex] = useState(0)
 
+  const handleBack = () => {
+    closeSidebarUpdate()
+  }
+
   const [selectedLoanType, setLoanType] = useState<loanType | null>({ name: 'New Loan', code: 1 })
   const loanType: loanType[] = [
     { name: 'New Loan', code: 1 },
@@ -109,7 +113,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   }
 
   useEffect(() => {
-    getLoanData()
+    // getLoanData()
     getLoanDatas(id)
   }, [activeIndex])
 
@@ -262,41 +266,41 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   const [loanDetails, setLoanDetails] = useState<any>([])
 
   const getLoanDatas = async (loanId: any) => {
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/rePayment/loanDetails',
-        {
-          loanId: loanId
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-        localStorage.setItem('token', 'Bearer ' + data.token)
-
-        if (data.success) {
-
-          console.log('data.data -------> 288', data.data)
-          console.log('loanId line ------- 289', loanNo)
-          data.data.map((audit) => {
-            if (audit.refLoanId === loanNo) {
-              console.log(' -> Line Number ----------------------------------- 289 \n\n\n',);
-              console.log('data ------------ > 291', data.data)
-              console.log('audit line ------ 290', audit)
-              setLoanDetails([audit])
+    try {
+      axios
+        .post(
+          import.meta.env.VITE_API_URL + '/rePayment/loanDetails',
+          {
+            loanId: loanId
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
             }
-          })
-        }
-      })
+          }
+        )
+        .then((response) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          console.log('data line ------ 289', data)
+          localStorage.setItem('token', 'Bearer ' + data.token)
+
+          if (data.success) {
+            data.data.map((audit) => {
+              if (audit.refLoanId === loanNo) {
+                setLoanDetails([audit])
+                setLoading(false)
+              }
+            })
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
   }
   function formatToFirstOfMonth(dateString: string): string {
     const date = new Date(dateString)
@@ -369,77 +373,6 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
             }}
             style={{ marginTop: '1rem' }}
           >
-            {/* <TabPanel header="Loan History">
-              <div style={{ padding: '20px 0px' }}>
-                <Dropdown
-                  id="statusChoose"
-                  value={filter}
-                  options={filterOption}
-                  optionLabel="label"
-                  optionValue="value"
-                  onChange={(e) => {
-                    setFilter(e.value)
-                  }}
-                  required
-                />
-              </div>
-
-              <DataTable
-                paginator
-                rows={5}
-                value={filteredLoanData} // Use the filtered data here
-                showGridlines
-                scrollable
-                emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
-                tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
-              >
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  field="refCustLoanId"
-                  header="Loan Id"
-                ></Column>
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  field="refLoanStartDate"
-                  header="Loan Start Date"
-                ></Column>
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  field="refLoanDueDate"
-                  header="Loan Closed Date"
-                ></Column>
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  field="principal"
-                  header="Principal Amount"
-                ></Column>
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  header="Interest %"
-                  body={(rowData) =>
-                    rowData.refProductInterest != null ? `${rowData.refProductInterest} %` : '--'
-                  }
-                />
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  body={(rowData) =>
-                    rowData.refProductDuration != null
-                      ? `${rowData.refProductDuration} Months`
-                      : '--'
-                  }
-                  header="Loan Duration"
-                ></Column>
-                <Column
-                  style={{ minWidth: '8rem' }}
-                  body={isInterestAmount}
-                  header="Interest First"
-                ></Column>
-                <Column style={{ minWidth: '8rem' }} body={Status} header="Status"></Column>
-              </DataTable>
-            </TabPanel>
-            <TabPanel header="Create New Loan">
-              <CreateNewLoan id={id} goToHistoryTab={() => setActiveIndex(0)} />
-            </TabPanel> */}
             <TabPanel header="Loan Audit">
               <>
                 {loanDetails.map((item, index) => (
@@ -576,30 +509,35 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             <div className="w-[30%]">
                               <p>
                                 Documentation Fees :{' '}
-                                <b>&#8377; {loanDetails[index]?.refDocFee === null ? 0.00 : loanDetails[index]?.refDocFee}</b>
+                                <b>
+                                  &#8377;{' '}
+                                  {loanDetails[index]?.refDocFee === null
+                                    ? 0.0
+                                    : loanDetails[index]?.refDocFee}
+                                </b>
                               </p>
                             </div>
                             <div className="w-[60%]">
                               <p>
                                 Security :{' '}
-                                <b> {loanDetails[index]?.refSecurity === null ? "No Security Provide" : loanDetails[index]?.refSecurity}</b>
+                                <b>
+                                  {' '}
+                                  {loanDetails[index]?.refSecurity === null
+                                    ? 'No Security Provide'
+                                    : loanDetails[index]?.refSecurity}
+                                </b>
                               </p>
                             </div>
-
                           </div>
                           <Divider />
-
                         </>
                       )}
-
                     </div>
                     <div className="m-2 border-1 shadow-md border-[#c7c7c7ef]">
                       <LoanAudit loanId={item.refLoanId} />
                     </div>
                   </>
-
                 ))}
-
               </>
             </TabPanel>
             <TabPanel header="Loan Closing">
