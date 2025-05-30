@@ -104,7 +104,7 @@ export default function ExpenseReport() {
   return (
     <div>
       <div>
-        <p className="text-[1.3rem] font-bold">Overall Report</p>
+        <p className="text-[1.3rem] font-bold">Expense Report</p>
       </div>
       <div className="w-full flex align-items-center justify-center">
         <div className="w-[90%] flex align-items-center justify-start my-2">

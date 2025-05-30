@@ -8,27 +8,29 @@ import AdminLoanCreation from './AdminLoanCreation'
 import AdminLoanDetails from '../AdminLoanDetails/AdminLoanDetails'
 import axios from 'axios'
 import decrypt from '../Helper/Helper'
-import { FilterMatchMode } from 'primereact/api';
-
+import { FilterMatchMode } from 'primereact/api'
 
 interface LoanData {
-  refLoanId: number;
-  refVendorId: number;
-  refVendorName: string;
-  refVendorMobileNo: string;
-  refVendorEmailId: string;
-  refDescription?: string;
-  refLoanAmount: string; // If you plan to use this for calculations, consider changing to number
-  refLoanDuration?: number;
-  refLoanInterest?: number;
-  refLoanStartDate?: string; // Format: 'YYYY-MM-DD'
-  refLoanStatus?: string;
-  refVenderType?: number;
+  refLoanId: number
+  refVendorId: number
+  refVendorName: string
+  refVendorMobileNo: string
+  refVendorEmailId: string
+  refDescription?: string
+  refLoanAmount: string // If you plan to use this for calculations, consider changing to number
+  refLoanDuration?: number
+  refLoanInterest?: number
+  refLoanStartDate?: string // Format: 'YYYY-MM-DD'
+  refLoanStatus?: string
+  refVenderType?: number
   refLoanStatusId?: number
 }
 
+interface propsInterface {
+  reloadFlag: boolean
+}
 
-const AdminNewLoan: React.FC = () => {
+const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [newData, setNewData] = useState(false)
   const [loanDetailsSidebar, setLoanDetailsSidebar] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
@@ -46,9 +48,9 @@ const AdminNewLoan: React.FC = () => {
   ]
 
   const filteredLoanList = useMemo(() => {
-    if (filter === 0) return loanList;
-    return loanList.filter(item => item.refLoanStatusId === filter);
-  }, [loanList, filter]);
+    if (filter === 0) return loanList
+    return loanList.filter((item) => item.refLoanStatusId === filter)
+  }, [loanList, filter])
 
   const exportToCSV = () => {
     const headers = [
@@ -66,7 +68,7 @@ const AdminNewLoan: React.FC = () => {
       'Loan Status',
       'Loan Status ID',
       'Vendor Type'
-    ];
+    ]
 
     const rows = filteredLoanList.map((item, index) => [
       index + 1,
@@ -83,55 +85,46 @@ const AdminNewLoan: React.FC = () => {
       item.refLoanStatus || '',
       item.refLoanStatusId ?? '',
       item.refVenderType === 1 ? 'Outside Vendor' : item.refVenderType === 2 ? 'Bank' : 'Depositor'
-    ]);
+    ])
 
     const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers, ...rows]
-        .map((e) => e.join(','))
-        .join('\n');
+      'data:text/csv;charset=utf-8,' + [headers, ...rows].map((e) => e.join(',')).join('\n')
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${new Date}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `${new Date()}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
-  };
-
-  const vendorOptions = Array.from(
-    new Set(loanList.map((item) => item.refVendorName))
-  ).map((name) => ({ label: name, value: name }));
-
+  const vendorOptions = Array.from(new Set(loanList.map((item) => item.refVendorName))).map(
+    (name) => ({ label: name, value: name })
+  )
 
   const [filters, setFilters] = useState<any>({
     refVendorName: {
       value: null,
-      matchMode: FilterMatchMode.EQUALS, // Set EQUALS by default
-    },
-  });
-
+      matchMode: FilterMatchMode.EQUALS // Set EQUALS by default
+    }
+  })
 
   const onFilterChange = (e: any) => {
-    const value = e.value;
+    const value = e.value
     setFilters((prev) => ({
       ...prev,
       refVendorName: {
         ...prev.refVendorName,
-        value,
-      },
-    }));
-  };
-
-
+        value
+      }
+    }))
+  }
 
   const nameBodyTemplate = (rowData: any) => (
     <span
       style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
       onClick={() => {
-
         console.log('rowData line ----- 135', rowData)
         setLoanId(rowData.refLoanId)
         setUserId(rowData.refVendorId)
@@ -151,15 +144,13 @@ const AdminNewLoan: React.FC = () => {
 
   const getLoanList = () => {
     axios
-      .get(
-        import.meta.env.VITE_API_URL + '/adminLoan/allLoan',
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
+      .get(import.meta.env.VITE_API_URL + '/adminLoan/allLoan', {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
         }
-      ).then((response) => {
+      })
+      .then((response) => {
         const data = decrypt(
           response.data[1],
           response.data[0],
@@ -168,18 +159,19 @@ const AdminNewLoan: React.FC = () => {
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          console.log("Data line ---------------- 65", data)
+          console.log('Data line ---------------- 65', data)
           setLoanList(data.data)
-
         }
       })
   }
 
-  useEffect(() => { getLoanList() }, [])
+  useEffect(() => {
+    getLoanList()
+  }, [reloadFlag])
   return (
     <div>
       <div className="flex justify-content-between">
-        <div className='w-[30%] flex justify-between'>
+        <div className="w-[30%] flex justify-between">
           <Dropdown
             id="statusChoose"
             value={filter}
@@ -193,11 +185,8 @@ const AdminNewLoan: React.FC = () => {
         </div>
         <div>
           <Button label="Add New Loan" onClick={() => setNewData(true)} />
-
         </div>
-
       </div>
-
 
       <DataTable
         value={filteredLoanList}
@@ -234,7 +223,11 @@ const AdminNewLoan: React.FC = () => {
           field="refVenderType"
           header="Vendor Type"
           body={(rowData) =>
-            rowData.refVenderType === 1 ? 'Outside Vendor' : rowData.refVenderType === 2 ? 'Bank' : "Depositor"
+            rowData.refVenderType === 1
+              ? 'Outside Vendor'
+              : rowData.refVenderType === 2
+                ? 'Bank'
+                : 'Depositor'
           }
         />
         <Column field="refLoanStartDate" header="Date" />
@@ -256,8 +249,6 @@ const AdminNewLoan: React.FC = () => {
         <Column field="refLoanStatus" header="Loan Status" />
       </DataTable>
 
-
-
       <Sidebar
         visible={newData}
         style={{ width: '80vw' }}
@@ -272,7 +263,11 @@ const AdminNewLoan: React.FC = () => {
         position="right"
         onHide={closeSidebarNew}
       >
-        <AdminLoanDetails closeSidebarNew={closeSidebarNew} userId={userId ?? 0} loanId={loanId ?? 0} />
+        <AdminLoanDetails
+          closeSidebarNew={closeSidebarNew}
+          userId={userId ?? 0}
+          loanId={loanId ?? 0}
+        />
       </Sidebar>
     </div>
   )

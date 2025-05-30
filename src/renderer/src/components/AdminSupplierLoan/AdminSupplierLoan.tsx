@@ -9,28 +9,31 @@ import decrypt from '../Helper/Helper'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { InputText } from 'primereact/inputtext'
-import { FilterMatchMode } from 'primereact/api';
-
+import { FilterMatchMode } from 'primereact/api'
 
 interface Vendor {
-  refVendorId: number;
-  refVendorName: string | null;
-  refVendorMobileNo: string | null;
-  refVenderType: number | null;
-  refVendorEmailId: string | null;
-  refDescription: string | null;
-  vendorBank?: Bank[];  // Optional field for storing associated bank details
+  refVendorId: number
+  refVendorName: string | null
+  refVendorMobileNo: string | null
+  refVenderType: number | null
+  refVendorEmailId: string | null
+  refDescription: string | null
+  vendorBank?: Bank[] // Optional field for storing associated bank details
 }
 
 interface Bank {
-  refBankId?: number;  // Optional, as it might be null or not available when creating a new bank entry
-  refBankName: string;
-  refAccountNo: string;
-  refIFSCCode: string;
-  refUPICode: string;
+  refBankId?: number // Optional, as it might be null or not available when creating a new bank entry
+  refBankName: string
+  refAccountNo: string
+  refIFSCCode: string
+  refUPICode: string
 }
 
-const AdminSupplierLoan: React.FC = () => {
+interface propsInterface {
+  reloadFlag?: boolean
+}
+
+const AdminSupplierLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [newData, setNewData] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
   const [selectedVendorId, setSelectedVendorId] = useState<number | null>()
@@ -51,18 +54,14 @@ const AdminSupplierLoan: React.FC = () => {
     setGlobalFilterValue(value)
   }
 
-
   const getVendorList = () => {
     axios
-      .get(
-        import.meta.env.VITE_API_URL + '/adminLoan/vendor/list',
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
+      .get(import.meta.env.VITE_API_URL + '/adminLoan/vendor/list', {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
         }
-      )
+      })
       .then((response) => {
         const data = decrypt(
           response.data[1],
@@ -74,8 +73,6 @@ const AdminSupplierLoan: React.FC = () => {
         if (data.success) {
           console.log(data)
           setVendorList(data.data)
-
-
         }
       })
   }
@@ -104,25 +101,21 @@ const AdminSupplierLoan: React.FC = () => {
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          console.log("line ------- 87", data)
+          console.log('line ------- 87', data)
           setSelectedSupplier(data.data)
-
         }
       })
   }
-
 
   const closeSidebarNew = () => {
     setNewData(false)
     setSelectedSupplier(null)
     getVendorList()
-
   }
 
   useEffect(() => {
     getVendorList()
-
-  }, [])
+  }, [reloadFlag])
 
   const nameBodyTemplate = (rowData: any) => (
     <span
@@ -140,9 +133,7 @@ const AdminSupplierLoan: React.FC = () => {
 
   return (
     <div>
-
-
-      <div className='flex justify-content-between'>
+      <div className="flex justify-content-between">
         <Button
           label="Add New Vendor"
           severity="warning"
@@ -166,11 +157,9 @@ const AdminSupplierLoan: React.FC = () => {
         </IconField>
       </div>
 
-
       <DataTable
         value={vendorList}
         filters={filters}
-
         className="mt-4"
         showGridlines
         stripedRows
@@ -179,14 +168,17 @@ const AdminSupplierLoan: React.FC = () => {
         rows={5}
         rowsPerPageOptions={[5, 10, 25, 50]}
       >
-        <Column
-          header="S.No"
-          body={(_rowData, options) => options.rowIndex + 1}
-        />
+        <Column header="S.No" body={(_rowData, options) => options.rowIndex + 1} />
         <Column field="refVendorName" header="Name" body={nameBodyTemplate} />
         <Column field="refVendorMobileNo" header="Mobile No" />
         <Column
-          body={(rowData) => rowData.refVenderType === 1 ? 'Outside Vendor' : rowData.refVenderType === 2 ? 'Bank' : "Depositor"}
+          body={(rowData) =>
+            rowData.refVenderType === 1
+              ? 'Outside Vendor'
+              : rowData.refVenderType === 2
+                ? 'Bank'
+                : 'Depositor'
+          }
           header="Vendor Type"
         />
         <Column field="refDescription" header="Description" />

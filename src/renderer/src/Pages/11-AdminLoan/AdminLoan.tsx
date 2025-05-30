@@ -11,6 +11,7 @@ import AdminRepayments from '../12-AdminRepayments/AdminRepayments'
 const AdminLoan: React.FC = () => {
   const [username, setUsername] = useState('')
   const [loadingStatus, setLoadingStatus] = useState(true)
+  const [reloadFlag, setReloadFlag] = useState(false)
 
   const loadData = () => {
     try {
@@ -46,10 +47,15 @@ const AdminLoan: React.FC = () => {
     loadData()
   }, [])
 
+  const reLoadPage = () => {
+    setReloadFlag((prev) => !prev)
+    loadData()
+  }
+
   return (
     <div>
       <ToastContainer />
-      <Header userName={username} pageName={'Admin Loan'} />
+      <Header userName={username} pageName={'Admin Loan'} reLoad={reLoadPage} />
       {loadingStatus ? (
         <div
           style={{
@@ -70,7 +76,7 @@ const AdminLoan: React.FC = () => {
               <AdminRepayments />
             </TabPanel>
             <TabPanel header="Loan">
-              <AdminNewLoan />
+              <AdminNewLoan reloadFlag={reloadFlag} />
             </TabPanel>
             <TabPanel header="Vendor">
               <AdminSupplierLoan />

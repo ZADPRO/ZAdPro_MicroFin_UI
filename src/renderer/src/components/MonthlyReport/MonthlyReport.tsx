@@ -169,7 +169,7 @@ export default function MonthlyReport() {
   return (
     <div>
       <div>
-        <p className="text-[1.3rem] font-bold">Overall Report</p>
+        <p className="text-[1.3rem] font-bold">Monthly Report</p>
       </div>
       <div className="w-full flex align-items-center justify-center">
         <div className="w-[90%] flex align-items-center justify-around my-2">
@@ -277,7 +277,7 @@ export default function MonthlyReport() {
               }}
               view="month"
               dateFormat="mm/yy"
-              maxDate={new Date()}
+              // maxDate={new Date()}
             />
           </div>
           <div className="flex flex-col w-[18%]">
@@ -298,7 +298,7 @@ export default function MonthlyReport() {
               dateFormat="mm/yy"
               minDate={startDate || undefined}
               disabled={!startDate}
-              maxDate={new Date()}
+              // maxDate={new Date()}
             />
           </div>
         </div>
