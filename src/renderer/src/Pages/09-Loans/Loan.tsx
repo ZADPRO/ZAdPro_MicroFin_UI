@@ -266,7 +266,14 @@ const Loan = () => {
                 body={(rowData) => {
                   return (
                     <>
-                      <p>{rowData.refProductDuration} Months</p>
+                      <p>
+                        {rowData.refProductDuration}{' '}
+                        {rowData.refProductDurationType === 1
+                          ? 'Months'
+                          : rowData.refProductDurationType === 2
+                            ? 'Weeks'
+                            : 'Days'}
+                      </p>
                     </>
                   )
                 }}

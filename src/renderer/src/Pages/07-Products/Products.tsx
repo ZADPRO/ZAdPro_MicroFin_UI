@@ -98,7 +98,13 @@ const Products = () => {
         <div>{rowData.refProductInterest} %</div>
         {rowData.refProductDurationType === 1 && (
           <div>
-           ( {rowData.refProductMonthlyCal === 1 ? 'Day wise Calculation' : 'Month wise Calculation'} )
+            ({' '}
+            {rowData.refProductMonthlyCal === 1
+              ? 'Day wise Calculation'
+              : rowData.refProductMonthlyCal === 2
+                ? 'Month wise Calculation'
+                : ''}{' '}
+            )
           </div>
         )}
       </>

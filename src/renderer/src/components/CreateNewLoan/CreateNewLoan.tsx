@@ -418,7 +418,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             <div className="w-[95%]">
               <label className="font-bold block mb-2">Select Customer</label>
               <Dropdown
-                value={selectedLoanType}
+                value={customerId}
                 className="w-full"
                 filter
                 onChange={(e: DropdownChangeEvent) => {
@@ -676,15 +676,15 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     dateFormat="dd/mm/yy"
                     className="w-full"
                     required
-                    value={rePaymentDate}
+                    value={rePaymentDate ?? undefined}
                     onChange={(e: any) => {
                       console.log('e', e)
                       setRePaymentDate(e.value)
                       setStep(5)
                       setInterestFirst(null)
                     }}
-                    minDate={minDate}
-                    maxDate={maxDate}
+                    minDate={minDate ?? undefined}
+                    maxDate={maxDate ?? undefined}
                     viewDate={viewDate}
                   />
                 </div>

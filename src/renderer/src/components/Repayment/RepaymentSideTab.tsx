@@ -290,7 +290,14 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
               <>
                 <div className="m-3 w-full flex ">
                   <div className="w-[30%]">
-                    <p>Loan Duration : {loanDetails?.refProductDuration} Month</p>
+                    <p>
+                      Loan Duration : {loanDetails?.refProductDuration}{' '}
+                      {loanDetails.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}
+                    </p>
                   </div>
                   <div className="w-[30%]">
                     <p>Interest : {loanDetails?.refProductInterest}%</p>
@@ -335,6 +342,14 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                   </div>
                   <div className="w-[30%]">
                     <p>Total Principal Paid : &#8377; {loanDetails?.totalPrincipal}</p>
+                  </div>
+                  <div className="w-[30%]">
+                    <p>
+                      Interest Calculation :{' '}
+                      {loanDetails.refProductMonthlyCal === 2
+                        ? 'Month Wise Interest'
+                        : 'Day wise Interest'}
+                    </p>
                   </div>
                 </div>
               </>
