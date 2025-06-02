@@ -41,6 +41,8 @@ interface LoadDetailsResponseProps {
   totalLoanPaidDuration: string
   totalPrincipal: string
   finalBalanceAmt: string
+  durationType: Number
+  interestCalType: Number
 }
 
 interface UserDetails {
@@ -166,7 +168,13 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
 
       if (data.success) {
         const options = data.data.map((d: any) => ({
-          name: `Loan Amt : ${d.refLoanAmount} - Interest : ${d.refProductInterest} - Duration : ${d.refProductDuration}`,
+          name: `Loan Amt : ${d.refLoanAmount} - Interest : ${d.refProductInterest} - Duration : ${d.refProductDuration} ${
+            d.refProductDurationType === 1
+              ? 'Month'
+              : d.refProductDurationType === 2
+                ? 'Weeks'
+                : 'Days'
+          }`,
           value: d.refLoanId
         }))
         setUserLoan(options)
@@ -447,6 +455,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   getAllLoanData()
                   setSelectedLoan(null)
                   show(e.value, null)
+                  setStep(0)
                 }}
                 required
                 options={loanTypeOptions}
@@ -491,7 +500,16 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                       </div>
                       <div className="flex-1">
                         <p>
-                          Loan Duration : <b> {loadDetailsResponse?.loanDuration} Month</b>
+                          Loan Duration :{' '}
+                          <b>
+                            {' '}
+                            {loadDetailsResponse?.loanDuration}{' '}
+                            {loadDetailsResponse?.durationType === 1
+                              ? 'Months'
+                              : loadDetailsResponse?.durationType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </b>
                         </p>
                       </div>
                     </div>
@@ -511,7 +529,15 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                       <div className="flex-1">
                         <p>
                           Interest Paid (First) :{' '}
-                          <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
+                          <b>
+                            {' '}
+                            {loadDetailsResponse?.interestFirstMonth}{' '}
+                            {loadDetailsResponse?.durationType === 1
+                              ? 'Months'
+                              : loadDetailsResponse?.durationType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </b>
                         </p>
                       </div>
                     </div>
@@ -552,7 +578,16 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     <div className="flex mt-3">
                       <div className="flex-1">
                         <p>
-                          Loan Duration : <b> {loadDetailsResponse?.loanDuration} Month</b>
+                          Loan Duration :{' '}
+                          <b>
+                            {' '}
+                            {loadDetailsResponse?.loanDuration}{' '}
+                            {loadDetailsResponse?.durationType === 1
+                              ? 'Months'
+                              : loadDetailsResponse?.durationType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </b>
                         </p>
                       </div>
                       <div className="flex-1">

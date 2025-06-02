@@ -11,7 +11,7 @@ import { Slide, toast, ToastContainer } from 'react-toastify'
 
 import {
   CalculateFirstInterest,
-  CalculateInterest,
+  CalculateInitialInterest,
   FirstInterest,
   getRemainingDaysInCurrentMonth
 } from '@renderer/helper/loanFile'
@@ -45,6 +45,8 @@ interface LoadDetailsResponseProps {
   totalLoanPaidDuration: string
   totalPrincipal: string
   finalBalanceAmt: string
+  durationType: Number
+  interestCalType: Number
 }
 
 const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) => {
@@ -66,7 +68,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
-  const [selectedDurationType, setSelectedDurationType] = useState()
+  const [selectedDurationType, setSelectedDurationType] = useState<any>()
   const [selectedInterestCal, setSelectedInterestCal] = useState<number | null>()
   const [docFee, setDocFee] = useState<number | null>()
   const [security, setSecurity] = useState<string>()
@@ -100,8 +102,51 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [selectedLoan, setSelectedLoan] = useState<any[] | null>([])
   const [loanProduct, setLoanProduct] = useState<any[]>([])
   const [bankList, setBankList] = useState<any[]>([])
-  const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-  const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0)
+  const [minDate, setMinDate] = useState<Date | null>()
+  const [maxDate, setMaxDate] = useState<Date | null>()
+  const [viewDate, setViewDate] = useState<Date | null>()
+
+  const getDateRange = (durationType: number) => {
+    console.log(' -> Line Number ----------------------------------- 105')
+    console.log('durationType', durationType)
+    switch (durationType) {
+      case 1: // Next Month
+        console.log(' -> Line Number ----------------------------------- 108')
+        setMinDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
+        setMaxDate(new Date(today.getFullYear(), today.getMonth() + 2, 0))
+        setViewDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
+        setRePaymentDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
+        break
+      case 2: // Next Week
+        console.log(' -> Line Number ----------------------------------- 114')
+        const nextWeekStart = new Date(today)
+        nextWeekStart.setDate(today.getDate() + (7 - today.getDay()))
+        const nextWeekEnd = new Date(nextWeekStart)
+        nextWeekEnd.setDate(nextWeekStart.getDate() + 6)
+        setMinDate(nextWeekStart)
+        setMaxDate(nextWeekEnd)
+        setViewDate(nextWeekStart)
+        setRePaymentDate(nextWeekStart)
+        break
+
+      case 3: // Next Day
+        console.log(' -> Line Number ----------------------------------- 124')
+        const nextDay = new Date(today)
+        nextDay.setDate(today.getDate() + 1)
+        setMinDate(nextDay)
+        setMaxDate(nextDay)
+        setViewDate(nextDay)
+        setRePaymentDate(nextDay)
+        break
+
+      default:
+        console.log(' -> Line Number ----------------------------------- 132')
+        setMinDate(null)
+        setMaxDate(null)
+        setViewDate(null)
+    }
+  }
+
   const [step, setStep] = useState(0)
 
   const [vendorList, setVendorList] = useState<LoanType[]>([])
@@ -129,7 +174,13 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
       if (data.success) {
         console.log('data.data line ----- 118', data.data)
         const options = data.data.map((d: any) => ({
-          name: `Loan Amt : ${d.refLoanAmount} - Interest : ${d.refLoanInterest} % - Duration : ${d.refLoanDuration} Month`,
+          name: `Loan Amt : ${d.refLoanAmount} - Interest : ${d.refLoanInterest} % - Duration : ${d.refLoanDuration} ${
+            d.refProductDurationType === 1
+              ? 'Month'
+              : d.refProductDurationType === 2
+                ? 'Weeks'
+                : 'Days'
+          }`,
           value: d.refLoanId
         }))
         setUserLoan(options)
@@ -186,12 +237,12 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   }
 
   const initialInterest = (Pamt) => {
-    const days = getRemainingDaysInCurrentMonth()
-    console.log('days', days)
-    const amt = CalculateInterest({
+    const days = getRemainingDaysInCurrentMonth(selectedDurationType.code)
+    const amt = CalculateInitialInterest({
       annualInterest: Number(loanInterest),
       principal: Pamt,
-      totalDays: days
+      totalDays: days,
+      interestCal: Number(selectedInterestCal)
     })
     console.log('amt line ----- 175', amt)
     // setNewLoan({ ...newLoan, initialInterestAmt: amt })
@@ -407,6 +458,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                   getUserLoanData()
                   getAllLoanData()
                   setSelectedLoan(null)
+                  setStep(0)
                   show(e.value, null)
                 }}
                 required
@@ -451,7 +503,16 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       </div>
                       <div className="flex-1">
                         <p>
-                          Loan Duration : <b> {loadDetailsResponse?.loanDuration} Month</b>
+                          Loan Duration :{' '}
+                          <b>
+                            {' '}
+                            {loadDetailsResponse?.loanDuration}{' '}
+                            {loadDetailsResponse?.durationType === 1
+                              ? 'Months'
+                              : loadDetailsResponse?.durationType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </b>
                         </p>
                       </div>
                     </div>
@@ -470,7 +531,15 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       <div className="flex-1">
                         <p>
                           Interest Paid (First) :{' '}
-                          <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
+                          <b>
+                            {' '}
+                            {loadDetailsResponse?.interestFirstMonth}{' '}
+                            {loadDetailsResponse?.durationType === 1
+                              ? 'Months'
+                              : loadDetailsResponse?.durationType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </b>
                         </p>
                       </div>
                     </div>
@@ -511,7 +580,16 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                     <div className="flex mt-3">
                       <div className="flex-1">
                         <p>
-                          Loan Duration : <b> {loadDetailsResponse?.loanDuration} Month</b>
+                          Loan Duration :{' '}
+                          <b>
+                            {' '}
+                            {loadDetailsResponse?.loanDuration}{' '}
+                            {loadDetailsResponse?.durationType === 1
+                              ? 'Months'
+                              : loadDetailsResponse?.durationType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </b>
                         </p>
                       </div>
                       <div className="flex-1">
@@ -532,7 +610,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
               <div className="w-full flex justify-content-around my-1">
                 <div className="w-[45%] flex justify-between">
                   <div className="w-[48%]">
-                    <label className="font-bold block mb-2">Loan Duration in Month</label>
+                    <label className="font-bold block mb-2">Loan Duration</label>
                     <InputNumber
                       className="w-full"
                       placeholder="Enter Loan Duration"
@@ -540,8 +618,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       disabled={step < 0}
                       value={loanDuration}
                       onChange={(e: any) => {
+                        setStep(0.3)
                         setLoanDuration(e.value)
-                        setLoanInterest(0)
+                        setSelectedDurationType(null)
                       }}
                       locale="en-IN"
                     />
@@ -554,6 +633,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       onChange={(e) => {
                         setStep(0.5)
                         setSelectedDurationType(e.value)
+                        setLoanInterest(0)
+                        getDateRange(e.value.code)
+
                         if (e.value.code === 1) {
                           setSelectedInterestCal(1)
                         } else {
@@ -561,7 +643,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                         }
                       }}
                       options={durationType}
-                      disabled={step < 0}
+                      disabled={step < 0.3}
                       optionLabel="name"
                       placeholder="Select Duration"
                       className="w-full"
@@ -582,6 +664,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                         setLoanInterest(e.value)
                         setStep(1)
                         setBankId(null)
+                        setSelectedRepaymentType(null)
                         const value = parseFloat(e.value) || 0
                         const balance = oldBalanceAmt ?? 0
                         setFinalLoanAmt(Number(value) + Number(balance))
@@ -601,6 +684,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       onChange={(e: DropdownChangeEvent) => {
                         setSelectedRepaymentType(e.value)
                         setStep(2)
+                        if (selectedDurationType.code !== 1) {
+                          setStep(2.5)
+                        }
                         setNewLoanAmt(null)
                       }}
                       options={rePaymentTypeOptions}
@@ -621,7 +707,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       optionLabel="name"
                       optionValue="code"
                       placeholder="Interest Calculation Type"
-                      disabled={step < 2}
+                      disabled={step < 2 || selectedDurationType.code !== 1}
                       onChange={(e: any) => {
                         console.log('e', e)
                         setStep(2.5)
@@ -686,7 +772,6 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                     onChange={(e: DropdownChangeEvent) => {
                       setBankId(e.value)
                       setStep(4)
-                      setRePaymentDate(nextMonth)
                     }}
                     options={bankList}
                     optionLabel="refBankName"
@@ -703,15 +788,16 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                     dateFormat="dd/mm/yy"
                     className="w-full"
                     required
-                    value={rePaymentDate}
+                    value={rePaymentDate ?? undefined}
                     onChange={(e: any) => {
+                      console.log('e', e)
                       setRePaymentDate(e.value)
                       setStep(5)
                       setInterestFirst(null)
                     }}
-                    minDate={nextMonthStart}
-                    maxDate={nextMonthEnd}
-                    viewDate={nextMonthStart}
+                    minDate={minDate ?? undefined}
+                    maxDate={maxDate ?? undefined}
+                    viewDate={viewDate}
                   />
                 </div>
                 <div className="w-[45%] flex align-items-center">
@@ -736,7 +822,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                               rePaymentDate: rePaymentDate?.toString() || '',
                               rePaymentType:
                                 (selectedRepaymentType as any)?.value ?? selectedRepaymentType ?? 1,
-                              loanDuration: Number(loanDuration)
+                              loanDuration: Number(loanDuration),
+                              durationType: selectedDurationType.code,
+                              interestCal: selectedInterestCal || 0
                             })
                           }}
                           checked={interestFirst === true}
@@ -768,7 +856,14 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                   </div>
                   {interestFirst && (
                     <div className="w-[60%]">
-                      <label className="font-bold block mb-2">Enter Number Of Month</label>
+                      <label className="font-bold block mb-2">
+                        Enter Number Of{' '}
+                        {selectedDurationType.code === 1
+                          ? 'Month'
+                          : selectedDurationType.code === 2
+                            ? 'Weeks'
+                            : 'Days'}
+                      </label>
                       <InputNumber
                         className="w-full"
                         inputId="expiry"
@@ -785,10 +880,18 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                             rePaymentDate: rePaymentDate?.toString() || '',
                             rePaymentType:
                               (selectedRepaymentType as any)?.value ?? selectedRepaymentType ?? 1,
-                            loanDuration: Number(loanDuration)
+                            loanDuration: Number(loanDuration),
+                            durationType: selectedDurationType.code,
+                            interestCal: selectedInterestCal || 0
                           })
                         }}
-                        suffix=" Month"
+                        suffix={
+                          selectedDurationType.code === 1
+                            ? ' Month'
+                            : selectedDurationType.code === 2
+                              ? ' Weeks'
+                              : ' Days'
+                        }
                       />
                     </div>
                   )}
@@ -832,7 +935,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
             </div>
           )}
 
-          {step >= 6 && (
+          {step >= 7 && (
             <div className="my-3 shadow-2xl border-0 rounded-lg p-5">
               <b>Loan Details</b>
               <div className="flex w-full justify-content-between my-2">
@@ -855,12 +958,24 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
               <div className="flex w-full justify-content-between my-2 ">
                 <div>
                   <p>
-                    Interest For This Month : ₹ <b>{initialInterestAmt.toFixed(2)}</b>
+                    Interest For This{' '}
+                    {selectedDurationType.code === 1
+                      ? 'Month'
+                      : selectedDurationType.code === 2
+                        ? 'Weeks'
+                        : 'Days'}{' '}
+                    : ₹ <b>{initialInterestAmt.toFixed(2)}</b>
                   </p>
                 </div>
                 <div>
                   <p>
-                    Interest for {monthCount} Month : ₹ <b>{interestFirstAmt.toFixed(2)}</b>
+                    Interest for {monthCount}{' '}
+                    {selectedDurationType.code === 1
+                      ? 'Month'
+                      : selectedDurationType.code === 2
+                        ? 'Weeks'
+                        : 'Days'}{' '}
+                    : ₹ <b>{interestFirstAmt.toFixed(2)}</b>
                   </p>
                 </div>
                 <div>
@@ -881,7 +996,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
 
           <div></div>
         </div>
-        {step >= 6 && (
+        {step >= 7 && (
           <div className="w-full flex justify-center">
             <button className="bg-[green] text-white py-2 px-10 rounded-md shadow-md">
               Create Loan
