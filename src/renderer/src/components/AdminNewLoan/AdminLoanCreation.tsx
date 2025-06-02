@@ -47,9 +47,6 @@ interface LoadDetailsResponseProps {
   finalBalanceAmt: string
 }
 
-
-
-
 const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) => {
   const today = new Date()
   const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
@@ -69,6 +66,8 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
+  const [selectedDurationType, setSelectedDurationType] = useState()
+  const [selectedInterestCal, setSelectedInterestCal] = useState<number | null>()
   const [docFee, setDocFee] = useState<number | null>()
   const [security, setSecurity] = useState<string>()
   const [selectedLoanType, setSelectedLoanType] = useState<number>(0)
@@ -80,6 +79,16 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
     { name: 'Loan Extension', value: 3 }
   ]
 
+  const durationType = [
+    { name: 'Monthly', code: 1 },
+    { name: 'Weekly', code: 2 },
+    { name: 'Daily', code: 3 }
+  ]
+
+  const interestCalculationType = [
+    { name: 'DayWise Monthly Calculation', code: 1 },
+    { name: 'Monthly Calculation', code: 2 }
+  ]
 
   const [selectedRepaymentType, setSelectedRepaymentType] = useState<LoanType | null>(null)
   const rePaymentTypeOptions: LoanType[] = [
@@ -118,7 +127,6 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
       localStorage.setItem('token', 'Bearer ' + data.token)
 
       if (data.success) {
-
         console.log('data.data line ----- 118', data.data)
         const options = data.data.map((d: any) => ({
           name: `Loan Amt : ${d.refLoanAmount} - Interest : ${d.refLoanInterest} % - Duration : ${d.refLoanDuration} Month`,
@@ -252,10 +260,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
           refLoanDuration: loanDuration,
           refLoanInterest: loanInterest,
           refLoanAmount: FinalLoanAmt.toFixed(2),
-          refLoanDueDate: getDateAfterMonths(
-            rePaymentDate,
-            Number(loanDuration)
-          ),
+          refLoanDueDate: getDateAfterMonths(rePaymentDate, Number(loanDuration)),
           refPayementType: 'bank',
           refRepaymentStartDate: rePaymentDate.toLocaleDateString('en-CA'),
           refBankId: bankId?.refBankId,
@@ -325,15 +330,12 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
 
   const getVendorList = () => {
     axios
-      .get(
-        import.meta.env.VITE_API_URL + '/adminLoan/vendorList',
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
+      .get(import.meta.env.VITE_API_URL + '/adminLoan/vendorList', {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
         }
-      )
+      })
       .then((response) => {
         console.log('response', response)
         const data = decrypt(
@@ -345,16 +347,14 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          const venList = data.data;
+          const venList = data.data
           venList.map((data, index) => {
-            const name = `Name : ${data.refVendorName} | Mobile : ${data.refVendorMobileNo} | Vendor Type : ${data.refVenderType === 1 ? "Outside Vendor" : "Bank"}`
+            const name = `Name : ${data.refVendorName} | Mobile : ${data.refVendorMobileNo} | Vendor Type : ${data.refVenderType === 1 ? 'Outside Vendor' : 'Bank'}`
             venList[index] = { ...venList[index], refVendorName: name }
           })
 
           setVendorList(venList)
-
         }
-
       })
   }
 
@@ -365,7 +365,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   return (
     <div>
       <ToastContainer />
-      <h2><b className='text-[1.2rem]'>Add New Loan</b></h2>
+      <h2>
+        <b className="text-[1.2rem]">Add New Loan</b>
+      </h2>
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -373,9 +375,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
         }}
       >
         <div className="w-[100%] flex flex-col justify-content-between">
-
           <div className="w-full flex justify-content-around my-1">
-
             <div className="w-[95%]">
               <label className="font-bold block mb-2">Select vendor</label>
               <Dropdown
@@ -469,7 +469,8 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       </div>
                       <div className="flex-1">
                         <p>
-                          Interest Paid (First) : <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
+                          Interest Paid (First) :{' '}
+                          <b> {loadDetailsResponse?.interestFirstMonth} Month</b>
                         </p>
                       </div>
                     </div>
@@ -543,17 +544,39 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                         setLoanInterest(0)
                       }}
                       locale="en-IN"
-                      suffix=" Month"
-
                     />
                   </div>
+                  <div className="w-[48%]">
+                    <label className="font-bold block mb-2">Select Duration Type</label>
+                    <Dropdown
+                      inputId="durationType"
+                      value={selectedDurationType}
+                      onChange={(e) => {
+                        setStep(0.5)
+                        setSelectedDurationType(e.value)
+                        if (e.value.code === 1) {
+                          setSelectedInterestCal(1)
+                        } else {
+                          setSelectedInterestCal(0)
+                        }
+                      }}
+                      options={durationType}
+                      disabled={step < 0}
+                      optionLabel="name"
+                      placeholder="Select Duration"
+                      className="w-full"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="w-[45%] flex justify-between">
                   <div className="w-[48%]">
                     <label className="font-bold block mb-2">Enter Loan Interest</label>
                     <InputNumber
                       className="w-full"
                       placeholder="Enter Loan Interest"
                       required
-                      disabled={step < 0}
+                      disabled={step < 0.5}
                       value={loanInterest}
                       onChange={(e: any) => {
                         setLoanInterest(e.value)
@@ -565,55 +588,76 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                         initialInterest(Number(value) + Number(balance))
                       }}
                       suffix=" %"
-
                       locale="en-IN"
                     />
                   </div>
-                </div>
-                <div className="w-[45%]">
-                  <label className="font-bold block mb-2">Select Repayment Type</label>
-                  <Dropdown
-                    value={selectedRepaymentType}
-                    disabled={step < 1}
-                    required
-                    className="w-full"
-                    onChange={(e: DropdownChangeEvent) => {
-                      setSelectedRepaymentType(e.value)
-                      setStep(2)
-                      setNewLoanAmt(null)
-                    }}
-                    options={rePaymentTypeOptions}
-                    optionLabel="name"
-                    placeholder="Select Re-payment Type"
-                  />
+                  <div className="w-[48%]">
+                    <label className="font-bold block mb-2">Select Repayment Type</label>
+                    <Dropdown
+                      value={selectedRepaymentType}
+                      disabled={step < 1}
+                      required
+                      className="w-full"
+                      onChange={(e: DropdownChangeEvent) => {
+                        setSelectedRepaymentType(e.value)
+                        setStep(2)
+                        setNewLoanAmt(null)
+                      }}
+                      options={rePaymentTypeOptions}
+                      optionLabel="name"
+                      placeholder="Select Re-payment Type"
+                    />
+                  </div>
                 </div>
               </div>
               <div className="w-full flex justify-content-around my-1">
                 <div className="w-[45%] flex flex-row justify-content-between gap-x-2">
-                  <div className="w-full">
-                    <label className="font-bold block mb-2">Enter Loan Amount</label>
-                    <InputNumber
-                      className="w-full"
-                      placeholder="Enter Loan Amount"
-                      inputId="currency-india"
-                      required
+                  <div className="w-[48%]">
+                    <label className="font-bold block mb-2">Interest Calculation Type</label>
+
+                    <Dropdown
+                      value={selectedInterestCal}
+                      options={interestCalculationType}
+                      optionLabel="name"
+                      optionValue="code"
+                      placeholder="Interest Calculation Type"
                       disabled={step < 2}
-                      value={newLoanAmt}
                       onChange={(e: any) => {
-                        setNewLoanAmt(e.value)
-                        setStep(3)
-                        setBankId(null)
-                        const value = parseFloat(e.value) || 0
-                        const balance = oldBalanceAmt ?? 0
-                        setFinalLoanAmt(Number(value) + Number(balance))
-                        initialInterest(Number(value) + Number(balance))
+                        console.log('e', e)
+                        setStep(2.5)
+                        setSelectedInterestCal(e.value)
                       }}
-                      mode="currency"
-                      currency="INR"
-                      currencyDisplay="symbol"
-                      locale="en-IN"
+                      className="w-full"
+                      required
                     />
                   </div>
+                  <div className="w-[48%]">
+                    <div className="w-full">
+                      <label className="font-bold block mb-2">Enter Loan Amount</label>
+                      <InputNumber
+                        className="w-full"
+                        placeholder="Enter Loan Amount"
+                        inputId="currency-india"
+                        required
+                        disabled={step < 2.5}
+                        value={newLoanAmt}
+                        onChange={(e: any) => {
+                          setNewLoanAmt(e.value)
+                          setStep(3)
+                          setBankId(null)
+                          const value = parseFloat(e.value) || 0
+                          const balance = oldBalanceAmt ?? 0
+                          setFinalLoanAmt(Number(value) + Number(balance))
+                          initialInterest(Number(value) + Number(balance))
+                        }}
+                        mode="currency"
+                        currency="INR"
+                        currencyDisplay="symbol"
+                        locale="en-IN"
+                      />
+                    </div>
+                  </div>
+
                   {(selectedLoanType === 2 || selectedLoanType === 3) && (
                     <div className="w-full">
                       <label className="font-bold block mb-2">Balance Amount</label>
@@ -767,21 +811,22 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                     locale="en-IN"
                     onChange={(e: any) => {
                       setDocFee(e.value)
-                      setSecurity("")
+                      setSecurity('')
                       setStep(7)
-
-
                     }}
                   />
                 </div>
                 <div className="w-[45%]">
                   <label className="font-bold block mb-2">Security</label>
-                  <InputTextarea className='w-full' value={security}
+                  <InputTextarea
+                    className="w-full"
+                    value={security}
                     disabled={step < 7}
                     onChange={(e) => {
-                      setSecurity(e.target.value); setStep(8)
-                    }} />
-
+                      setSecurity(e.target.value)
+                      setStep(8)
+                    }}
+                  />
                 </div>
               </div>
             </div>

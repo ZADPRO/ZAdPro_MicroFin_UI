@@ -172,7 +172,7 @@ const ProductInputNew = ({ closeSidebarNew }) => {
                 }}
                 required
               />
-              <label htmlFor="refProductInterest">Enter Integerest (%)</label>
+              <label htmlFor="refProductInterest">Enter Interest (%)</label>
             </FloatLabel>
           </div>
 

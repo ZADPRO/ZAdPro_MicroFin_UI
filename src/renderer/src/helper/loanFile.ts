@@ -108,7 +108,7 @@ export function getRemainingDaysInCurrentMonthOld(): number {
   return remainingDays
 }
 
-export function getRemainingDaysInCurrentMonth(type: number) {
+export function getRemainingDaysInCurrentMonth(type?: number) {
   const today = new Date()
 
   if (type === 1) {
