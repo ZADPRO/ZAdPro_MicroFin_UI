@@ -27,9 +27,9 @@ interface LoanType {
   value: number
 }
 
-interface LoanType {
+interface DurationType {
   name: string
-  value: number
+  code: number
 }
 
 interface LoadDetailsResponseProps {
@@ -68,7 +68,10 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
-  const [selectedDurationType, setSelectedDurationType] = useState<any>()
+  const [selectedDurationType, setSelectedDurationType] = useState<DurationType>({
+    name: 'Monthly',
+    code: 1
+  })
   const [selectedInterestCal, setSelectedInterestCal] = useState<number | null>()
   const [docFee, setDocFee] = useState<number | null>()
   const [security, setSecurity] = useState<string>()
@@ -622,7 +625,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                       onChange={(e: any) => {
                         setStep(0.3)
                         setLoanDuration(e.value)
-                        setSelectedDurationType(null)
+                        setSelectedDurationType({ name: 'Monthly', code: 1 })
                       }}
                       locale="en-IN"
                     />
