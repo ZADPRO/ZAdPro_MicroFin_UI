@@ -232,7 +232,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     const amt: number = CalculateInitialInterest({
       annualInterest: Number(productId?.refProductInterest),
       principal: Pamt,
-      totalDays: days
+      totalDays: days,
+      interestCal: Number(productId?.refProductMonthlyCal)
     })
     console.log('amt line ----- 175', amt)
     // setNewLoan({ ...newLoan, initialInterestAmt: amt })
@@ -424,6 +425,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 onChange={(e: DropdownChangeEvent) => {
                   console.log('e line ----------- 405', e)
                   setCustomerId(e.target.value)
+                  setStep(0.5)
                 }}
                 required
                 options={customerList}
@@ -438,6 +440,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
               <Dropdown
                 value={selectedLoanType}
                 className="w-full"
+                disabled={step < 0.5}
                 onChange={(e: DropdownChangeEvent) => {
                   setSelectedLoanType(e.value)
                   getUserLoanData()
@@ -701,6 +704,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                           disabled={step < 5}
                           onChange={(e: RadioButtonChangeEvent) => {
                             setInterestFirst(true)
+                            setDocFee(0)
                             setMonthCount(1)
                             setStep(6)
                             calculateInterest({
@@ -729,6 +733,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                           value="Mushroom"
                           required
                           onChange={(e: RadioButtonChangeEvent) => {
+                            setDocFee(0)
                             setInterestFirst(false)
                             setMonthCount(0)
                             setInterestFirstAmt(0)
@@ -760,6 +765,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         required
                         onChange={(e: any) => {
                           setMonthCount(e.value)
+                          setDocFee(0)
                           calculateInterest({
                             Interest: Number(productId?.refProductInterest),
                             PrincipalAmt: Number(FinalLoanAmt),
@@ -802,6 +808,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     locale="en-IN"
                     onChange={(e: any) => {
                       setDocFee(e.value)
+                      setSecurity('')
                       setSecurity('')
                       setStep(7)
                     }}
@@ -903,7 +910,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
 
           <div></div>
         </div>
-        {step >= 6 && (
+        {step >= 7 && (
           <div className="w-full flex justify-center">
             <button className="bg-[green] text-white py-2 px-10 rounded-md shadow-md">
               Create Loan

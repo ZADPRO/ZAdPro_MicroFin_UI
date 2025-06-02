@@ -291,12 +291,7 @@ const Loan = () => {
                 }}
                 header="Loan Interest"
               ></Column>
-              <Column
-                style={{ minWidth: '8rem' }}
-                filter
-                field="refLoanStatus"
-                header="Status"
-              ></Column>
+              <Column style={{ minWidth: '8rem' }} field="refLoanStatus" header="Status"></Column>
             </DataTable>
           </div>
 

@@ -129,6 +129,14 @@ export function getRemainingDaysInCurrentMonth(type?: number) {
 
   return 0 // fallback if type is not 1, 2, or 3
 }
+export function getDaysInCurrentMonth(): number {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+
+  const lastDayOfMonth = new Date(year, month + 1, 0)
+  return lastDayOfMonth.getDate()
+}
 
 interface CalaulateInterest {
   principal: number
@@ -137,9 +145,20 @@ interface CalaulateInterest {
   interestCal?: number
 }
 export function CalculateInitialInterest(data: CalaulateInterest): number {
+  console.log(' -> Line Number ----------------------------------- 148')
   try {
-    let Interest =
-      ((Number(data.principal) * (Number(data.annualInterest) * 12)) / 100 / 365) * data.totalDays
+    let Interest
+    if (data.interestCal === 2) {
+      console.log(' -> Line Number ----------------------------------- 152')
+      let temp1 = (Number(data.principal) * (Number(data.annualInterest) * 12)) / 100 / 12
+      temp1 = Number(temp1) / Number(getDaysInCurrentMonth())
+      Interest = temp1 * data.totalDays
+    } else {
+      console.log(' -> Line Number ----------------------------------- 157')
+      Interest =
+        ((Number(data.principal) * (Number(data.annualInterest) * 12)) / 100 / 365) * data.totalDays
+    }
+
     console.log('Interest line ----- 118', Interest)
     return Interest
   } catch (error) {
