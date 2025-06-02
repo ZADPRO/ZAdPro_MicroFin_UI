@@ -329,7 +329,9 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
           ),
           oldBalanceAmt: (Number(oldBalanceAmt) ?? 0).toFixed(2),
           refDocFee: docFee,
-          refSecurity: security
+          refSecurity: security,
+          refProductDurationType: selectedDurationType,
+          refProductMonthlyCal: selectedInterestCal
         },
         {
           headers: {
