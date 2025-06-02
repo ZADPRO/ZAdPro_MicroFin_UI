@@ -330,7 +330,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
           oldBalanceAmt: (Number(oldBalanceAmt) ?? 0).toFixed(2),
           refDocFee: docFee,
           refSecurity: security,
-          refProductDurationType: selectedDurationType,
+          refProductDurationType: selectedDurationType.code,
           refProductMonthlyCal: selectedInterestCal
         },
         {
@@ -700,26 +700,29 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
               </div>
               <div className="w-full flex justify-content-around my-1">
                 <div className="w-[45%] flex flex-row justify-content-between gap-x-2">
-                  <div className="w-[48%]">
-                    <label className="font-bold block mb-2">Interest Calculation Type</label>
+                  {selectedDurationType.code === 1 && (
+                    <div className="w-[48%]">
+                      <label className="font-bold block mb-2">Interest Calculation Type</label>
 
-                    <Dropdown
-                      value={selectedInterestCal}
-                      options={interestCalculationType}
-                      optionLabel="name"
-                      optionValue="code"
-                      placeholder="Interest Calculation Type"
-                      disabled={step < 2 || selectedDurationType.code !== 1}
-                      onChange={(e: any) => {
-                        console.log('e', e)
-                        setStep(2.5)
-                        setSelectedInterestCal(e.value)
-                      }}
-                      className="w-full"
-                      required
-                    />
-                  </div>
-                  <div className="w-[48%]">
+                      <Dropdown
+                        value={selectedInterestCal}
+                        options={interestCalculationType}
+                        optionLabel="name"
+                        optionValue="code"
+                        placeholder="Interest Calculation Type"
+                        disabled={step < 2 || selectedDurationType.code !== 1}
+                        onChange={(e: any) => {
+                          console.log('e', e)
+                          setStep(2.5)
+                          setSelectedInterestCal(e.value)
+                        }}
+                        className="w-full"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div className="w-full">
                     <div className="w-full">
                       <label className="font-bold block mb-2">Enter Loan Amount</label>
                       <InputNumber
