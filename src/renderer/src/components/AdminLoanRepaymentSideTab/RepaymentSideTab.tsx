@@ -317,7 +317,14 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
               <>
                 <div className="m-3 w-full flex ">
                   <div className="w-[30%]">
-                    <p>Loan Duration : {loanDetails?.refProductDuration} Month</p>
+                    <p>
+                      Loan Duration : {loanDetails?.refProductDuration}{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}
+                    </p>
                   </div>
                   <div className="w-[30%]">
                     <p>Interest : {loanDetails?.refProductInterest}%</p>
@@ -333,7 +340,15 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
                     </p>
                   </div>
                   <div className="w-[30%]">
-                    <p>No of Month Paid First : {loanDetails?.refInterestMonthCount} Month</p>
+                    <p>
+                      No of{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      Paid First : {loanDetails?.refInterestMonthCount} Month
+                    </p>
                   </div>
                   <div className="w-[30%]">
                     <p>Initial Interest : ₹ {loanDetails?.refInitialInterest}</p>
@@ -345,14 +360,28 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      Loan Start Month :{' '}
+                      Loan Start{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      :{' '}
                       {loanDetails.refRepaymentStartDate
                         ? formatToFirstOfMonth(loanDetails.refRepaymentStartDate)
                         : ' -'}
                     </p>
                   </div>
                   <div className="w-[30%]">
-                    <p>Loan End Month : {loanDetails?.refLoanDueDate}</p>
+                    <p>
+                      Loan End{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      : {loanDetails?.refLoanDueDate}
+                    </p>
                   </div>
                 </div>
 

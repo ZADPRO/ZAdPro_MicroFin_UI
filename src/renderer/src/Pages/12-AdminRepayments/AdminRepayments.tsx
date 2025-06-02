@@ -31,11 +31,13 @@ const AdminRepayments = () => {
     { name: 'Month', code: 1 }
   ]
 
-  function formatToYearMonth(dateInput: string | Date): string {
-    const date = new Date(dateInput)
+  function formatToDDMMYYYY(dateString) {
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
     const year = date.getFullYear()
-    const month = (date.getMonth() + 1).toString().padStart(2, '0') // Month is 0-indexed
-    return `${year}-${month}`
+
+    return `${day}-${month}-${year}`
   }
 
   const loadData = () => {
@@ -45,8 +47,8 @@ const AdminRepayments = () => {
           import.meta.env.VITE_API_URL + '/AdminRePayment/userList',
           {
             ifMonth: userListType.code === 0 ? false : true,
-            startDate: startDate ? formatToYearMonth(startDate) : '',
-            endDate: endDate ? formatToYearMonth(endDate) : ''
+            startDate: startDate ? formatToDDMMYYYY(startDate) : '',
+            endDate: endDate ? formatToDDMMYYYY(endDate) : ''
           },
           {
             headers: {
@@ -189,25 +191,23 @@ const AdminRepayments = () => {
                 <>
                   <Calendar
                     value={startDate}
-                    placeholder="Select Start Range"
                     onChange={(e) => {
                       setStartDate(e.value)
                       if (endDate && e.value && endDate < e.value) {
                         setEndDate(e.value)
                       }
                     }}
-                    view="month"
-                    dateFormat="mm/yy"
+                    dateFormat="dd-mm-yy"
                   />
                   <Calendar
                     value={endDate}
-                    placeholder="Select End Range"
-                    onChange={(e) => setEndDate(e.value)}
-                    view="month"
-                    dateFormat="mm/yy"
+                    onChange={(e) => {
+                      setEndDate(e.value)
+                    }}
+                    dateFormat="dd-mm-yy"
                     minDate={startDate || undefined}
                     disabled={!startDate}
-                  />{' '}
+                  />
                 </>
               )}
             </div>

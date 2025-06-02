@@ -47,6 +47,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   const [productList, setProductList]: any = useState([])
 
   const [loanData, setLoadData] = useState<any>([])
+  const [loanStatus, setLoanStatus] = useState<string>()
 
   const [addInputs, setAddInputs] = useState({
     productId: '',
@@ -293,6 +294,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
             data.data.map((audit) => {
               if (audit.refLoanId === loanNo) {
                 setLoanDetails([audit])
+                setLoanStatus(audit.refLoanStatus)
                 setLoading(false)
               }
             })
@@ -424,7 +426,14 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             <div className="w-[30%]">
                               <p>
                                 Loan Duration :{' '}
-                                <b>{loanDetails[index]?.refProductDuration} Month</b>
+                                <b>
+                                  {loanDetails[index]?.refProductDuration}{' '}
+                                  {loanDetails[index]?.refProductDurationType === 1
+                                    ? 'Months'
+                                    : loanDetails[index]?.refProductDurationType === 2
+                                      ? 'Weeks'
+                                      : 'Days'}
+                                </b>
                               </p>
                             </div>
                             <div className="w-[30%]">
@@ -448,7 +457,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             </div>
                             <div className="w-[30%]">
                               <p>
-                                No of Month Paid First :{' '}
+                                No of{' '}
+                                {loanDetails[index]?.refProductDurationType === 1
+                                  ? 'Months'
+                                  : loanDetails[index]?.refProductDurationType === 2
+                                    ? 'Weeks'
+                                    : 'Days'}{' '}
+                                Paid First :{' '}
                                 <b>{loanDetails[index]?.refInterestMonthCount} Month</b>
                               </p>
                             </div>
@@ -467,7 +482,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             </div>
                             <div className="w-[30%]">
                               <p>
-                                Loan Start Month :{' '}
+                                Loan Start{' '}
+                                {loanDetails[index]?.refProductDurationType === 1
+                                  ? 'Months'
+                                  : loanDetails[index]?.refProductDurationType === 2
+                                    ? 'Weeks'
+                                    : 'Days'}{' '}
+                                :{' '}
                                 <b>
                                   {loanDetails[index].refRepaymentStartDate
                                     ? formatToFirstOfMonth(loanDetails[index].refRepaymentStartDate)
@@ -477,7 +498,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             </div>
                             <div className="w-[30%]">
                               <p>
-                                Loan End Month : <b>{loanDetails[index]?.refLoanDueDate}</b>
+                                Loan End{' '}
+                                {loanDetails[index]?.refProductDurationType === 1
+                                  ? 'Months'
+                                  : loanDetails[index]?.refProductDurationType === 2
+                                    ? 'Weeks'
+                                    : 'Days'}{' '}
+                                : <b>{loanDetails[index]?.refLoanDueDate}</b>
                               </p>
                             </div>
                           </div>
@@ -540,9 +567,11 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                 ))}
               </>
             </TabPanel>
-            <TabPanel header="Loan Closing">
-              <CloseLoan id={id} LoanId={loanNo} goToHistoryTab={() => setActiveIndex(0)} />
-            </TabPanel>
+            {loanStatus === 'opened' && (
+              <TabPanel header="Loan Closing">
+                <CloseLoan id={id} LoanId={loanNo} goToHistoryTab={() => setActiveIndex(0)} />
+              </TabPanel>
+            )}
           </TabView>
         </>
       )}

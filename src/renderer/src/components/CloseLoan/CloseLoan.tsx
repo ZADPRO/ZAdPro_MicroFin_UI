@@ -218,7 +218,16 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                 <div className="flex m-3">
                   <div className="flex-1">
                     <p>
-                      Loan Duration :<b> {loanDetails?.refProductDuration} Month </b>
+                      Loan Duration :
+                      <b>
+                        {' '}
+                        {loanDetails?.refProductDuration}{' '}
+                        {loanDetails?.refProductDurationType === 1
+                          ? 'Months'
+                          : loanDetails?.refProductDurationType === 2
+                            ? 'Weeks'
+                            : 'Days'}{' '}
+                      </b>
                     </p>
                   </div>
                   <div className="flex-1">
@@ -241,7 +250,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                   </div>
                   <div className="flex-1">
                     <p>
-                      No of Month Paid First :{' '}
+                      No of{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      Paid First :{' '}
                       <b>
                         {loanDetails?.refInterestMonthCount === null
                           ? 0
@@ -269,7 +284,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                   </div>
                   <div className="flex-1">
                     <p>
-                      Loan Start Month :{' '}
+                      Loan Start{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      :{' '}
                       <b>
                         {loanDetails?.refRepaymentStartDate
                           ? formatToFirstOfMonth(loanDetails?.refRepaymentStartDate)
@@ -279,7 +300,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                   </div>
                   <div className="flex-1">
                     <p>
-                      Loan End Month : <b>{loanDetails?.refLoanDueDate} </b>
+                      Loan End{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      : <b>{loanDetails?.refLoanDueDate} </b>
                     </p>
                   </div>
                 </div>

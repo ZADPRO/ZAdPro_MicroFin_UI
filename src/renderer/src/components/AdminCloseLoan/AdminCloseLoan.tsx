@@ -32,7 +32,6 @@ interface BankDetailsReponseProps {
 }
 
 const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
-
   // useEffect(() => {  }, [])
   const handleBack = () => {
     goToHistoryTab()
@@ -48,7 +47,6 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   const [loanAmt, setLoanAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
-
 
   const getLoanDatas = async () => {
     axios
@@ -144,7 +142,6 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
 
   return (
     <div>
-
       {showCard && (
         <>
           <div className="mt-3">
@@ -170,7 +167,16 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
                 <div className="flex m-3">
                   <div className="flex-1">
                     <p>
-                      Loan Duration :<b> {loanDetails?.refProductDuration} Month </b>
+                      Loan Duration :
+                      <b>
+                        {' '}
+                        {loanDetails?.refProductDuration}{' '}
+                        {loanDetails?.refProductDurationType === 1
+                          ? 'Months'
+                          : loanDetails?.refProductDurationType === 2
+                            ? 'Weeks'
+                            : 'Days'}{' '}
+                      </b>
                     </p>
                   </div>
                   <div className="flex-1">
@@ -193,12 +199,17 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
                   </div>
                   <div className="flex-1">
                     <p>
-                      No of Month Paid First :{' '}
+                      No of{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      Paid First :{' '}
                       <b>
                         {loanDetails?.refInterestMonthCount === null
                           ? 0
                           : loanDetails?.refInterestMonthCount}{' '}
-                        %
                       </b>
                     </p>
                   </div>
@@ -221,7 +232,13 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
                   </div>
                   <div className="flex-1">
                     <p>
-                      Loan Start Month :{' '}
+                      Loan Start{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      :{' '}
                       <b>
                         {loanDetails?.refRepaymentStartDate
                           ? formatToFirstOfMonth(loanDetails?.refRepaymentStartDate)
@@ -231,7 +248,13 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
                   </div>
                   <div className="flex-1">
                     <p>
-                      Loan End Month : <b>{loanDetails?.refLoanDueDate} </b>
+                      Loan End{' '}
+                      {loanDetails?.refProductDurationType === 1
+                        ? 'Months'
+                        : loanDetails?.refProductDurationType === 2
+                          ? 'Weeks'
+                          : 'Days'}{' '}
+                      : <b>{loanDetails?.refLoanDueDate} </b>
                     </p>
                   </div>
                 </div>
@@ -281,7 +304,7 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
               />
             </div>
             <div className="flex-1">
-              <label className="font-bold block mb-2">Enter Balance Amount</label>
+              <label className="font-bold block mb-2">Select Amount Type</label>
 
               <div className="flex flex-wrap gap-3 mt-3">
                 <div className="flex align-items-center">

@@ -8,30 +8,28 @@ import { IoCloseCircleOutline } from 'react-icons/io5'
 import AdminLoanAudit from '../adminLoanAudit/AdminLoanAudit'
 import AdminCloseLoan from '../AdminCloseLoan/AdminCloseLoan'
 
-
 interface AddNewSupplierProps {
   closeSidebarNew: () => void
-  userId: number;
+  userId: number
   loanId: number
 }
 
-
 interface LoanDetail {
-  refLoanId: number;
-  refLoanAmount: string;
-  refLoanStartDate: string;
-  refLoanDueDate: string;
-  refLoanStatus: string;
-  refProductDuration: number;
-  refProductInterest: number;
-  refRepaymentStartDate: string;
-  refRepaymentTypeName: string;
-  isInterestFirst: boolean;
-  refInitialInterest: string;
-  refInterestMonthCount: number;
-  totalInterest: string;
-  totalPrincipal: string;
-  refVendorName: string;
+  refLoanId: number
+  refLoanAmount: string
+  refLoanStartDate: string
+  refLoanDueDate: string
+  refLoanStatus: string
+  refProductDuration: number
+  refProductInterest: number
+  refRepaymentStartDate: string
+  refRepaymentTypeName: string
+  isInterestFirst: boolean
+  refInitialInterest: string
+  refInterestMonthCount: number
+  totalInterest: string
+  totalPrincipal: string
+  refVendorName: string
   refBalanceAmt: string
 }
 
@@ -39,7 +37,6 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
   const [activeIndex, setActiveIndex] = useState(0)
   const [loanDetails, setLoanDetails] = useState<LoanDetail>()
   const [rePaymentInfo, setRePaymentInfo] = useState(false)
-
 
   const getLoanDatas = async () => {
     axios
@@ -89,7 +86,6 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
     getLoanDatas()
   }, [])
 
-
   return (
     <div>
       <TabView
@@ -101,7 +97,6 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
         style={{ marginTop: '1rem' }}
       >
         <TabPanel header="Loan Audit">
-
           <div className="w-full my-3 border-2 border-transparent rounded-md shadow-3">
             <div className="m-3 w-full flex ">
               <div className="w-[30%]">
@@ -124,7 +119,9 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                   <BsInfoCircle
                     size={'1.5rem'}
                     color="blue"
-                    onClick={() => { setRePaymentInfo(true) }}
+                    onClick={() => {
+                      setRePaymentInfo(true)
+                    }}
                   />
                 </div>
               ) : (
@@ -132,8 +129,9 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                   <IoCloseCircleOutline
                     size={'1.7rem'}
                     color="red"
-                    onClick={() => { setRePaymentInfo(false) }}
-
+                    onClick={() => {
+                      setRePaymentInfo(false)
+                    }}
                   />
                 </div>
               )}
@@ -143,8 +141,7 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                 <div className="m-3 w-full flex ">
                   <div className="w-[30%]">
                     <p>
-                      Loan Duration :{' '}
-                      <b>{loanDetails?.refProductDuration} Month</b>
+                      Loan Duration : <b>{loanDetails?.refProductDuration} Month</b>
                     </p>
                   </div>
                   <div className="w-[30%]">
@@ -154,8 +151,7 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      Re-Payment Type :{' '}
-                      <b>{loanDetails?.refRepaymentTypeName}</b>{' '}
+                      Re-Payment Type : <b>{loanDetails?.refRepaymentTypeName}</b>{' '}
                     </p>
                   </div>
                 </div>
@@ -168,14 +164,12 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      No of Month Paid First :{' '}
-                      <b>{loanDetails?.refInterestMonthCount} Month</b>
+                      No of Month Paid First : <b>{loanDetails?.refInterestMonthCount} Month</b>
                     </p>
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      Initial Interest :{' '}
-                      <b>₹ {loanDetails?.refInitialInterest}</b>{' '}
+                      Initial Interest : <b>₹ {loanDetails?.refInitialInterest}</b>{' '}
                     </p>
                   </div>
                 </div>
@@ -206,14 +200,12 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                 <div className="m-3 w-full flex ">
                   <div className="w-[30%]">
                     <p>
-                      Total Interest Paid :{' '}
-                      <b>&#8377; {loanDetails?.totalInterest}</b>
+                      Total Interest Paid : <b>&#8377; {loanDetails?.totalInterest}</b>
                     </p>
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      Total Principal Paid :{' '}
-                      <b>&#8377; {loanDetails?.totalPrincipal}</b>
+                      Total Principal Paid : <b>&#8377; {loanDetails?.totalPrincipal}</b>
                     </p>
                   </div>
                   <div className="w-[30%]">
@@ -222,26 +214,25 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                       <b>
                         {loanDetails?.refLoanStatus
                           ? loanDetails.refLoanStatus.charAt(0).toUpperCase() +
-                          loanDetails.refLoanStatus.slice(1)
+                            loanDetails.refLoanStatus.slice(1)
                           : 'N/A'}
                       </b>
                     </p>
                   </div>
-
                 </div>
                 <Divider />
-
               </>
             )}
-
           </div>
           <div className="m-2 border-1 shadow-md border-[#c7c7c7ef]">
             <AdminLoanAudit loanId={loanId} />
           </div>
         </TabPanel>
-        <TabPanel header="Loan Closing">
-          <AdminCloseLoan id={loanId} goToHistoryTab={handleBack} />
-        </TabPanel>
+        {loanDetails?.refLoanStatus === 'opened' && (
+          <TabPanel header="Loan Closing">
+            <AdminCloseLoan id={loanId} goToHistoryTab={handleBack} />
+          </TabPanel>
+        )}
       </TabView>
     </div>
   )
