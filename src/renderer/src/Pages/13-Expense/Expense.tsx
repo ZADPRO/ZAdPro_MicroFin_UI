@@ -138,7 +138,9 @@ export default function Expense({}: Props) {
   }
 
   const closeSidebarNew = () => {
+    console.log(' -> Line Number ----------------------------------- 141')
     setAddExpense(false)
+    reLoadPage()
     expenseData(new Date())
     setUpdateExpense(false)
   }

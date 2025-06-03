@@ -82,7 +82,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
-  const [selectedLoanType, setSelectedLoanType] = useState<number>(0)
+  const [selectedLoanType, setSelectedLoanType] = useState<number | null>(0)
   const [showForm, setShowForm] = useState<boolean>(false)
   const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
   const loanTypeOptions: LoanType[] = [
@@ -434,6 +434,10 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   console.log('e line ----------- 405', e)
                   setCustomerId(e.target.value)
                   setStep(0.5)
+                  setSelectedLoanType(null)
+                  setSelectedLoan(null)
+                  setShowLoanInfo(false)
+                  setShowForm(false)
                 }}
                 required
                 options={customerList}
@@ -455,7 +459,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   getAllLoanData()
                   setSelectedLoan(null)
                   show(e.value, null)
-                  setStep(0)
+                  setStep(0.6)
                 }}
                 required
                 options={loanTypeOptions}
@@ -472,7 +476,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 onChange={(e: DropdownChangeEvent) => {
                   setSelectedLoan(e.value)
                   getLoanEntireDetails(e.value)
-                  show(selectedLoanType, e.value)
+                  show(selectedLoanType || 0, e.value)
                 }}
                 filter
                 options={userLoan}
