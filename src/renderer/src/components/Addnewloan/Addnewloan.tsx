@@ -464,7 +464,14 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                                     ? 'Weeks'
                                     : 'Days'}{' '}
                                 Paid First :{' '}
-                                <b>{loanDetails[index]?.refInterestMonthCount} Month</b>
+                                <b>
+                                  {loanDetails[index]?.refInterestMonthCount}{' '}
+                                  {loanDetails[index]?.refProductDurationType === 1
+                                    ? 'Months'
+                                    : loanDetails[index]?.refProductDurationType === 2
+                                      ? 'Weeks'
+                                      : 'Days'}
+                                </b>
                               </p>
                             </div>
                             <div className="w-[30%]">

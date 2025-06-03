@@ -24,6 +24,8 @@ interface LoanData {
   refLoanStatus?: string
   refVenderType?: number
   refLoanStatusId?: number
+  refProductDurationType?: number
+  refProductMonthlyCal?: number
 }
 
 interface propsInterface {
@@ -239,7 +241,9 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
         <Column
           field="refLoanDuration"
           header="Loan Duration"
-          body={(rowData) => `${rowData.refLoanDuration} Month`}
+          body={(rowData) =>
+            `${rowData.refLoanDuration} ${rowData?.refProductDurationType === 1 ? 'Months' : rowData?.refProductDurationType === 2 ? 'Weeks' : 'Days'}`
+          }
         />
         <Column
           field="refLoanInterest"
