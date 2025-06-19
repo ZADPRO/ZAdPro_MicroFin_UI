@@ -12,6 +12,7 @@ import Repayments from '../10-Repayments/Repayments'
 import AdminLoan from '../11-AdminLoan/AdminLoan'
 import Expense from '../13-Expense/Expense'
 import Report from '../14-Report/Report'
+import Customize from '../15 - Customize/Customize'
 
 export const MainRoutes = () => {
   return (
@@ -24,12 +25,14 @@ export const MainRoutes = () => {
           <Route path="/customers" element={<Customers />} />
           <Route path="/banks" element={<BankDetails />} />
           <Route path="/products" element={<Products />} />
-          <Route path="/expense" element={<Expense />} />
           <Route path="/funds" element={<Funds />} />
           <Route path="/loans" element={<Loan />} />
           <Route path="/repayment" element={<Repayments />} />
           <Route path="/adminloan" element={<AdminLoan />} />
+          <Route path="/expense" element={<Expense />} />
+
           <Route path="/report" element={<Report />} />
+          <Route path="/customize" element={<Customize />} />
         </Routes>
       </Navbar>
     </>

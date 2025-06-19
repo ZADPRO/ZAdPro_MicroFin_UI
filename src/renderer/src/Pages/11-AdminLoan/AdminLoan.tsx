@@ -72,10 +72,10 @@ const AdminLoan: React.FC = () => {
       ) : (
         <div className="contentPage">
           <TabView>
-            <TabPanel header="Repayment">
+            <TabPanel header="Loan">
               <AdminRepayments />
             </TabPanel>
-            <TabPanel header="Loan">
+            <TabPanel header="Repayment">
               <AdminNewLoan reloadFlag={reloadFlag} />
             </TabPanel>
             <TabPanel header="Vendor">

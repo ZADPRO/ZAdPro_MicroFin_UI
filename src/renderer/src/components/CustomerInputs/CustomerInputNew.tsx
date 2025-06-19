@@ -9,17 +9,35 @@ import { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { Slide, toast } from 'react-toastify'
 
+interface areaDetails {
+  areaName: string
+  areaPrifix: string
+}
+
+interface option {
+  label: string
+  value: number
+}
+
 const CustomerInputNew = ({ closeSidebarNew }) => {
   const status = [
     { name: 'Active', code: 'active' },
     { name: 'Inactive', code: 'inactive' }
   ]
+  const areaTypeOption: option[] = [
+    { label: 'Add PinCode in Existing Area', value: 1 },
+    { label: 'Add PinCode as New Area', value: 2 }
+  ]
 
   const [states, setStates] = useState([])
   const [districts, setDistricts] = useState([])
-
+  const [areaName, setAreaName] = useState<areaDetails | null>(null)
+  const [addArea, setAddArea] = useState<boolean | null>(null)
   const [submitLoading, setSubmitLoading] = useState(false)
-
+  const [showAddArea, setShowAddArea] = useState<boolean>(false)
+  const [areaTypeSelected, setAreaTypeSelected] = useState<number | null>()
+  const [areaList, setAreaList] = useState<option[]>([])
+  const [selectedAreaId, setSelectedAreaId] = useState<number | null>()
   useEffect(() => {
     const countryStates: any = State.getStatesOfCountry('IN')
     setStates(countryStates)
@@ -84,7 +102,6 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
         refPanNumber: ''
       }
     ])
-
   }
 
   const handleFile = (event: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -103,12 +120,12 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
   }
 
   const handleNewUser = async () => {
-    const formData = new FormData();
-    setSubmitLoading(true);
+    const formData = new FormData()
+    setSubmitLoading(true)
 
-    formData.append('profile', inputs.profileImg?.data || "")
-    formData.append('pan', inputs.panImg?.data || "")
-    formData.append('aadhar', inputs.aadharImg?.data || "")
+    formData.append('profile', inputs.profileImg?.data || '')
+    formData.append('pan', inputs.panImg?.data || '')
+    formData.append('aadhar', inputs.aadharImg?.data || '')
 
     try {
       const response = await axios.post(
@@ -125,7 +142,6 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
       console.log('data profile api - 170 ', data)
 
       if (data.success) {
-
         axios
           .post(
             import.meta.env.VITE_API_URL + '/adminRoutes/addPerson',
@@ -139,9 +155,11 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                   refAadharNo: inputs.aadharno,
                   refPanNo: inputs.panno,
                   activeStatus: inputs.status,
-                  ProfileImgPath: data.filePaths.images.profile ? data.filePaths.images.profile : "",
-                  refPanPath: data.filePaths.images.pan ? data.filePaths.images.pan : "",
-                  refAadharPath: data.filePaths.images.aadhar ? data.filePaths.images.aadhar : ""
+                  ProfileImgPath: data.filePaths.images.profile
+                    ? data.filePaths.images.profile
+                    : '',
+                  refPanPath: data.filePaths.images.pan ? data.filePaths.images.pan : '',
+                  refAadharPath: data.filePaths.images.aadhar ? data.filePaths.images.aadhar : ''
                 },
                 Communtication: {
                   refPerMob: inputs.mobileno,
@@ -156,6 +174,13 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 refUserPassword: inputs.password
               },
               reference: references,
+              Area: {
+                addArea: addArea,
+                areaType: areaTypeSelected,
+                areaId: selectedAreaId,
+                areaName: areaName?.areaName,
+                areaPrifix: areaName?.areaPrifix
+              }
             },
             {
               headers: {
@@ -165,23 +190,17 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
             }
           )
           .then((response: any) => {
-
-
             const data = decrypt(
-
-
               response.data[1],
               response.data[0],
               import.meta.env.VITE_ENCRYPTION_KEY
             )
 
-            localStorage.setItem("token", "Bearer " + data.token);
+            localStorage.setItem('token', 'Bearer ' + data.token)
             console.log('data----------------------', data)
 
             if (data.success) {
-
-              setSubmitLoading(false);
-
+              setSubmitLoading(false)
 
               toast.success('Successfully Added', {
                 position: 'top-right',
@@ -201,6 +220,53 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
       }
     } catch (e: any) {
       console.log(e)
+    }
+  }
+
+  const validatePincode = async (pinCode) => {
+    try {
+      await axios
+        .post(
+          import.meta.env.VITE_API_URL + '/area/validatePinCode',
+          {
+            pinCode: pinCode
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response: any) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+
+          localStorage.setItem('token', 'Bearer ' + data.token)
+          console.log('data---------------------- 240', data)
+          if (data.success) {
+            const options = data.list.map((d: any) => ({
+              label: `Area : ${d.refAreaName} - Code :  ${d.refAreaPrefix} `,
+              value: d.refAreaId
+            }))
+            setAreaList(options)
+            if (data.data.length > 0) {
+              setAddArea(false)
+              setAreaName({
+                areaName: data.data[0].refAreaName,
+                areaPrifix: data.data[0].refAreaPrefix
+              })
+            } else {
+              setAreaName(null)
+              setAddArea(true)
+            }
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
     }
   }
 
@@ -317,9 +383,9 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 name="mobileno"
                 value={inputs.mobileno}
                 onChange={(e: any) => {
-                  const value = e.target.value;
+                  const value = e.target.value
                   if (/^\d{0,10}$/.test(value)) {
-                    handleInput(e); // Only update if it's a number and max 12 digits
+                    handleInput(e) // Only update if it's a number and max 12 digits
                   }
                 }}
                 required
@@ -330,7 +396,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
               <InputText
                 id="email"
                 name="email"
-                type='email'
+                type="email"
                 onChange={(e: any) => {
                   handleInput(e)
                 }}
@@ -349,9 +415,9 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 keyfilter="pint" // PrimeReact built-in to allow only positive integers
                 maxLength={12}
                 onChange={(e: any) => {
-                  const value = e.target.value;
+                  const value = e.target.value
                   if (/^\d{0,12}$/.test(value)) {
-                    handleInput(e); // Only update if it's a number and max 12 digits
+                    handleInput(e) // Only update if it's a number and max 12 digits
                   }
                 }}
                 value={inputs.aadharno}
@@ -367,36 +433,34 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                 value={inputs.panno}
                 maxLength={10}
                 onChange={(e: any) => {
-                  let value = e.target.value.toUpperCase(); // Always uppercase
-                  let valid = true;
+                  let value = e.target.value.toUpperCase() // Always uppercase
+                  let valid = true
 
                   // Enforce character-by-character format
                   for (let i = 0; i < value.length; i++) {
-                    const char = value[i];
+                    const char = value[i]
 
                     if (i < 5 && !/[A-Z]/.test(char)) {
-                      valid = false; // First 5 should be A-Z
-                      break;
+                      valid = false // First 5 should be A-Z
+                      break
                     } else if (i >= 5 && i < 9 && !/[0-9]/.test(char)) {
-                      valid = false; // Next 4 should be 0-9
-                      break;
+                      valid = false // Next 4 should be 0-9
+                      break
                     } else if (i === 9 && !/[A-Z]/.test(char)) {
-                      valid = false; // Last one should be A-Z
-                      break;
+                      valid = false // Last one should be A-Z
+                      break
                     }
                   }
 
                   if (valid && value.length <= 10) {
-                    e.target.value = value;
-                    handleInput(e);
+                    e.target.value = value
+                    handleInput(e)
                   }
                 }}
                 required
               />
               <label htmlFor="panno">Pan Number *</label>
             </FloatLabel>
-
-
           </div>
 
           <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
@@ -475,29 +539,126 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
               />
               <label>Select District *</label>
             </FloatLabel>
-            <FloatLabel style={{ width: '100%' }}>
-              <InputText
-                type="text" // Use text instead of number to allow maxlength to work
-                name="pincode"
-                maxLength={6}
-                style={{ width: '100%' }}
-                id="pincode"
-                value={inputs.pincode || ""} // Corrected this
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d{0,6}$/.test(value)) {
-                    handleInput(e); // Only update if it's 0-6 digits
-                  }
-                }}
-                required
-              />
+            <div className="w-[100%]">
+              <FloatLabel style={{ width: '100%' }}>
+                <InputText
+                  type="text" // Use text instead of number to allow maxlength to work
+                  name="pincode"
+                  maxLength={6}
+                  style={{ width: '100%' }}
+                  id="pincode"
+                  value={inputs.pincode || ''} // Corrected this
+                  onChange={(e) => {
+                    const value = e.target.value
 
-              <label htmlFor="pincode">Enter Pincode *</label>
-            </FloatLabel>
+                    if (/^\d{0,6}$/.test(value)) {
+                      handleInput(e) // Only update if it's 0-6 digits
+                      if (value.length === 6) {
+                        validatePincode(value)
+                        setShowAddArea(true)
+                      } else {
+                        setShowAddArea(false)
+                      }
+                    }
+                  }}
+                  required
+                />
+
+                <label htmlFor="pincode">Enter Pincode *</label>
+              </FloatLabel>
+              {!addArea && addArea !== null && (
+                <small id="username-help" className="text-[green]">
+                  This Pincode Is Under the Area of{' '}
+                  <b>
+                    {areaName?.areaName} [{areaName?.areaPrifix}]
+                  </b>
+                </small>
+              )}
+            </div>
           </div>
 
+          {addArea && showAddArea && (
+            <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
+              <FloatLabel style={{ width: '100%' }}>
+                <Dropdown
+                  className="dropDown"
+                  name="AreaType"
+                  style={{ width: '100%', minWidth: '100%' }}
+                  value={areaTypeSelected}
+                  options={areaTypeOption}
+                  optionLabel="label" // Ensures dropdown displays district names
+                  optionValue="value" // Stores district name as the selected value
+                  onChange={(e) => {
+                    setAreaTypeSelected(e.value)
+                  }}
+                  required
+                />
+                <label>Area type to Store this Pincode *</label>
+              </FloatLabel>
+              {areaTypeSelected === 1 && (
+                <FloatLabel style={{ width: '100%' }}>
+                  <Dropdown
+                    filter
+                    className="dropDown"
+                    name="Area"
+                    style={{ width: '100%', minWidth: '100%' }}
+                    value={selectedAreaId}
+                    options={areaList}
+                    optionLabel="label" // Ensures dropdown displays district names
+                    optionValue="value" // Stores district name as the selected value
+                    onChange={(e) => {
+                      setSelectedAreaId(e.value)
+                    }}
+                    required
+                  />
+                  <label>Select Area To Store the PinCode *</label>
+                </FloatLabel>
+              )}
+              {areaTypeSelected === 2 && (
+                <div className="w-[100%] flex justify-between">
+                  <FloatLabel style={{ width: '48%' }}>
+                    <InputText
+                      type="text" // Use text instead of number to allow maxlength to work
+                      name="AreaName"
+                      className="capitalize"
+                      style={{ width: '100%' }}
+                      id="areaName"
+                      value={areaName?.areaName} // Corrected this
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setAreaName({ areaName: value, areaPrifix: areaName?.areaPrifix || '' })
+                      }}
+                      required
+                    />
+
+                    <label htmlFor="pincode">Enter Area Name</label>
+                  </FloatLabel>
+                  <FloatLabel style={{ width: '48%' }}>
+                    <InputText
+                      type="text" // Use text instead of number to allow maxlength to work
+                      name="areaPrifix"
+                      maxLength={6}
+                      style={{ width: '100%' }}
+                      id="areaPriFix"
+                      value={areaName?.areaPrifix} // Corrected this
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase()
+                        setAreaName({
+                          areaName: areaName?.areaName || '',
+                          areaPrifix: value
+                        })
+                      }}
+                      required
+                    />
+
+                    <label htmlFor="pincode">Enter Area PriFix</label>
+                  </FloatLabel>
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ marginTop: '35px' }}>
-            <Button type='button' label="Add New Reference" onClick={Addnewreference} raised />
+            <Button type="button" label="Add New Reference" onClick={Addnewreference} raised />
 
             {references.map((reference, index) => (
               <div
@@ -524,7 +685,7 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       name="refRPhoneNumber"
                       value={reference.refRPhoneNumber}
                       onChange={(e) => {
-                        const value = e.target.value;
+                        const value = e.target.value
                         if (/^\d{0,10}$/.test(value)) {
                           handleReferenceInput(index, e)
                         }
@@ -550,12 +711,10 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       name="refAadharNumber"
                       value={reference.refAadharNumber}
                       onChange={(e) => {
-
-                        const value = e.target.value;
+                        const value = e.target.value
                         if (/^\d{0,12}$/.test(value)) {
                           handleReferenceInput(index, e)
                         }
-
                       }}
                       required
                     />
@@ -569,30 +728,29 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
                       name="refPanNumber"
                       value={reference.refPanNumber}
                       onChange={(e) => {
-                        let value = e.target.value.toUpperCase(); // Always uppercase
-                        let valid = true;
+                        let value = e.target.value.toUpperCase() // Always uppercase
+                        let valid = true
 
                         // Enforce character-by-character format
                         for (let i = 0; i < value.length; i++) {
-                          const char = value[i];
+                          const char = value[i]
 
                           if (i < 5 && !/[A-Z]/.test(char)) {
-                            valid = false; // First 5 should be A-Z
-                            break;
+                            valid = false // First 5 should be A-Z
+                            break
                           } else if (i >= 5 && i < 9 && !/[0-9]/.test(char)) {
-                            valid = false; // Next 4 should be 0-9
-                            break;
+                            valid = false // Next 4 should be 0-9
+                            break
                           } else if (i === 9 && !/[A-Z]/.test(char)) {
-                            valid = false; // Last one should be A-Z
-                            break;
+                            valid = false // Last one should be A-Z
+                            break
                           }
                         }
 
                         if (valid && value.length <= 10) {
-                          e.target.value = value;
+                          e.target.value = value
                           handleReferenceInput(index, e)
                         }
-
                       }}
                       required
                     />
@@ -614,34 +772,29 @@ const CustomerInputNew = ({ closeSidebarNew }) => {
               </div>
             ))}
 
-
-            {
-              submitLoading ? (
-                <div
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginTop: '35px'
-                  }}
-                >
-                  <Button style={{ width: '20%' }} type="submit" icon="pi pi-check pi-spinner" />
-                </div>
-              ) : (
-                <div
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginTop: '35px'
-                  }}
-                >
-                  <Button style={{ width: '20%' }} type="submit" label="Submit" />
-                </div>
-              )
-            }
-
-
+            {submitLoading ? (
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginTop: '35px'
+                }}
+              >
+                <Button style={{ width: '20%' }} type="submit" icon="pi pi-check pi-spinner" />
+              </div>
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginTop: '35px'
+                }}
+              >
+                <Button style={{ width: '20%' }} type="submit" label="Submit" />
+              </div>
+            )}
           </div>
         </div>
       </form>

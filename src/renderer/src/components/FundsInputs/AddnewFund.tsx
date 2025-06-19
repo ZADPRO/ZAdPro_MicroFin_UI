@@ -38,7 +38,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
   // Handle the from and to account with validation
   const [handleSelfTransferFrom, setHandleSelfTransferFrom] = useState<number | null>(null)
   console.log('handleSelfTransferFrom', handleSelfTransferFrom)
-  const [handleSelfTransferTo, setHandleSelfTransferTo] = useState<BankOptions[] | []>([])
+  const [handleSelfTransferTo, setHandleSelfTransferTo] = useState<number | null>(null)
   const [transferAmount, setTransferAmount] = useState<number | null>(null)
 
   const [bankOptions, setBankOptions] = useState<BankOptions[] | []>([])
@@ -222,7 +222,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
         import.meta.env.VITE_API_URL + '/fund/selfTransfer',
         {
           fromId: handleSelfTransferFrom,
-          toId: handleSelfTransferTo?.refBankId,
+          toId: handleSelfTransferTo,
           amt: transferAmount
         },
         {
@@ -253,9 +253,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
             transition: Slide
           })
           closeSidebarNew()
-
-        }
-        else {
+        } else {
           toast.error('Error in Making SelfTransfer', {
             position: 'top-right',
             autoClose: 2999,
@@ -437,6 +435,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 options={filteredToOptions}
                 optionLabel="label"
                 className="w-full"
+                optionValue="refBankId"
                 placeholder="Select to"
                 disabled={!handleSelfTransferFrom}
               />

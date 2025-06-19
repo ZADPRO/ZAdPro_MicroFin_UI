@@ -56,14 +56,14 @@ const Loan = () => {
     loadData()
   }, [])
 
-  const AddressBody = (rowData: any) => {
-    return (
-      <>
-        {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
-        {rowData.refUserPincode}
-      </>
-    )
-  }
+  // const AddressBody = (rowData: any) => {
+  //   return (
+  //     <>
+  //       {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
+  //       {rowData.refUserPincode}
+  //     </>
+  //   )
+  // }
 
   const CustomerId = (rowData: any) => {
     return (

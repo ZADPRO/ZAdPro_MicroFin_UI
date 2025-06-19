@@ -1,4 +1,3 @@
-import Header from '@renderer/components/Header/Header'
 import decrypt from '@renderer/components/Helper/Helper'
 import axios from 'axios'
 import { Column } from 'primereact/column'
@@ -10,8 +9,6 @@ import { ToastContainer } from 'react-toastify'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { FilterMatchMode } from 'primereact/api'
-// import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
-import RepaymentSideTab from '@renderer/components/Repayment/RepaymentSideTab'
 import { Dropdown } from 'primereact/dropdown'
 import { Calendar } from 'primereact/calendar'
 import { Nullable } from 'primereact/ts-helpers'
@@ -19,9 +16,6 @@ import AdminLoanRepaymentSideTab from '../../components/AdminLoanRepaymentSideTa
 
 const AdminRepayments = () => {
   const [userLists, setUserLists] = useState([])
-
-  const [username, setUsername] = useState('')
-
   const [loadingStatus, setLoadingStatus] = useState(true)
   const [userListType, setUserListType] = useState({ name: 'Over All', code: 0 })
   const [startDate, setStartDate] = useState<Nullable<Date>>(null)

@@ -160,7 +160,7 @@ export function CalculateInitialInterest(data: CalaulateInterest): number {
     }
 
     console.log('Interest line ----- 118', Interest)
-    return Interest
+    return Math.round(Interest)
   } catch (error) {
     return 0
   }
@@ -233,7 +233,7 @@ export const CalculateFirstInterest = (data: FirstInterest): number => {
       interestCal: data.durationType !== 1 ? 0 : data.interestCal
     }
     const Interest = CalculateInterest(interestData)
-    return Interest
+    return Math.round(Interest)
   } else if (data.rePaymentType === 2) {
     const monthPrincipal = data.PrincipalAmt / data.loanDuration
     let LoanAmount = data.PrincipalAmt
@@ -251,7 +251,7 @@ export const CalculateFirstInterest = (data: FirstInterest): number => {
       LoanAmount -= monthPrincipal
     }
 
-    return totalInterest
+    return Math.round(totalInterest)
   } else {
     throw new Error('Repayment Type Is Wrong') // Better than returning string on wrong type
   }

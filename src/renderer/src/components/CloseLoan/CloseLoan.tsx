@@ -3,9 +3,6 @@ import React, { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import axios from 'axios'
 import { Accordion, AccordionTab } from 'primereact/accordion'
-import { InputSwitch, InputSwitchChangeEvent } from 'primereact/inputswitch'
-import { Message } from 'primereact/message'
-import { Divider } from 'primereact/divider'
 import { InputNumber } from 'primereact/inputnumber'
 import { Button } from 'primereact/button'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
@@ -37,13 +34,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
     goToHistoryTab()
   }
 
-  const [userLoan, setUserLoan] = useState<setUserLoanProps[]>([])
+  const [_userLoan, setUserLoan] = useState<setUserLoanProps[]>([])
   const [selectedLoan, setSelectedLoan] = useState<number | null>()
   const [bankModeType, setBankModeType] = useState<string>('')
   const [loanDetails, setLoanDetails] = useState<any>()
   const [showCard, setShowCard] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string>()
-  const [errorShow, setErrorShow] = useState(false)
+  // const [errorMessage, setErrorMessage] = useState<string>()
+  // const [errorShow, setErrorShow] = useState(false)
   const [loanAmt, setLoanAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
@@ -164,7 +161,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
 
   useEffect(() => {
     setShowCard(true)
-    setErrorShow(false)
+    // setErrorShow(false)
     setSelectedLoan(LoanId)
     getLoanDatas(LoanId)
     getUserLoanData()
@@ -386,13 +383,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
               </div>
             </div>
           </div>
-          {errorShow && (
+          {/* {errorShow && (
             <div className="flex mt-3 ">
               <div className="flex-1">
                 <Message text={errorMessage} />
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="flex mt-3 gap-3">
             <div className="flex-1">

@@ -5,6 +5,7 @@
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
+  "type": "module",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
@@ -30,18 +31,21 @@
     "electron-router-dom": "^2.1.0",
     "electron-updater": "^6.1.7",
     "framer-motion": "^12.4.7",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.2",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.2.0",
     "react-toastify": "^11.0.5",
-    "testing-app": "file:"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
     "@electron-toolkit/eslint-config-ts": "^2.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^20.14.8",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -52,11 +56,11 @@
     "electron-vite": "^2.3.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.3",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.4",
     "prettier": "^3.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwindcss": "^4.1.4",
+    "tailwindcss": "^4.1.8",
     "typescript": "^5.5.2",
     "vite": "^5.3.1"
   }

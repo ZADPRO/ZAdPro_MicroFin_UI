@@ -12,7 +12,7 @@ import { Nullable } from 'primereact/ts-helpers'
 import { Sidebar } from 'primereact/sidebar'
 import { CiEdit } from 'react-icons/ci'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 import { AddExpense } from '../../components/AddExpense/AddExpense'
 import { UpdateExpense } from '@renderer/components/UpdateExpense/UpdateExpense'

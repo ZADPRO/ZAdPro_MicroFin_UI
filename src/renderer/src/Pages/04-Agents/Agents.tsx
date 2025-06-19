@@ -17,7 +17,7 @@ import AgentInputNew from '@renderer/components/AgentInputs/AgentInputNew'
 const Customers = () => {
   const [userLists, setUserLists] = useState([])
 
-  const dt = useRef(null)
+  const dt = useRef<DataTable<any>>(null) 
 
   const [username, setUsername] = useState('')
 
@@ -164,7 +164,8 @@ const Customers = () => {
   //Filter Data - End
 
   // HEADER
-  const exportCSV = () => {
+  const exportCSV = (type: any) => {
+    console.log('type', type)
     dt.current?.exportCSV()
   }
 
@@ -179,11 +180,14 @@ const Customers = () => {
       />
     </div>
   )
+  const reLoadPage = () => {
+    loadData()
+  }
 
   return (
     <>
       <ToastContainer />
-      <Header userName={username} pageName={'Agents'} />
+      <Header userName={username} pageName={'Agents'} reLoad={reLoadPage} />
       {loadingStatus ? (
         <div
           style={{

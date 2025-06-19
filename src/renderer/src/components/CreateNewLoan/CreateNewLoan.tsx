@@ -741,7 +741,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                           value="true"
                           required
                           disabled={step < 5}
-                          onChange={(e: RadioButtonChangeEvent) => {
+                          onChange={(_e: RadioButtonChangeEvent) => {
                             setInterestFirst(true)
                             setDocFee(0)
                             setMonthCount(1)
@@ -771,7 +771,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                           disabled={step < 5}
                           value="Mushroom"
                           required
-                          onChange={(e: RadioButtonChangeEvent) => {
+                          onChange={(_e: RadioButtonChangeEvent) => {
                             setDocFee(0)
                             setInterestFirst(false)
                             setMonthCount(0)

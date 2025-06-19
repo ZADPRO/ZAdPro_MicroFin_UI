@@ -30,14 +30,7 @@ const Repayments = () => {
     { name: 'Month', code: 1 }
   ]
 
-  function formatToYearMonth(dateInput: string | Date): string {
-    console.log('dateInput line ---------- 34', dateInput)
-    const date = new Date(dateInput)
-    const year = date.getFullYear()
-    const month = (date.getMonth() + 1).toString().padStart(2, '0') // Month is 0-indexed
-    console.log('${date}-${year}-${month}', ` ${date}-${year}-${month}`)
-    return `${date}-${year}-${month}`
-  }
+
 
   function formatToDDMMYYYY(dateString) {
     const date = new Date(dateString)

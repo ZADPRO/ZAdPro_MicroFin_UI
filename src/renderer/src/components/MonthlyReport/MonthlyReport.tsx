@@ -1,5 +1,5 @@
 import axios from 'axios'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { MultiSelect, MultiSelectChangeEvent } from 'primereact/multiselect'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
@@ -30,6 +30,8 @@ interface LoanDetails {
   refUserFname: string
   refUserLname: string
   refUserMobileNo: string
+  refAreaName: string
+  refAreaPrefix: string
 }
 
 export default function MonthlyReport() {
@@ -44,6 +46,10 @@ export default function MonthlyReport() {
   ])
   const [startDate, setStartDate] = useState<Nullable<Date>>(null)
   const [endDate, setEndDate] = useState<Nullable<Date>>(null)
+  const [selectedArea, setSelectedArea] = useState<number[]>([])
+  const [areaList, setAreaList] = useState<option[]>([])
+  const [AreaError, setAreaError] = useState<boolean>(false)
+
 
   const [repaymentError, setRepaymentError] = useState(false)
   const [statusError, setStatusError] = useState(false)
@@ -70,7 +76,8 @@ export default function MonthlyReport() {
     interest: string[] | [],
     principal: string[] | [],
     startDate: string | Date,
-    endDate: string | Date
+    endDate: string | Date,
+    selectedArea: number[] | []
   ) => {
     try {
       axios
@@ -81,7 +88,8 @@ export default function MonthlyReport() {
             principal: principal,
             loanOption: loanOp,
             startDate: formatToYearMonth(startDate),
-            endDate: formatToYearMonth(endDate)
+            endDate: formatToYearMonth(endDate),
+            area: selectedArea
           },
           {
             headers: {
@@ -106,16 +114,52 @@ export default function MonthlyReport() {
       console.log('error', error)
     }
   }
+
+  const getAreaOptions = () => {
+    try {
+      axios
+        .get(
+          import.meta.env.VITE_API_URL + '/area/option',
+
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response: any) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          localStorage.setItem('token', 'Bearer ' + data.token)
+          if (data.success) {
+            const options3 = data.data.map((item: any) => ({
+              label: `${item.refAreaName} - [${item.refAreaPrefix}]`,
+              value: item.refAreaId
+            }))
+            setAreaList(options3)
+            setSelectedArea(options3.map((opt) => opt.value))
+            getData(
+              selectedLoanOption,
+              selectedInterestStatusOption,
+              selectedPrincipalStatusOption,
+              new Date(),
+              new Date(),
+              selectedArea
+            )
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
   useEffect(() => {
     setStartDate(new Date())
     setEndDate(new Date())
-    getData(
-      selectedLoanOption,
-      selectedInterestStatusOption,
-      selectedPrincipalStatusOption,
-      new Date(),
-      new Date()
-    )
+    getAreaOptions()
   }, [])
 
   const exportCustomCSV = () => {
@@ -126,6 +170,7 @@ export default function MonthlyReport() {
       'Re-Payment Month',
       'Name',
       'Mobile',
+      'Area',
       'Repayment',
       'Loan Amount',
       'Initial Interest',
@@ -142,6 +187,7 @@ export default function MonthlyReport() {
       row.refPaymentDate,
       `${row.refUserFname} ${row.refUserLname}`,
       row.refUserMobileNo,
+      `${row.refAreaName} - ${row.refAreaName}`,
       row.refRepaymentTypeName,
       `INR ${row.refLoanAmount}`,
       `INR ${row.refInitialInterest}`,
@@ -173,7 +219,8 @@ export default function MonthlyReport() {
       </div>
       <div className="w-full flex align-items-center justify-center">
         <div className="w-[90%] flex align-items-center justify-around my-2">
-          <div className="flex flex-col w-[18%]">
+          <div className="flex flex-col w-[18%] gap-y-1">
+            <label htmlFor="username">Select Loan of</label>
             <Dropdown
               value={selectedLoanOption}
               onChange={(e: DropdownChangeEvent) => {
@@ -183,7 +230,8 @@ export default function MonthlyReport() {
                   selectedInterestStatusOption,
                   selectedPrincipalStatusOption,
                   startDate || new Date(),
-                  endDate || new Date()
+                  endDate || new Date(),
+                  selectedArea
                 )
               }}
               options={LoanOption}
@@ -192,20 +240,60 @@ export default function MonthlyReport() {
               className=" w-full"
             />
           </div>
-          <div className="flex flex-col w-[18%]">
+          <div className="flex flex-col w-[18%] gap-y-1">
+            <label htmlFor="username">Select Area</label>
+            <MultiSelect
+              filter
+              value={selectedArea}
+              onChange={(e: MultiSelectChangeEvent) => {
+                setSelectedArea(e.value)
+                setAreaError(e.value.length === 0)
+                if (
+                  e.value.length !== 0 &&
+                  selectedInterestStatusOption?.length !== 0 &&
+                  selectedPrincipalStatusOption?.length !== 0
+                ) {
+                  getData(
+                    selectedLoanOption,
+                    selectedInterestStatusOption,
+                    selectedPrincipalStatusOption,
+                    startDate || new Date(),
+                    endDate || new Date(),
+                    e.value
+                  )
+                } else {
+                  setOverAllData([])
+                }
+              }}
+              options={areaList}
+              optionLabel="label"
+              placeholder="Select a Repayment Type"
+              className="w-[100%] h-[2.5rem] flex align-items-center"
+              required
+            />
+            {AreaError && <small className="text-[red]">Please select at least one Area.</small>}
+          </div>
+          <div className="flex flex-col w-[18%] gap-y-1">
+            <label htmlFor="username">Interest Status</label>
+
             <MultiSelect
               filter
               value={selectedInterestStatusOption}
               onChange={(e: MultiSelectChangeEvent) => {
                 setSelectedInterestStatusOption(e.value)
                 setRepaymentError(e.value.length === 0)
-                if (e.value.length !== 0 && selectedPrincipalStatusOption?.length !== 0) {
+                if (
+                  e.value.length !== 0 &&
+                  selectedPrincipalStatusOption?.length !== 0 &&
+                  selectedArea?.length !== 0
+                ) {
                   getData(
                     selectedLoanOption,
                     e.value,
                     selectedPrincipalStatusOption,
                     startDate || new Date(),
-                    endDate || new Date()
+                    endDate || new Date(),
+                    selectedArea
                   )
                 } else {
                   setOverAllData([])
@@ -214,27 +302,34 @@ export default function MonthlyReport() {
               options={loanStatus}
               optionLabel="label"
               placeholder="Select a Repayment Type"
-              className="w-[100%]"
+              className="w-[100%] h-[2.5rem] flex align-items-center"
               required
             />
             {repaymentError && (
               <small className="text-[red]">Please select at least one repayment type.</small>
             )}
           </div>
-          <div className="flex flex-col w-[18%]">
+          <div className="flex flex-col w-[18%] gap-y-1">
+            <label htmlFor="username">Principal Status</label>
+
             <MultiSelect
               filter
               value={selectedPrincipalStatusOption}
               onChange={(e: MultiSelectChangeEvent) => {
                 setSelectedPrincipalStatusOption(e.value)
                 setStatusError(e.value.length === 0) // true if nothing selected
-                if (e.value.length !== 0 && selectedInterestStatusOption?.length !== 0) {
+                if (
+                  e.value.length !== 0 &&
+                  selectedInterestStatusOption?.length !== 0 &&
+                  selectedArea?.length !== 0
+                ) {
                   getData(
                     selectedLoanOption,
                     selectedInterestStatusOption,
                     e.value,
                     startDate || new Date(),
-                    endDate || new Date()
+                    endDate || new Date(),
+                    selectedArea
                   )
                 } else {
                   setOverAllData([])
@@ -243,14 +338,16 @@ export default function MonthlyReport() {
               options={loanStatus}
               optionLabel="label"
               placeholder="Select a Loan Status"
-              className="w-[100%]"
+              className="w-[100%] h-[2.5rem] flex align-items-center"
               required
             />
             {statusError && (
               <small className="text-[red]">Please select at least one loan status.</small>
             )}
           </div>
-          <div className="flex flex-col w-[18%]">
+          <div className="flex flex-col w-[10%] gap-y-1">
+            <label htmlFor="username">Start Month</label>
+
             <Calendar
               value={startDate}
               placeholder="Select Start Range"
@@ -263,7 +360,8 @@ export default function MonthlyReport() {
                     selectedInterestStatusOption,
                     selectedPrincipalStatusOption,
                     e.value,
-                    e.value
+                    e.value,
+                    selectedArea
                   )
                 } else {
                   getData(
@@ -271,7 +369,8 @@ export default function MonthlyReport() {
                     selectedInterestStatusOption,
                     selectedPrincipalStatusOption,
                     e.value || new Date(),
-                    endDate || new Date()
+                    endDate || new Date(),
+                    selectedArea
                   )
                 }
               }}
@@ -280,7 +379,9 @@ export default function MonthlyReport() {
               // maxDate={new Date()}
             />
           </div>
-          <div className="flex flex-col w-[18%]">
+          <div className="flex flex-col w-[10%] gap-y-1">
+            <label htmlFor="username">End Month</label>
+
             <Calendar
               value={endDate}
               placeholder="Select End Range"
@@ -291,7 +392,8 @@ export default function MonthlyReport() {
                   selectedInterestStatusOption,
                   selectedPrincipalStatusOption,
                   startDate || new Date(),
-                  e.value || new Date()
+                  e.value || new Date(),
+                  selectedArea
                 )
               }}
               view="month"
@@ -339,6 +441,18 @@ export default function MonthlyReport() {
             style={{ minWidth: '13rem' }}
           />
           <Column field="refUserMobileNo" header="Mobile" style={{ minWidth: '8rem' }} />
+          <Column
+            field="refAreaPrefix"
+            body={(rowData) => {
+              return (
+                <>
+                  {rowData.refAreaName} - [{rowData.refAreaPrefix}]
+                </>
+              )
+            }}
+            header="Area"
+            style={{ minWidth: '8rem' }}
+          />
           <Column field="refRepaymentTypeName" header="Repayment" style={{ minWidth: '10rem' }} />
           <Column
             header="Loan Amount"

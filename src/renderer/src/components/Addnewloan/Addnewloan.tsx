@@ -2,234 +2,30 @@ import axios from 'axios'
 import { TabPanel, TabView } from 'primereact/tabview'
 import { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
-import { Button } from 'primereact/button'
-import { FloatLabel } from 'primereact/floatlabel'
-import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-// import { InputText } from "primereact/inputtext";
-import { Calendar } from 'primereact/calendar'
-import { InputNumber } from 'primereact/inputnumber'
-import { Slide, toast, ToastContainer } from 'react-toastify'
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
 import LoanAudit from '../LoanAudit/LoanAudit'
 import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import { Divider } from 'primereact/divider'
-import CreateNewLoan from '../CreateNewLoan/CreateNewLoan'
 import CloseLoan from '../CloseLoan/CloseLoan'
-
-interface loanType {
-  name: string
-  code: number
-}
 
 const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const handleBack = () => {
-    closeSidebarUpdate()
+    if (0 == 0) {
+    } else {
+      closeSidebarUpdate()
+    }
   }
-
-  const [selectedLoanType, setLoanType] = useState<loanType | null>({ name: 'New Loan', code: 1 })
-  const loanType: loanType[] = [
-    { name: 'New Loan', code: 1 },
-    { name: 'Top Up', code: 2 },
-    { name: 'Extension', code: 3 }
-  ]
-
-  const [addLoanOption, setAddLoanOption] = useState([])
-  const [selectLoanOption, setSelectLoanOption] = useState([])
 
   const [loading, setLoading] = useState(true)
-  const [newLoading, setNewLoading] = useState(false)
 
-  const [allBankAccountList, setAllBankAccountList] = useState([])
-  const [productList, setProductList]: any = useState([])
-
-  const [loanData, setLoadData] = useState<any>([])
   const [loanStatus, setLoanStatus] = useState<string>()
 
-  const [addInputs, setAddInputs] = useState({
-    productId: '',
-    productInterest: '',
-    productDuration: '',
-    refLoanAmount: null,
-    refrepaymentStartDate: null,
-    refPaymentType: '',
-    refLoanStatus: 'opened',
-    refBankId: '',
-    refisInterest: false,
-    refLoanBalance: 0,
-    refInterestMonth: 0
-  })
-
-  const paymentType = [
-    {
-      label: 'Bank',
-      id: 'bank'
-    },
-    {
-      label: 'Cash',
-      id: 'cash'
-    }
-  ]
-
-  const getLoanData = () => {
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/adminRoutes/getLoan',
-        {
-          userId: id
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-        localStorage.setItem('token', 'Bearer ' + data.token)
-
-        if (data.success) {
-          console.log(data)
-          setLoading(false)
-
-          setLoadData(data.loanData)
-
-          setAllBankAccountList(data.allBankAccountList)
-          const productList = data.productList
-          data.productList.map((data, index) => {
-            const name = `Name : ${data.refProductName} - Interest : ${data.refProductInterest} - Duration : ${data.refProductDuration}`
-            productList[index] = { ...productList[index], refProductName: name }
-          })
-          setProductList(productList)
-        }
-      })
-  }
-
   useEffect(() => {
-    // getLoanData()
     getLoanDatas(id)
   }, [activeIndex])
 
-  const handleInput = (e: any) => {
-    const { name, value } = e.target
-
-    setError({
-      status: false,
-      message: ''
-    })
-
-    if (name === 'productId') {
-      setAddInputs({
-        ...addInputs,
-        [name]: value,
-        ['productInterest']: productList.find((product: any) => product.refProductId === value)
-          ?.refProductInterest,
-        ['productDuration']: productList.find((product: any) => product.refProductId === value)
-          ?.refProductDuration,
-        ['refLoanAmount']: null,
-        ['refisInterest']: false,
-        ['refLoanBalance']: 0
-      })
-    } else {
-      setAddInputs({
-        ...addInputs,
-        [name]: value
-      })
-    }
-  }
-
-  const submitAddLoan = () => {
-    setNewLoading(true)
-
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/adminRoutes/addLoan',
-        {
-          refProductId: addInputs.productId,
-          refLoanAmount: addInputs.refLoanAmount,
-          refPayementType: addInputs.refPaymentType,
-          refRepaymentStartDate: addInputs.refrepaymentStartDate,
-          refLoanStatus: 1,
-          refBankId: addInputs.refBankId,
-          refLoanBalance: addInputs.refLoanBalance,
-          isInterestFirst: addInputs.refisInterest,
-          interest:
-            (parseFloat(addInputs.productInterest) / 100) *
-            (addInputs.refLoanAmount ? addInputs.refLoanAmount : 0),
-          userId: id,
-          refLoanExt: selectedLoanType?.code,
-          refExLoanId: selectedLoanType?.code === 1 ? null : selectLoanOption
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-        localStorage.setItem('token', 'Bearer ' + data.token)
-
-        if (data.success) {
-          console.log(data)
-
-          setNewLoading(false)
-
-          toast.success('Successfully Loan Added', {
-            position: 'top-right',
-            autoClose: 2999,
-            hideProgressBar: false,
-            closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: 'light',
-            transition: Slide
-          })
-
-          setAddInputs({
-            productId: '',
-            productInterest: '',
-            productDuration: '',
-            refLoanAmount: null,
-            refrepaymentStartDate: null,
-            refPaymentType: '',
-            refLoanStatus: 'opened',
-            refBankId: '',
-            refisInterest: false,
-            refLoanBalance: 0,
-            refInterestMonth: 0
-          })
-
-          setActiveIndex(0)
-
-          getLoanData()
-        } else {
-          console.log(data)
-
-          setNewLoading(false)
-          setError({
-            status: true,
-            message: data.error
-          })
-        }
-      })
-  }
-
-  const [error, setError] = useState({ status: false, message: '' })
   const [rePaymentInfo, setRePaymentInfo] = useState({})
   const toggleRepaymentInfo = (index) => {
     setRePaymentInfo((prev) => ({
@@ -237,32 +33,6 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
       [index]: !prev[index] // toggle only this index
     }))
   }
-
-  const isInterestAmount = (rowData: any) => {
-    return <>{rowData.isInterestFirst ? 'Yes' : 'No'}</>
-  }
-
-  const Status = (rowData: any) => {
-    return (
-      <>
-        {rowData.refLoanStatus.charAt(0).toUpperCase() +
-          rowData.refLoanStatus.slice(1).toLowerCase()}
-      </>
-    )
-  }
-
-  const [filter, setFilter] = useState('all')
-
-  const filterOption = [
-    { label: 'All Loan', value: 'all' },
-    { label: 'Loan Opened', value: 'opened' },
-    { label: 'Loan Closed', value: 'closed' },
-    { label: 'Loan Extended', value: 'extended' },
-    { label: 'Loan Top Up', value: 'topup' }
-  ]
-
-  const filteredLoanData =
-    filter === 'all' ? loanData : loanData.filter((loan: any) => loan.refLoanStatus === filter)
 
   const [loanDetails, setLoanDetails] = useState<any>([])
 
@@ -302,6 +72,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
         })
     } catch (error) {
       console.log('error', error)
+      handleBack
     }
   }
   function formatToFirstOfMonth(dateString: string): string {
@@ -314,41 +85,8 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
     return `${year}-${month}-${day}`
   }
 
-  const loanOptions = () => {
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/adminRoutes/addLoanOption',
-        {
-          userId: id
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-        localStorage.setItem('token', 'Bearer ' + data.token)
-
-        if (data.success) {
-          const options = data.data.map((data: any) => ({
-            label: `Loan Amt : ${data.refLoanAmount} - Interest : ${data.refProductInterest} - Duration : ${data.refProductDuration}`,
-            value: data.refLoanId
-          }))
-          setAddLoanOption(options)
-        }
-      })
-  }
-
   return (
     <>
-      <ToastContainer />
       <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#000' }}>{custId}</div>
       {loading ? (
         <>

@@ -35,7 +35,6 @@ interface propsInterface {
 const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [newData, setNewData] = useState(false)
   const [loanDetailsSidebar, setLoanDetailsSidebar] = useState(false)
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
   const [loanList, setLoanList] = useState<LoanData[]>([])
   const [filter, setFilter] = useState(0)
   const [userId, setUserId] = useState<number>()
@@ -140,7 +139,6 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   const closeSidebarNew = () => {
     setNewData(false)
     setLoanDetailsSidebar(false)
-    setSelectedSupplier(null)
     getLoanList()
   }
 

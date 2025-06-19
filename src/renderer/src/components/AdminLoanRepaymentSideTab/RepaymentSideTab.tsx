@@ -11,7 +11,6 @@ import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 
 import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
-import LoanAudit from '../LoanAudit/LoanAudit'
 import AdminLoanAudit from '../adminLoanAudit/AdminLoanAudit'
 
 interface RePaymentForm {

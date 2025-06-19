@@ -60,7 +60,6 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [interestFirst, setInterestFirst] = useState<boolean | null>(false)
   const [monthCount, setMonthCount] = useState<number>(0)
   const [bankId, setBankId] = useState<any | null>(null)
-  const [productId, setProductId] = useState<number | null>(null)
   const [loanDuration, setLoanDuration] = useState<number | null>()
   const [loanInterest, setLoanInterest] = useState<number | null>()
   const [interestFirstAmt, setInterestFirstAmt] = useState<number>(0)
@@ -103,7 +102,6 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   ]
   const [userLoan, setUserLoan] = useState<any[]>([])
   const [selectedLoan, setSelectedLoan] = useState<any[] | null>([])
-  const [loanProduct, setLoanProduct] = useState<any[]>([])
   const [bankList, setBankList] = useState<any[]>([])
   const [minDate, setMinDate] = useState<Date | null>()
   const [maxDate, setMaxDate] = useState<Date | null>()
@@ -819,7 +817,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                           value="true"
                           required
                           disabled={step < 5}
-                          onChange={(e: RadioButtonChangeEvent) => {
+                          onChange={(_e: RadioButtonChangeEvent) => {
                             setInterestFirst(true)
                             setMonthCount(1)
                             setStep(6)
@@ -848,7 +846,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                           disabled={step < 5}
                           value="Mushroom"
                           required
-                          onChange={(e: RadioButtonChangeEvent) => {
+                          onChange={(_e: RadioButtonChangeEvent) => {
                             setInterestFirst(false)
                             setMonthCount(0)
                             setInterestFirstAmt(0)

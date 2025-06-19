@@ -36,7 +36,7 @@ interface propsInterface {
 const AdminSupplierLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [newData, setNewData] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
-  const [selectedVendorId, setSelectedVendorId] = useState<number | null>()
+  // const [selectedVendorId, setSelectedVendorId] = useState<number | null>()
   const [vendorList, setVendorList] = useState<Vendor[]>([])
 
   const [globalFilterValue, setGlobalFilterValue] = useState('')
@@ -122,7 +122,7 @@ const AdminSupplierLoan: React.FC<propsInterface> = (reloadFlag) => {
       style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
       onClick={() => {
         console.log('rowData line ----- 110', rowData)
-        setSelectedVendorId(rowData.refVendorId)
+        // setSelectedVendorId(rowData.refVendorId)
         getVendorDetails(rowData.refVendorId)
         setNewData(true)
       }}

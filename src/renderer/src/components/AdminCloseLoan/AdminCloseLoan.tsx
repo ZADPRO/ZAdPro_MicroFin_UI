@@ -3,9 +3,7 @@ import React, { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import axios from 'axios'
 import { Accordion, AccordionTab } from 'primereact/accordion'
-import { InputSwitch, InputSwitchChangeEvent } from 'primereact/inputswitch'
-import { Message } from 'primereact/message'
-import { Divider } from 'primereact/divider'
+// import { Message } from 'primereact/message'
 import { InputNumber } from 'primereact/inputnumber'
 import { Button } from 'primereact/button'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
@@ -15,12 +13,12 @@ interface CloseLoanProps {
   goToHistoryTab?: any
 }
 
-interface setUserLoanProps {
-  refLoanAmount: string
-  refLoanId: number
-  refProductDuration: string
-  refProductInterest: string
-}
+// interface setUserLoanProps {
+//   refLoanAmount: string
+//   refLoanId: number
+//   refProductDuration: string
+//   refProductInterest: string
+// }
 
 interface BankDetailsReponseProps {
   refAccountType: number
@@ -37,13 +35,11 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
     goToHistoryTab()
   }
 
-  const [userLoan, setUserLoan] = useState<setUserLoanProps[]>([])
-  const [selectedLoan, setSelectedLoan] = useState<number | null>()
   const [bankModeType, setBankModeType] = useState<string>('')
   const [loanDetails, setLoanDetails] = useState<any>()
   const [showCard, setShowCard] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string>()
-  const [errorShow, setErrorShow] = useState(false)
+  // const [errorMessage, setErrorMessage] = useState<string>()
+  // const [errorShow, setErrorShow] = useState(false)
   const [loanAmt, setLoanAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
@@ -122,7 +118,6 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          setSelectedLoan(null)
           setLoanDetails(null)
           setBankModeType('')
           setBankid(null)
@@ -134,8 +129,6 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
 
   useEffect(() => {
     setShowCard(false)
-    setErrorShow(false)
-    setSelectedLoan(null)
     getLoanDatas()
     // getUserLoanData()
   }, [])
@@ -334,13 +327,13 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
               </div>
             </div>
           </div>
-          {errorShow && (
+          {/* {errorShow && (
             <div className="flex mt-3 ">
               <div className="flex-1">
                 <Message text={errorMessage} />
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="flex mt-3 gap-3">
             <div className="flex-1">

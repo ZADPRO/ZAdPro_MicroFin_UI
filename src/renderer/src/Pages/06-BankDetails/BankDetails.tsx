@@ -32,7 +32,7 @@ const BankDetails = () => {
     refIFSCsCode: ''
   })
 
-  const dt = useRef<DataTable>(null)
+  const dt = useRef<DataTable<any>>(null)
 
   const loadData = () => {
     try {
@@ -126,6 +126,7 @@ const BankDetails = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
   })
+  const [first, setFirst] = useState(0)
 
   const [globalFilterValue, setGlobalFilterValue] = useState('')
 
@@ -145,8 +146,8 @@ const BankDetails = () => {
 
   // EXPORT AS CSV
 
-  const exportCSV = (selectionOnly) => {
-    dt.current.exportCSV({ selectionOnly })
+  const exportCSV = (selectionOnly: boolean) => {
+    dt.current?.exportCSV({ selectionOnly })
   }
 
   const header = (
@@ -217,15 +218,17 @@ const BankDetails = () => {
 
           <div>
             <DataTable
+              value={userLists}
               filters={filters}
               paginator
+              first={first}
+              onPage={(e) => setFirst(e.first)}
+              rows={5}
+              rowsPerPageOptions={[5, 10, 25, 50]}
               paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
               footer={footer}
               header={header}
               ref={dt}
-              rows={5}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              value={userLists}
               showGridlines
               scrollable
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
@@ -233,9 +236,10 @@ const BankDetails = () => {
             >
               <Column
                 header="S.No"
-                body={(_rowData, options) => options.rowIndex + 1 + (filters?.first || 0)}
+                body={(_rowData, options) => options.rowIndex + 1 + first}
                 style={{ width: '80px', textAlign: 'center' }}
               />
+
               <Column body={CustomerId} header="Bank Name"></Column>
               <Column field="refBalance" body={BankBalance} header="Bank Balance"></Column>
               <Column field="refBankAccountNo" header="Account Number"></Column>
