@@ -9,6 +9,10 @@ import { Slide, toast, ToastContainer } from 'react-toastify'
 
 import { TabView, TabPanel } from 'primereact/tabview'
 import { InputNumber, InputNumberChangeEvent } from 'primereact/inputnumber'
+import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
+import AddedFundList from './AddedFundList'
+import { InputText } from 'primereact/inputtext'
+import { Calendar } from 'primereact/calendar'
 
 // interface for mode of payment
 interface MoneyType {
@@ -28,8 +32,9 @@ interface BankOptions {
 const AddnewFund = ({ closeSidebarNew }) => {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
-
-  const [moneyType, setMoneyType] = useState<MoneyType | null>(null)
+  const [settingData, setSettingData] = useState<SettingData | null>()
+  const [comment, setComment] = useState<string | null>(null)
+  const [moneyType, setMoneyType] = useState<number | null>(null)
   // Need to maintain that the input amount was from in hand (liquid cash) or from bank
   const moneyOptions: MoneyType[] = [
     { name: 'Bank', id: 1 },
@@ -37,9 +42,10 @@ const AddnewFund = ({ closeSidebarNew }) => {
   ]
   // Handle the from and to account with validation
   const [handleSelfTransferFrom, setHandleSelfTransferFrom] = useState<number | null>(null)
-  console.log('handleSelfTransferFrom', handleSelfTransferFrom)
   const [handleSelfTransferTo, setHandleSelfTransferTo] = useState<number | null>(null)
   const [transferAmount, setTransferAmount] = useState<number | null>(null)
+  const [description, setDescription] = useState<string>('')
+  const [date, setDate] = useState<Date>(new Date())
 
   const [bankOptions, setBankOptions] = useState<BankOptions[] | []>([])
 
@@ -73,17 +79,21 @@ const AddnewFund = ({ closeSidebarNew }) => {
     setSubmitLoading(true)
 
     console.log('inputs.refbfTransactionAmount', inputs.refbfTransactionAmount)
+    const tempDate = new Date(date)
+    tempDate.setDate(tempDate.getDate() + 1)
     try {
       axios
         .post(
           import.meta.env.VITE_API_URL + '/adminRoutes/addBankFund',
           {
             refBankId: inputs.refBankId,
-            refbfTransactionDate: inputs.refbfTransactionDate,
+            refbfTransactionDate: tempDate.toISOString().split('T')[0],
             refbfTransactionType: inputs.refbfTransactionType,
             refbfTransactionAmount: Number(inputs.refbfTransactionAmount),
             refTxnId: null,
-            refFundType: inputs.refFundType
+            refFundType: inputs.refFundType,
+            Description: description,
+            date: date
           },
           {
             headers: {
@@ -125,9 +135,9 @@ const AddnewFund = ({ closeSidebarNew }) => {
     }
   }
 
-  const fetchBankDetails = async (e: any) => {
-    console.log('e', e)
-    setMoneyType(e.value)
+  const fetchBankDetails = async (paymentType: number) => {
+    console.log('paymentType line ------- 131', paymentType)
+    setMoneyType(paymentType)
     try {
       const response = await axios.get(import.meta.env.VITE_API_URL + '/adminRoutes/getBankList', {
         headers: {
@@ -146,7 +156,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
         console.log('moneyType', moneyType)
 
         const filteredBankData = data.BankFund.filter(
-          (item: any) => item.refAccountType === e.value
+          (item: any) => item.refAccountType === paymentType
         ).map((item: any) => ({
           ...item,
           label: `Name: ${item.refBankName} | ₹ ${item.refBalance ?? 0}`
@@ -160,52 +170,59 @@ const AddnewFund = ({ closeSidebarNew }) => {
     }
   }
 
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
-    setInputs((prevState) => ({
-      ...prevState,
-      refbfTransactionDate: today
-    }))
-
-    const selfTransferAccAPI = async () => {
-      try {
-        const response = await axios.get(
-          import.meta.env.VITE_API_URL + '/adminRoutes/getBankList',
-          {
-            headers: {
-              Authorization: localStorage.getItem('token'),
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
-        )
-
-        localStorage.setItem('token', 'Bearer ' + data.token)
-
-        console.log('data', data)
-        console.log('moneyType', moneyType)
-        if (data.success) {
-          console.log('moneyType', moneyType)
-
-          const filteredBankData = data.BankFund.map((item: any) => ({
-            ...item,
-            label: `Name:  ${item.refBankName} | ₹ ${item.refBalance ?? 0}`
-          }))
-
-          console.log('Filtered Bank Data:', filteredBankData)
-          setBankOptions(filteredBankData)
+  const selfTransferAccAPI = async () => {
+    try {
+      const response = await axios.get(import.meta.env.VITE_API_URL + '/adminRoutes/getBankList', {
+        headers: {
+          Authorization: localStorage.getItem('token'),
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.log('Error fetching bank details:', error)
+      })
+
+      const data = decrypt(response.data[1], response.data[0], import.meta.env.VITE_ENCRYPTION_KEY)
+
+      localStorage.setItem('token', 'Bearer ' + data.token)
+
+      console.log('data', data)
+      console.log('moneyType', moneyType)
+      if (data.success) {
+        console.log('moneyType', moneyType)
+
+        const filteredBankData = data.BankFund.map((item: any) => ({
+          ...item,
+          label: `Name:  ${item.refBankName} | ₹ ${item.refBalance ?? 0}`
+        }))
+
+        console.log('Filtered Bank Data:', filteredBankData)
+        setBankOptions(filteredBankData)
+      }
+    } catch (error) {
+      console.log('Error fetching bank details:', error)
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getSettingData()
+      console.log('data line ----- 199', data)
+      setSettingData(data)
+
+      const today = new Date().toISOString().split('T')[0]
+      setInputs((prevState) => ({
+        ...prevState,
+        refbfTransactionDate: today
+      }))
+
+      selfTransferAccAPI()
+
+      if (data.paymentMethod !== 1) {
+        console.log('-> Line Number ----------------------------------- 169')
+        console.log('data.paymentMethod', data.paymentMethod)
+        fetchBankDetails(data.paymentMethod === 2 ? 1 : 2)
       }
     }
 
-    selfTransferAccAPI()
+    fetchData()
   }, [activeIndex])
 
   useEffect(() => {
@@ -223,7 +240,9 @@ const AddnewFund = ({ closeSidebarNew }) => {
         {
           fromId: handleSelfTransferFrom,
           toId: handleSelfTransferTo,
-          amt: transferAmount
+          amt: transferAmount,
+          fundType: comment,
+          date: date
         },
         {
           headers: {
@@ -318,40 +337,65 @@ const AddnewFund = ({ closeSidebarNew }) => {
             }}
           >
             <div style={{ margin: '5px 0px', overflow: 'auto', padding: '10px' }}>
-              <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-                <FloatLabel style={{ width: '100%' }}>
-                  <Dropdown
-                    name="moneyType"
-                    style={{ width: '100%', minWidth: '100%' }}
-                    value={moneyType}
-                    options={moneyOptions}
-                    optionLabel="name"
-                    optionValue="id"
-                    onChange={(e: DropdownChangeEvent) => {
-                      fetchBankDetails(e)
-                    }}
-                    required
+              <div className="flex justify-between">
+                <div>
+                  {settingData?.paymentMethod === 1 && (
+                    <>
+                      {Number(settingData?.paymentMethod) === 2 ? (
+                        <b>Select a Bank Account To Deposit Amount</b>
+                      ) : (
+                        <b>Select a Cash Flow To Deposit Amount</b>
+                      )}
+                    </>
+                  )}
+                </div>
+                <div>
+                  <Calendar
+                    value={date}
+                    onChange={(e) => setDate(e.value ?? new Date())}
+                    dateFormat="dd/mm/yy"
+                    maxDate={new Date()}
+                    // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
                   />
-                  <label htmlFor="refBankId">Choose Bank Type</label>
-                </FloatLabel>
+                </div>
               </div>
+              {settingData?.paymentMethod === 1 && (
+                <>
+                  <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
+                    <FloatLabel style={{ width: '100%' }}>
+                      <Dropdown
+                        name="moneyType"
+                        style={{ width: '100%', minWidth: '100%' }}
+                        value={moneyType}
+                        options={moneyOptions}
+                        optionLabel="name"
+                        optionValue="id"
+                        onChange={(e: DropdownChangeEvent) => {
+                          fetchBankDetails(e.value)
+                        }}
+                        required
+                      />
+                      <label htmlFor="refBankId">Choose Bank Type</label>
+                    </FloatLabel>
+                    <FloatLabel style={{ width: '100%' }}>
+                      <Dropdown
+                        name="refBankId"
+                        style={{ width: '100%', minWidth: '100%' }}
+                        value={inputs.refBankId}
+                        options={bankOptions}
+                        optionLabel="label"
+                        optionValue="refBankId"
+                        onChange={(e: any) => handleInput(e)}
+                        required
+                      />
+                      <label htmlFor="refBankId">Choose Payment Flow</label>
+                    </FloatLabel>
+                  </div>
+                </>
+              )}
             </div>
             <div style={{ margin: '5px 0px', height: '78vh', overflow: 'auto', padding: '10px' }}>
               <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '15px' }}>
-                <FloatLabel style={{ width: '100%' }}>
-                  <Dropdown
-                    name="refBankId"
-                    style={{ width: '100%', minWidth: '100%' }}
-                    value={inputs.refBankId}
-                    options={bankOptions}
-                    optionLabel="label"
-                    optionValue="refBankId"
-                    onChange={(e: any) => handleInput(e)}
-                    required
-                  />
-                  <label htmlFor="refBankId">Choose Bank</label>
-                </FloatLabel>
-
                 <FloatLabel style={{ width: '100%', marginTop: '' }}>
                   <InputNumber
                     id="refbfTransactionAmount"
@@ -366,6 +410,19 @@ const AddnewFund = ({ closeSidebarNew }) => {
                     required
                   />
                   <label htmlFor="refbfTransactionAmount">Transaction Amount</label>
+                </FloatLabel>
+                <FloatLabel style={{ width: '100%', marginTop: '' }}>
+                  <InputText
+                    id="Description"
+                    name="Description"
+                    className="w-full"
+                    value={inputs.Description}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setDescription(e.target.value)
+                    }}
+                    required
+                  />
+                  <label htmlFor="refbfTransactionAmount">Description</label>
                 </FloatLabel>
               </div>
 
@@ -414,6 +471,18 @@ const AddnewFund = ({ closeSidebarNew }) => {
         {/* CHANGES DONE - THIRU */}
         {/* Need a separate UI to maintain the transfer of money from one to another : the agent or admin can transfer the amount from one bank to another or inhand to other */}
         <TabPanel header="Self Transfer">
+          <div className="flex justify-end items-center gap-x-2">
+            <label>
+              <b>Select Date : </b>
+            </label>
+            <Calendar
+              value={date}
+              onChange={(e) => setDate(e.value ?? new Date())}
+              dateFormat="dd/mm/yy"
+              maxDate={new Date()}
+              // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+            />
+          </div>
           <div className="card flex flex-column md:flex-row gap-3 mt-6 mx-[5px]">
             <FloatLabel className="w-full flex-1">
               <Dropdown
@@ -430,6 +499,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
 
             <FloatLabel className="w-full flex-1">
               <Dropdown
+                id="transferTo"
                 value={handleSelfTransferTo}
                 onChange={(e: DropdownChangeEvent) => setHandleSelfTransferTo(e.value)}
                 options={filteredToOptions}
@@ -439,7 +509,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 placeholder="Select to"
                 disabled={!handleSelfTransferFrom}
               />
-              <label>Self Transfer To</label>
+              <label htmlFor="transferTo">Self Transfer To</label>
             </FloatLabel>
           </div>
           <div className="card flex flex-column md:flex-row gap-3 mt-5 mx-[5px]">
@@ -456,6 +526,18 @@ const AddnewFund = ({ closeSidebarNew }) => {
               />
 
               <label htmlFor="username">Transfer Amount</label>
+            </FloatLabel>
+            <FloatLabel className="w-full flex-1">
+              <InputText
+                id="comment"
+                value={comment}
+                className="w-full"
+                onChange={(e) => {
+                  setComment(e.target.value)
+                }}
+              />
+
+              <label htmlFor="comment">Enter Comment</label>
             </FloatLabel>
           </div>
 
@@ -490,6 +572,9 @@ const AddnewFund = ({ closeSidebarNew }) => {
               />
             </div>
           )}
+        </TabPanel>
+        <TabPanel header="Recently Added funds">
+          <AddedFundList closeSidebarNew={closeSidebarNew} />
         </TabPanel>
       </TabView>
     </>

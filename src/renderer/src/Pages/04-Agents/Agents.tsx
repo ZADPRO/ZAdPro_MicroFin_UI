@@ -17,7 +17,7 @@ import AgentInputNew from '@renderer/components/AgentInputs/AgentInputNew'
 const Customers = () => {
   const [userLists, setUserLists] = useState([])
 
-  const dt = useRef<DataTable<any>>(null) 
+  const dt = useRef<DataTable<any>>(null)
 
   const [username, setUsername] = useState('')
 
@@ -244,6 +244,7 @@ const Customers = () => {
               paginator
               rows={5}
               ref={dt}
+              size="small"
               header={header}
               rowsPerPageOptions={[5, 10, 25, 50]}
               value={userLists}

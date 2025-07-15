@@ -194,6 +194,7 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
         onFilter={(e) => setFilters(e.filters)}
         className="mt-4"
         showGridlines
+        size="small"
         stripedRows
         scrollable
         paginator

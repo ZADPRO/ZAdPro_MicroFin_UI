@@ -7,6 +7,9 @@ import { Accordion, AccordionTab } from 'primereact/accordion'
 import { InputNumber } from 'primereact/inputnumber'
 import { Button } from 'primereact/button'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
+import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
+import { Divider } from 'primereact/divider'
+import { Calendar } from 'primereact/calendar'
 
 interface CloseLoanProps {
   id: number
@@ -38,18 +41,20 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   const [bankModeType, setBankModeType] = useState<string>('')
   const [loanDetails, setLoanDetails] = useState<any>()
   const [showCard, setShowCard] = useState(false)
-  // const [errorMessage, setErrorMessage] = useState<string>()
-  // const [errorShow, setErrorShow] = useState(false)
+  const [date, setDate] = useState<Date>(new Date())
+
   const [loanAmt, setLoanAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
+  const [settingData, setSettingData] = useState<SettingData | null>()
 
   const getLoanDatas = async () => {
     axios
       .post(
         import.meta.env.VITE_API_URL + '/adminLoan/loanCloseData',
         {
-          LoanId: id
+          LoanId: id,
+          todayDate: date
         },
         {
           headers: {
@@ -69,6 +74,7 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
 
         if (data.success) {
           const matchedLoan = data.data.find((item) => item.refLoanId === id)
+          console.log('Loan', matchedLoan)
           setLoanDetails(matchedLoan)
           const options = data.bank.map((d: any) => ({
             name: `Name : ${d.refBankName} - A/C : ${d.refBankAccountNo} - IFSC's : ${d.refIFSCsCode}`,
@@ -97,6 +103,7 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
       .post(
         import.meta.env.VITE_API_URL + '/adminLoan/payPrincipalAmt',
         {
+          todayDate: date,
           LoanId: id,
           principalAmt: Number(loanAmt),
           bankId: bankID
@@ -130,7 +137,16 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   useEffect(() => {
     setShowCard(false)
     getLoanDatas()
-    // getUserLoanData()
+    const getSetData = async () => {
+      const settingdatas = await getSettingData()
+      console.log('settingdatas line ------ 172', settingdatas)
+      setSettingData(settingdatas)
+      if (settingdatas.paymentMethod !== 1) {
+        console.log('settingdatas.paymentMethod line ----- 175', settingdatas.paymentMethod)
+        setBankModeType(settingdatas?.paymentMethod === 2 ? 'Bank' : 'Cash')
+      }
+    }
+    getSetData()
   }, [])
 
   return (
@@ -271,7 +287,23 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
               </AccordionTab>
             </Accordion>
           </div>
-
+          <Divider />
+          <div className="flex justify-between align-items-center">
+            <div className="w-[30%]">
+              <label className="font-bold block mb-2">Select Paid Date</label>
+              <Calendar
+                placeholder="DD/MM/YYYY"
+                value={date}
+                required
+                onChange={(e) => {
+                  setDate(e.value ?? new Date())
+                }}
+                dateFormat="dd/mm/yy"
+                // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                maxDate={new Date()}
+              />
+            </div>
+          </div>
           <div className="flex mt-3 gap-3">
             <div className="flex-1">
               <label className="font-bold block mb-2">Enter Balance Amount</label>
@@ -286,17 +318,25 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
                 locale="en-IN"
                 onChange={(e: any) => {
                   const enteredValue = e.value
+                  console.log('enteredValue line ----- 319', enteredValue)
                   const maxValue = loanDetails?.refBalanceAmt
 
                   if (enteredValue <= maxValue) {
+                    console.log('enteredValue line ----- 323', enteredValue)
+
+                    console.log(' -> Line Number ----------------------------------- 323')
                     setLoanAmt(enteredValue)
                   } else {
+                    console.log(' -> Line Number ----------------------------------- 326')
+                    console.log('enteredValue line ----- 330', enteredValue)
+
                     setLoanAmt(maxValue) // force the value to max
                   }
                 }}
               />
             </div>
-            <div className="flex-1">
+            {settingData?.paymentMethod === 1 && <></>}
+            {/* <div className="flex-1">
               <label className="font-bold block mb-2">Select Amount Type</label>
 
               <div className="flex flex-wrap gap-3 mt-3">
@@ -325,7 +365,70 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
                   </label>
                 </div>
               </div>
-            </div>
+            </div> */}
+            {settingData?.paymentMethod === 1 && (
+              <>
+                {' '}
+                <div className="flex-1">
+                  <label className="font-bold block mb-2">Select Payment Flow</label>
+
+                  <div className="flex flex-wrap gap-3 mt-3">
+                    <div className="flex align-items-center">
+                      <RadioButton
+                        inputId="bankModeType1"
+                        name="Bank"
+                        value="Bank"
+                        onChange={(e: RadioButtonChangeEvent) => {
+                          console.log('e.value', e.value)
+                          setBankModeType(e.value)
+                        }}
+                        checked={bankModeType === 'Bank'}
+                      />
+                      <label htmlFor="bankModeType1" className="ml-2">
+                        Bank
+                      </label>
+                    </div>
+                    <div className="flex align-items-center">
+                      <RadioButton
+                        inputId="bankModeType2"
+                        name="Cash"
+                        value="Cash"
+                        onChange={(e: RadioButtonChangeEvent) => {
+                          console.log('e.value', e.value)
+                          setBankModeType(e.value)
+                        }}
+                        checked={bankModeType === 'Cash'}
+                      />
+                      <label htmlFor="bankModeType2" className="ml-2">
+                        Cash
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {(settingData?.paymentMethod === 2 || settingData?.paymentMethod === 3) && (
+              <div className="flex-1">
+                <label className="font-bold block mb-2">
+                  Choose {settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}
+                </label>
+
+                <Dropdown
+                  value={bankID}
+                  filter
+                  onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
+                  options={bankDetailsResponse.filter(
+                    (item) =>
+                      (bankModeType === 'Bank' && item.refAccountType === 1) ||
+                      (bankModeType === 'Cash' && item.refAccountType === 2)
+                  )}
+                  optionValue="value"
+                  optionLabel="name"
+                  placeholder={`Select ${settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}`}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
           {/* {errorShow && (
             <div className="flex mt-3 ">
@@ -336,24 +439,28 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
           )} */}
 
           <div className="flex mt-3 gap-3">
-            <div className="flex-1">
-              <label className="font-bold block mb-2">Choose Bank</label>
+            {settingData?.paymentMethod === 1 && (
+              <div className="flex-1">
+                <label className="font-bold block mb-2">
+                  Choose {bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}
+                </label>
 
-              <Dropdown
-                value={bankID}
-                filter
-                onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
-                options={bankDetailsResponse.filter(
-                  (item) =>
-                    (bankModeType === 'Bank' && item.refAccountType === 1) ||
-                    (bankModeType === 'Cash' && item.refAccountType === 2)
-                )}
-                optionValue="value"
-                optionLabel="name"
-                placeholder="Select a Bank"
-                className="w-full"
-              />
-            </div>
+                <Dropdown
+                  value={bankID}
+                  filter
+                  onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
+                  options={bankDetailsResponse.filter(
+                    (item) =>
+                      (bankModeType === 'Bank' && item.refAccountType === 1) ||
+                      (bankModeType === 'Cash' && item.refAccountType === 2)
+                  )}
+                  optionValue="value"
+                  optionLabel="name"
+                  placeholder={`Select ${bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}`}
+                  className="w-full"
+                />
+              </div>
+            )}
             <div className="flex-1"></div>
           </div>
 

@@ -4,38 +4,30 @@ import axios from 'axios'
 import { Column } from 'primereact/column'
 import { DataTable } from 'primereact/datatable'
 import { InputText } from 'primereact/inputtext'
-import { Sidebar } from 'primereact/sidebar'
+// import { Sidebar } from 'primereact/sidebar'
 import { useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { FilterMatchMode } from 'primereact/api'
 import { Button } from 'primereact/button'
-import ProductInputsUpdate from '@renderer/components/ProductsInputs/ProductInputsUpdate'
-import ProductInputNew from '@renderer/components/ProductsInputs/ProductInputNew'
+// import ProductInputsUpdate from '@renderer/components/ProductsInputs/ProductInputsUpdate'
+import ProductInputNew, { productData } from '@renderer/components/ProductsInputs/ProductInputNew'
+import { Dialog } from 'primereact/dialog'
 
 const Products = () => {
-  const [userLists, setUserLists] = useState([])
+  const [loanProduct, setLoanProduct] = useState([])
 
   const [username, setUsername] = useState('')
 
   const [loadingStatus, setLoadingStatus] = useState(true)
 
-  const [userData, setUserData] = useState({
-    refProductId: '',
-    refProductName: '',
-    refProductDuration: '',
-    refProductInterest: '',
-    refProductDescription: '',
-    refProductStatus: '',
-    refProductDurationType: 0,
-    refProductMonthlyCal: 0
-  })
+  const [selectedProductData, setSelectedProductData] = useState<productData | null>()
 
   const loadData = () => {
     try {
       axios
-        .get(import.meta.env.VITE_API_URL + '/adminRoutes/productList', {
+        .get(import.meta.env.VITE_API_URL + '/product/list', {
           headers: {
             Authorization: localStorage.getItem('token'),
             'Content-Type': 'application/json'
@@ -55,7 +47,7 @@ const Products = () => {
           if (data.success) {
             setLoadingStatus(false)
             setUsername(data.name[0].refUserFname + ' ' + data.name[0].refUserLname)
-            setUserLists(data.products)
+            setLoanProduct(data.product)
           }
         })
     } catch (e: any) {
@@ -73,15 +65,16 @@ const Products = () => {
         <div
           onClick={() => {
             setUpdateData(true)
-            setUserData({
-              refProductId: rowData.refProductId,
-              refProductName: rowData.refProductName,
-              refProductDuration: rowData.refProductDuration,
-              refProductInterest: rowData.refProductInterest,
-              refProductDescription: rowData.refProductDescription,
-              refProductStatus: rowData.refProductStatus,
-              refProductMonthlyCal: rowData.refProductMonthlyCal,
-              refProductDurationType: rowData.refProductDurationType
+            setSelectedProductData({
+              productName: rowData.refProductName,
+              interest: rowData.refProductInterest,
+              repaymentType: Number(rowData.refRePaymentType),
+              loanDueType: Number(rowData.refLoanDueType),
+              duration: rowData.refProductDuration,
+              InterestCalType: Number(rowData.refInterestCalType),
+              status: rowData.refStatus,
+              description: rowData.refProductDescurption,
+              productId: Number(rowData.refProductId)
             })
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
@@ -95,18 +88,15 @@ const Products = () => {
   const InterestPercentage = (rowData: any) => {
     return (
       <>
-        <div>{rowData.refProductInterest} %</div>
-        {rowData.refProductDurationType === 1 && (
-          <div>
-            ({' '}
-            {rowData.refProductMonthlyCal === 1
-              ? 'Day wise Calculation'
-              : rowData.refProductMonthlyCal === 2
-                ? 'Month wise Calculation'
-                : ''}{' '}
-            )
-          </div>
-        )}
+        <div>
+          {rowData.refProductInterest} % - [{' '}
+          {rowData.refInterestCalType === 1
+            ? 'Day wise Calculation'
+            : rowData.refInterestCalType === 2
+              ? 'Overall Calculation'
+              : ''}{' '}
+          ]
+        </div>
       </>
     )
   }
@@ -116,11 +106,7 @@ const Products = () => {
       <>
         <div>
           {rowData.refProductDuration}{' '}
-          {rowData.refProductDurationType === 3
-            ? 'Days'
-            : rowData.refProductDurationType === 2
-              ? 'Week'
-              : 'Month'}
+          {rowData.refLoanDueType === 3 ? 'Days' : rowData.refLoanDueType === 2 ? 'Week' : 'Month'}
         </div>
       </>
     )
@@ -130,13 +116,15 @@ const Products = () => {
 
   const [updateData, setUpdateData] = useState(false)
 
-  const closeSidebarUpdate = () => {
-    setUpdateData(false)
-    loadData()
-  }
+  // const closeSidebarUpdate = () => {
+  //   setUpdateData(false)
+  //   loadData()
+  // }
 
   const closeSidebarNew = () => {
     setNewData(false)
+    setUpdateData(false)
+
     loadData()
   }
 
@@ -163,7 +151,7 @@ const Products = () => {
   const StatusBody = (rowData: any) => {
     return (
       <>
-        {rowData.refProductStatus === 'active' ? (
+        {rowData.refStatus === 'active' ? (
           <div
             style={{
               padding: '5px',
@@ -257,16 +245,22 @@ const Products = () => {
               filters={filters}
               paginator
               rows={5}
-              value={userLists}
+              size="small"
+              value={loanProduct}
               showGridlines
               scrollable
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
-              <Column body={CustomerId} header="Product Name"></Column>
-              <Column body={ProductDuration} header="Product Duration"></Column>
-              <Column body={InterestPercentage} header="Interest"></Column>
-              <Column field="refProductDescription" header="Description"></Column>
+              <Column body={CustomerId} field="refProductName" header="Product Name"></Column>
+              <Column
+                body={ProductDuration}
+                field="refProductDuration"
+                header="Product Duration"
+              ></Column>
+              <Column body={InterestPercentage} field="refFinalInterest" header="Interest"></Column>
+              <Column field="refRepaymentTypeName" header="Re-Payment Type"></Column>
+              <Column field="refProductDescurption" header="Description"></Column>
               <Column body={StatusBody} header="Status"></Column>
             </DataTable>
           </div>
@@ -275,27 +269,48 @@ const Products = () => {
 
           {/* New User Side Bar - Start */}
 
-          <Sidebar
+          {/* <Sidebar
             visible={newData}
-            style={{ width: '80vw' }}
+            style={{ width: '60vw' }}
             position="right"
             onHide={() => setNewData(false)}
           >
             <ProductInputNew closeSidebarNew={closeSidebarNew} />
-          </Sidebar>
+          </Sidebar> */}
+
+          <Dialog
+            header="Add New Product"
+            visible={newData}
+            style={{ width: '75vw' }}
+            onHide={closeSidebarNew}
+          >
+            <ProductInputNew closeSidebarNew={closeSidebarNew} />
+          </Dialog>
+
+          <Dialog
+            header="Update Product Product"
+            visible={updateData}
+            style={{ width: '75vw' }}
+            onHide={closeSidebarNew}
+          >
+            <ProductInputNew
+              closeSidebarNew={closeSidebarNew}
+              updateProductData={selectedProductData ?? undefined}
+            />
+          </Dialog>
 
           {/* New User Side Bar - End */}
 
           {/* Update Side Bar - Start */}
 
-          <Sidebar
+          {/* <Sidebar
             visible={updateData}
             style={{ width: '80vw' }}
             position="right"
             onHide={() => setUpdateData(false)}
           >
             <ProductInputsUpdate data={userData} closeSidebarUpdate={closeSidebarUpdate} />
-          </Sidebar>
+          </Sidebar> */}
 
           {/* Update Side Bar - End */}
         </div>

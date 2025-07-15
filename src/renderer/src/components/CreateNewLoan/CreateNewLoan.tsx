@@ -10,13 +10,15 @@ import { Slide, toast, ToastContainer } from 'react-toastify'
 import { InputNumber } from 'primereact/inputnumber'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 import {
-  CalculateFirstInterest,
-  CalculateInitialInterest,
-  FirstInterest
+
+  calInitialInterest,
+  calInterestPayFirst,
+  interestCal
 } from '@renderer/helper/loanFile'
-import { getRemainingDaysInCurrentMonth } from '../../helper/loanFile'
+// import { getRemainingDaysInCurrentMonth } from '../../helper/loanFile'
 import { getDateAfterMonths } from '@renderer/helper/date'
 import { InputTextarea } from 'primereact/inputtextarea'
+import { getSettingData } from '@renderer/helper/SettingsData'
 
 interface CreateNewLoanProps {
   id?: number
@@ -63,15 +65,20 @@ interface UserDetails {
 }
 
 const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => {
+  const handleBack = () => {
+    goToHistoryTab()
+  }
+
   const today = new Date()
+  // const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
   const [customerId, setCustomerId] = useState<number>()
   const [customerList, setCustomerList] = useState<UserDetails[]>([])
-  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-  const [rePaymentDate, setRePaymentDate] = useState<Date>(nextMonth)
+  const [rePaymentDate, setRePaymentDate] = useState<Date | null>()
+  const [date, setDate] = useState<Date | null>(new Date())
   const [newLoanAmt, setNewLoanAmt] = useState<number | null>()
   const [oldBalanceAmt, setOldBalanceAmt] = useState<number | null>(0)
   const [FinalLoanAmt, setFinalLoanAmt] = useState<number>(0)
-  const [interestFirst, setInterestFirst] = useState<boolean | null>(false)
+  const [interestFirst, setInterestFirst] = useState<boolean | null>()
   const [monthCount, setMonthCount] = useState<number>(0)
   const [bankId, setBankId] = useState<number | null | any>(null)
   const [productId, setProductId] = useState<number | null | any>(null)
@@ -85,17 +92,9 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [selectedLoanType, setSelectedLoanType] = useState<number | null>(0)
   const [showForm, setShowForm] = useState<boolean>(false)
   const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
-  const loanTypeOptions: LoanType[] = [
-    { name: 'New Loan', value: 1 },
-    { name: 'Loan TopUp', value: 2 },
-    { name: 'Loan Extension', value: 3 }
-  ]
-  const [selectedRepaymentType, setSelectedRepaymentType] = useState<LoanType | null>(null)
-  const rePaymentTypeOptions: LoanType[] = [
-    { name: 'Flat Loan', value: 1 },
-    { name: 'Diminishing Loan', value: 2 },
-    { name: 'Monthly Interest', value: 3 }
-  ]
+  const [loanTypeOptions, setLoanTypeOptions] = useState<LoanType[] | null>([])
+
+  const [selectedRepaymentType, setSelectedRepaymentType] = useState<number | null>(null)
   const [userLoan, setUserLoan] = useState<any[]>([])
   const [selectedLoan, setSelectedLoan] = useState<any[] | null>([])
   const [loanProduct, setLoanProduct] = useState<any[]>([])
@@ -103,37 +102,67 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [minDate, setMinDate] = useState<Date | null>()
   const [maxDate, setMaxDate] = useState<Date | null>()
   const [viewDate, setViewDate] = useState<Date | null>()
-  const getDateRange = (durationType: number) => {
-    console.log(' -> Line Number ----------------------------------- 105')
-    console.log('durationType', durationType)
-    switch (durationType) {
-      case 1: // Next Month
-        console.log(' -> Line Number ----------------------------------- 108')
+  const [step, setStep] = useState(0)
+  const [loanCalculationData, setLoanCalculationData] = useState<interestCal>()
+
+  function getNextWeekRange(startDay: string, endDay: string) {
+    const daysOfWeek: Record<string, number> = {
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6
+    }
+
+    const today = new Date(date ?? new Date())
+    const currentDay = today.getDay()
+
+    const startOffset = (7 + daysOfWeek[startDay] - currentDay) % 7 || 7
+    const startDate = new Date(today)
+    startDate.setDate(today.getDate() + startOffset)
+
+    const endOffset = (7 + daysOfWeek[endDay] - daysOfWeek[startDay]) % 7
+    const endDate = new Date(startDate)
+    endDate.setDate(startDate.getDate() + endOffset)
+
+    return { startDate, endDate }
+  }
+
+  const getDateRange = async (durationType: number) => {
+    const today = new Date(date ?? new Date())
+    switch (durationType) { 
+      case 1:
         setMinDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
         setMaxDate(new Date(today.getFullYear(), today.getMonth() + 2, 0))
         setViewDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
-        setRePaymentDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
         break
-      case 2: // Next Week
-        console.log(' -> Line Number ----------------------------------- 114')
-        const nextWeekStart = new Date(today)
-        nextWeekStart.setDate(today.getDate() + (7 - today.getDay()))
-        const nextWeekEnd = new Date(nextWeekStart)
-        nextWeekEnd.setDate(nextWeekStart.getDate() + 6)
-        setMinDate(nextWeekStart)
-        setMaxDate(nextWeekEnd)
-        setViewDate(nextWeekStart)
-        setRePaymentDate(nextWeekStart)
+      case 2:
+        const settingData = await getSettingData()
+        const weekData = settingData.weekStartEnd?.split(',')
+        if (weekData && weekData.length === 2) {
+          const { startDate, endDate } = getNextWeekRange(weekData[0], weekData[1])
+          setMinDate(startDate)
+          setMaxDate(endDate)
+          setViewDate(startDate)
+        } else {
+          // Fallback logic if setting is missing or invalid
+          console.warn('Invalid or missing weekStartEnd. Using default Monday–Sunday.')
+          const { startDate, endDate } = getNextWeekRange('Monday', 'Sunday')
+          setMinDate(startDate)
+          setMaxDate(endDate)
+          setViewDate(startDate)
+        }
+
         break
 
-      case 3: // Next Day
-        console.log(' -> Line Number ----------------------------------- 124')
+      case 3:
         const nextDay = new Date(today)
         nextDay.setDate(today.getDate() + 1)
         setMinDate(nextDay)
         setMaxDate(nextDay)
         setViewDate(nextDay)
-        setRePaymentDate(nextDay)
         break
 
       default:
@@ -142,12 +171,6 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         setMaxDate(null)
         setViewDate(null)
     }
-  }
-
-  const [step, setStep] = useState(0)
-
-  const handleBack = () => {
-    goToHistoryTab()
   }
 
   const getUserLoanData = async () => {
@@ -185,7 +208,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     }
   }
 
-  const getAllLoanData = () => {
+  const getAllLoanData = async () => {
+    const settingData = await getSettingData()
     axios
       .post(
         import.meta.env.VITE_API_URL + '/adminRoutes/getLoan',
@@ -211,41 +235,28 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           console.log('data =======> ', data)
           const productList = data.productList
           data.productList.map((data, index) => {
-            const name = `Name : ${data.refProductName} - Interest : ${data.refProductInterest} %- Duration : ${data.refProductDuration} ${data.refProductDurationType === 1 ? 'Month' : data.refProductDurationType === 2 ? 'Weeks' : 'Days'}`
+            const name = `${data.refProductName} | ${data.refProductInterest} % | ${data.refProductDuration} ${data.refLoanDueType === 1 ? 'Months' : data.refLoanDueType === 2 ? 'Weeks' : 'Days'} | ${data.refRepaymentTypeName} | ${data.refInterestCalType === 1 ? 'Day wise calculation' : 'Overall Calculation'}`
             productList[index] = { ...productList[index], refProductName: name }
           })
           setLoanProduct(productList)
 
           const bankList = data.allBankAccountList
-          console.log('bankList line ------ 202', bankList)
-          bankList.map((data, index) => {
-            const name = `Name : ${data.refBankName} | Balance : ₹ ${data.refBalance}`
-            bankList[index] = { ...bankList[index], refBankName: name }
-          })
           console.log('bankList', bankList)
-          setBankList(bankList)
+          let filterBankList
+          if (settingData.paymentMethod !== 1 && settingData.paymentMethod !== null) {
+            const paymentType = settingData?.paymentMethod - 1
+            filterBankList = bankList.filter((e) => e.refAccountType === paymentType)
+          } else {
+            filterBankList = bankList
+          }
+          console.log('filterBankList line ---- 223', filterBankList)
+          filterBankList.map((data, index) => {
+            const name = `Name : ${data.refBankName} | Balance : ₹ ${data.refBalance}`
+            filterBankList[index] = { ...filterBankList[index], refBankName: name }
+          })
+          setBankList(filterBankList)
         }
       })
-  }
-
-  const calculateInterest = async (data: FirstInterest) => {
-    console.log('data', data)
-    const firstInterestAmt = await CalculateFirstInterest(data)
-    console.log('firstInterestAmt line ---- 149', firstInterestAmt)
-    setInterestFirstAmt(firstInterestAmt)
-  }
-
-  const initialInterest = (Pamt) => {
-    const days = getRemainingDaysInCurrentMonth(productId.refProductDurationType)
-    const amt: number = CalculateInitialInterest({
-      annualInterest: Number(productId?.refProductInterest),
-      principal: Pamt,
-      totalDays: days,
-      interestCal: Number(productId?.refProductMonthlyCal)
-    })
-    console.log('amt line ----- 175', amt)
-    // setNewLoan({ ...newLoan, initialInterestAmt: amt })
-    setInitialInterestAmt(amt)
   }
 
   const getLoanEntireDetails = (value?: number) => {
@@ -315,7 +326,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             parseInt(productId?.refProductDuration)
           ),
           refPayementType: 'bank',
-          refRepaymentStartDate: rePaymentDate.toLocaleDateString('en-CA'),
+          refRepaymentStartDate: rePaymentDate?.toLocaleDateString('en-CA'),
           refBankId: bankId?.refBankId,
           refLoanBalance: FinalLoanAmt.toFixed(2),
           isInterestFirst: interestFirst,
@@ -331,7 +342,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           ),
           oldBalanceAmt: oldBalanceAmt ?? 0,
           refDocFee: docFee,
-          refSecurity: security
+          refSecurity: security,
+          todayDate: date ?? undefined
         },
         {
           headers: {
@@ -400,12 +412,44 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         if (data.success) {
           let userList = data.data
           userList.map((data, index) => {
-            const name = `Name : ${data.refUserFname} ${data.refUserLname} | Mobile : ${data.refUserMobileNo} | Aadhar Card : ${data.refAadharNo}`
+            const name = `Name : ${data.refUserFname} ${data.refUserLname} | Joint  : ${data.refRName} | Area : ${data.refAreaName}-[${data.refAreaPrefix}] | Mobile : ${data.refUserMobileNo} | Aadhar Card : ${data.refAadharNo}`
             userList[index] = { ...userList[index], label: name, value: data.refUserId }
           })
           setCustomerList(userList)
+          const loanOption = data.loanType.map((data) => {
+            return {
+              name: data.refLoanType,
+              value: data.refLoanTypeId
+            }
+          })
+          setLoanTypeOptions(loanOption)
         }
       })
+  }
+
+  const loanCalculation = async (data: interestCal) => {
+    const requiredFields = [
+      'duration',
+      'interest',
+      'interestCalType',
+      'interestMonth',
+      'loanAmount',
+      'loanDueType',
+      'rePaymentType',
+      'rePaymentDate',
+      'todayDate'
+    ]
+    if (requiredFields.every((key) => data[key] !== undefined && data[key] !== null)) {
+      const interestFirst = await calInterestPayFirst(data)
+      setInterestFirstAmt(Math.round(interestFirst))
+      const settingData = await getSettingData()
+      console.log(' -> Line Number ----------------------------------- 443')
+      if (settingData.initialInterest) {
+        console.log(' -> Line Number ----------------------------------- 444')
+        const intialInterest = await calInitialInterest(data)
+        setInitialInterestAmt(Math.round(intialInterest))
+      }
+    }
   }
 
   useEffect(() => {
@@ -423,8 +467,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         }}
       >
         <div className="w-[100%] flex flex-col justify-content-between">
-          <div className="w-full flex justify-center">
-            <div className="w-[95%]">
+          <div className="w-full flex gap-x-5 justify-center">
+            <div className="w-[73%]">
               <label className="font-bold block mb-2">Select Customer</label>
               <Dropdown
                 value={customerId}
@@ -445,6 +489,20 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 placeholder="Select Customer To Provide Loan"
               />
             </div>
+            <div className="w-[20%]">
+              <label className="font-bold block mb-2">Select Calendar</label>
+              <Calendar
+                placeholder="DD/MM/YYYY"
+                value={date}
+                onChange={(e) => {
+                  setDate(e.value ?? new Date())
+                  setSelectedLoanType(null)
+                }}
+                dateFormat="dd/mm/yy"
+                // minDate={firstDayOfMonth}
+                maxDate={today}
+              />
+            </div>
           </div>
           <div className="w-full flex justify-content-around my-1">
             <div className="w-[45%]">
@@ -457,12 +515,14 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   setSelectedLoanType(e.value)
                   getUserLoanData()
                   getAllLoanData()
+                  setProductId(null)
                   setSelectedLoan(null)
                   show(e.value, null)
                   setStep(0.6)
+                  setSelectedRepaymentType(null)
                 }}
                 required
-                options={loanTypeOptions}
+                options={loanTypeOptions ?? []}
                 optionLabel="name"
                 placeholder="Select Loan Type"
               />
@@ -610,45 +670,46 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             <div>
               <Divider layout="horizontal" className="flex" />
               <div className="w-full flex justify-content-around my-1">
-                <div className="w-[45%]">
-                  <label className="font-bold block mb-2">Select Loan Duration and Interest</label>
+                <div className="w-[95%]">
+                  <label className="font-bold block mb-2">Select Product</label>
                   <Dropdown
                     filter
                     value={productId}
                     required
                     className="w-full"
-                    onChange={(e: DropdownChangeEvent) => {
-                      console.log('e.value', e.value)
+                    onChange={async (e: DropdownChangeEvent) => {
+                      console.log('e', e)
                       setProductId(e.value)
-                      setStep(1)
-                      setSelectedRepaymentType(null)
-                      getDateRange(e.value.refProductDurationType)
+                      console.log('e.value', e.value)
+                      setStep(2)
+                      const selected = loanProduct.find(
+                        (data) => data.refProductId === e.value.refProductId
+                      )
+                      console.log('loanProduct', loanProduct)
+                      console.log('selected', selected)
+                      setSelectedRepaymentType(selected ? selected.refRePaymentType : null)
+                      getDateRange(e.value.refLoanDueType)
+                      setNewLoanAmt(null)
+                      const data: interestCal = {
+                        ...loanCalculationData,
+                        interest: Number(e.value.refProductInterest),
+                        interestCalType: Number(e.value.refInterestCalType),
+                        duration: Number(e.value.refProductDuration),
+                        loanDueType: Number(e.value.refLoanDueType),
+                        rePaymentType: Number(e.value.refRePaymentType),
+                        todayDate: date ?? undefined
+                      }
+                      setLoanCalculationData(data)
+                      await loanCalculation(data)
                     }}
                     options={loanProduct}
                     optionLabel="refProductName"
                     placeholder="Select Product"
                   />
                 </div>
-                <div className="w-[45%]">
-                  <label className="font-bold block mb-2">Select Repayment Type</label>
-                  <Dropdown
-                    value={selectedRepaymentType}
-                    disabled={step < 1}
-                    required
-                    className="w-full"
-                    onChange={(e: DropdownChangeEvent) => {
-                      setSelectedRepaymentType(e.value)
-                      setStep(2)
-                      setNewLoanAmt(null)
-                    }}
-                    options={rePaymentTypeOptions}
-                    optionLabel="name"
-                    placeholder="Select Re-payment Type"
-                  />
-                </div>
               </div>
-              <div className="w-full flex justify-content-around my-1">
-                <div className="w-[45%] flex flex-row justify-content-between gap-x-2">
+              <div className="w-full  flex justify-content-around my-1">
+                <div className="w-[45%]  flex flex-row justify-content-between gap-x-2">
                   <div className="w-full">
                     <label className="font-bold block mb-2">Enter Loan Amount</label>
                     <InputNumber
@@ -658,14 +719,19 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                       required
                       disabled={step < 2}
                       value={newLoanAmt}
-                      onChange={(e: any) => {
+                      onChange={async (e: any) => {
                         setNewLoanAmt(e.value)
                         setStep(3)
                         setBankId(null)
                         const value = parseFloat(e.value) || 0
                         const balance = oldBalanceAmt ?? 0
                         setFinalLoanAmt(value + Number(balance))
-                        initialInterest(value + Number(balance))
+                        const data: interestCal = {
+                          ...loanCalculationData,
+                          loanAmount: value + Number(balance)
+                        }
+                        setLoanCalculationData(data)
+                        await loanCalculation(data)
                       }}
                       mode="currency"
                       currency="INR"
@@ -702,6 +768,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     onChange={(e: DropdownChangeEvent) => {
                       setBankId(e.value)
                       setStep(4)
+                      setRePaymentDate(null)
                     }}
                     options={bankList}
                     optionLabel="refBankName"
@@ -709,8 +776,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   />
                 </div>
               </div>
-              <div className="w-full flex flex-row justify-content-around my-1">
-                <div className="w-[45%]">
+              <div className="w-full flex justify-content-around my-1">
+                <div className="w-[45%]  ml-2">
                   <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
                   <Calendar
                     placeholder="Repayment Schedule Date"
@@ -719,18 +786,24 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     className="w-full"
                     required
                     value={rePaymentDate ?? undefined}
-                    onChange={(e: any) => {
+                    onChange={async (e: any) => {
                       console.log('e', e)
                       setRePaymentDate(e.value)
                       setStep(5)
                       setInterestFirst(null)
+                      const data: interestCal = {
+                        ...loanCalculationData,
+                        rePaymentDate: e.value
+                      }
+                      setLoanCalculationData(data)
+                      await loanCalculation(data)
                     }}
                     minDate={minDate ?? undefined}
                     maxDate={maxDate ?? undefined}
                     viewDate={viewDate}
                   />
                 </div>
-                <div className="w-[45%] flex align-items-center">
+                <div className="w-[45%] flex align-items-center pl-4">
                   <div className="w-[40%]">
                     <label className="font-bold block mb-2">Interest First</label>
                     <div className="flex flex-row gap-x-5 w-[100%]">
@@ -741,22 +814,17 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                           value="true"
                           required
                           disabled={step < 5}
-                          onChange={(_e: RadioButtonChangeEvent) => {
+                          onChange={async (_e: RadioButtonChangeEvent) => {
                             setInterestFirst(true)
-                            setDocFee(0)
+                            setDocFee(null)
                             setMonthCount(1)
                             setStep(6)
-                            calculateInterest({
-                              Interest: Number(productId?.refProductInterest),
-                              PrincipalAmt: Number(FinalLoanAmt),
-                              monthCount: 1,
-                              rePaymentDate: rePaymentDate?.toString() || '',
-                              rePaymentType:
-                                (selectedRepaymentType as any)?.value ?? selectedRepaymentType ?? 1,
-                              loanDuration: Number(productId?.refProductDuration),
-                              durationType: productId.refProductDurationType,
-                              interestCal: productId.refProductMonthlyCal
-                            })
+                            const data: interestCal = {
+                              ...loanCalculationData,
+                              interestMonth: 1
+                            }
+                            setLoanCalculationData(data)
+                            await loanCalculation(data)
                           }}
                           checked={interestFirst === true}
                         />
@@ -771,12 +839,18 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                           disabled={step < 5}
                           value="Mushroom"
                           required
-                          onChange={(_e: RadioButtonChangeEvent) => {
-                            setDocFee(0)
+                          onChange={async (_e: RadioButtonChangeEvent) => {
+                            setDocFee(null)
                             setInterestFirst(false)
                             setMonthCount(0)
                             setInterestFirstAmt(0)
                             setStep(6)
+                            const data: interestCal = {
+                              ...loanCalculationData,
+                              interestMonth: 0
+                            }
+                            setLoanCalculationData(data)
+                            await loanCalculation(data)
                           }}
                           checked={interestFirst === false}
                         />
@@ -790,9 +864,9 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     <div className="w-[60%]">
                       <label className="font-bold block mb-2">
                         Enter Number Of{' '}
-                        {productId.refProductDurationType === 1
+                        {productId.refLoanDueType === 1
                           ? 'Month'
-                          : productId.refProductDurationType === 2
+                          : productId.refLoanDueType === 2
                             ? 'Weeks'
                             : 'Days'}
                       </label>
@@ -802,25 +876,20 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         disabled={step < 6}
                         value={monthCount}
                         required
-                        onChange={(e: any) => {
+                        onChange={async (e: any) => {
                           setMonthCount(e.value)
-                          setDocFee(0)
-                          calculateInterest({
-                            Interest: Number(productId?.refProductInterest),
-                            PrincipalAmt: Number(FinalLoanAmt),
-                            monthCount: e.value || 1,
-                            rePaymentDate: rePaymentDate?.toString() || '',
-                            rePaymentType:
-                              (selectedRepaymentType as any)?.value ?? selectedRepaymentType ?? 1,
-                            loanDuration: Number(productId?.refProductDuration),
-                            durationType: productId.refProductDurationType,
-                            interestCal: productId.refProductMonthlyCal
-                          })
+                          setDocFee(null)
+                          const data: interestCal = {
+                            ...loanCalculationData,
+                            interestMonth: e.value
+                          }
+                          setLoanCalculationData(data)
+                          await loanCalculation(data)
                         }}
                         suffix={
-                          productId.refProductDurationType === 1
+                          productId.refLoanDueType === 1
                             ? ' Month'
-                            : productId.refProductDurationType === 2
+                            : productId.refLoanDueType === 2
                               ? ' Weeks'
                               : ' Days'
                         }
@@ -898,9 +967,9 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 <div>
                   <p>
                     Interest for {monthCount}{' '}
-                    {productId.refProductDurationType === 1
+                    {productId.refLoanDueType === 1
                       ? ' Month'
-                      : productId.refProductDurationType === 2
+                      : productId.refLoanDueType === 2
                         ? ' Weeks'
                         : ' Days'}{' '}
                     : ₹ <b>{interestFirstAmt.toFixed(2)}</b>
@@ -920,9 +989,9 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                     <b>
                       {' '}
                       [ Total Loan Amount - ( Initial Interest - Interest Paid {monthCount}{' '}
-                      {productId.refProductDurationType === 1
+                      {productId.refLoanDueType === 1
                         ? ' Month'
-                        : productId.refProductDurationType === 2
+                        : productId.refLoanDueType === 2
                           ? ' Weeks'
                           : ' Days'}{' '}
                       - Documentation Fee ) ]

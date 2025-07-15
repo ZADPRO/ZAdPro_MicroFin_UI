@@ -15,7 +15,7 @@ import { FaMoneyBillTransfer } from 'react-icons/fa6'
 import { AiFillFolderOpen } from 'react-icons/ai'
 import { MdDisplaySettings } from 'react-icons/md'
 
-import logo from '../../assets/Logo-1.png'
+import logo from '../../assets/Logo.png'
 
 import { NavLink, useLocation } from 'react-router-dom'
 

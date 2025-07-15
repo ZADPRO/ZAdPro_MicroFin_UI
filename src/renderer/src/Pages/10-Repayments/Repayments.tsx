@@ -1,6 +1,7 @@
 import Header from '@renderer/components/Header/Header'
 import decrypt from '@renderer/components/Helper/Helper'
 import axios from 'axios'
+import { useRef } from 'react'
 import { Column } from 'primereact/column'
 import { DataTable } from 'primereact/datatable'
 import { InputText } from 'primereact/inputtext'
@@ -15,6 +16,9 @@ import RepaymentSideTab from '@renderer/components/Repayment/RepaymentSideTab'
 import { Dropdown } from 'primereact/dropdown'
 import { Calendar } from 'primereact/calendar'
 import { Nullable } from 'primereact/ts-helpers'
+import { OverlayPanel } from 'primereact/overlaypanel'
+// import type { OverlayPanel as OverlayPanelType } from 'primereact/overlaypanel'
+import { Divider } from 'primereact/divider'
 
 const Repayments = () => {
   const [userLists, setUserLists] = useState([])
@@ -29,8 +33,6 @@ const Repayments = () => {
     { name: 'Over All', code: 0 },
     { name: 'Month', code: 1 }
   ]
-
-
 
   function formatToDDMMYYYY(dateString) {
     const date = new Date(dateString)
@@ -89,28 +91,43 @@ const Repayments = () => {
   const AddressBody = (rowData: any) => {
     return (
       <>
-        {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
-        {rowData.refUserPincode}
+        {/* {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
+        {rowData.refUserPincode} */}
+        {rowData.refAreaName ? ` ${rowData.refAreaName},` : ''}
+        {rowData.refUserCity ? ` ${rowData.refUserCity},` : ''}
+        {rowData.refUserTaluk ? ` ${rowData.refUserTaluk},` : ''}
+        {rowData.refUserDistrict ? ` ${rowData.refUserDistrict}` : ''}
       </>
     )
   }
 
   const ProductBody = (rowData: any) => {
+    const op = useRef<OverlayPanel | null>(null)
     return (
-      <>
+      <div onMouseOver={(e) => op.current?.toggle(e)} onMouseLeave={() => op.current?.hide()}>
         <p>
           <b>{rowData.refProductName}</b>
         </p>
-        <p>
-          ( {rowData.refProductDuration}{' '}
-          {rowData.refProductDurationType === 1
-            ? 'Months'
-            : rowData.refProductDurationType === 2
-              ? 'Weeks'
-              : 'Days'}{' '}
-          - {rowData.refProductInterest}% )
-        </p>
-      </>
+
+        <OverlayPanel className="p-0" ref={op}>
+          <div className="">
+            <b className="w-full flex justify-center">{rowData.refProductName}</b>
+            <Divider className="m-1" />
+            <p>
+              <b>Duration : </b>
+              {rowData.refProductDuration}{' '}
+              {rowData.refProductDurationType === 1
+                ? 'Months'
+                : rowData.refProductDurationType === 2
+                  ? 'Weeks'
+                  : 'Days'}{' '}
+            </p>
+            <p>
+              <b>Interest : </b> {rowData.refProductInterest}%
+            </p>
+          </div>
+        </OverlayPanel>
+      </div>
     )
   }
 
@@ -274,6 +291,7 @@ const Repayments = () => {
               filters={filters}
               paginator
               rows={5}
+              size="small"
               value={userLists}
               showGridlines
               scrollable
@@ -287,6 +305,7 @@ const Repayments = () => {
                 body={(rowData) => `${rowData.refUserFname} ${rowData.refUserLname}`}
                 header="Name"
               ></Column>
+              <Column style={{ minWidth: '8rem' }} field="refRName" header="Join Name"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refUserMobileNo"
@@ -299,6 +318,9 @@ const Repayments = () => {
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refLoanAmount"
+                body={(rowData) => {
+                  return <>₹ {rowData.refLoanAmount}</>
+                }}
                 header="Principal Amount"
               ></Column>
             </DataTable>

@@ -222,6 +222,7 @@ const AdminRepayments = () => {
               filters={filters}
               paginator
               rows={5}
+              size="small"
               value={userLists}
               showGridlines
               scrollable

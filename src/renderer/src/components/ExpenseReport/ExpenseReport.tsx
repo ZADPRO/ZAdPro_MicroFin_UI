@@ -139,6 +139,7 @@ export default function ExpenseReport() {
           className="mt-4"
           showGridlines
           ref={dt}
+          size="small"
           stripedRows
           scrollable
           paginator

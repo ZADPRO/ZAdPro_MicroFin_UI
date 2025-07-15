@@ -52,8 +52,12 @@ export default function CustomerIdCust() {
         .post(
           import.meta.env.VITE_API_URL + '/settings/updateOption',
           {
-            id: 1,
-            value: selectedOption
+            settings: [
+              {
+                id: 1,
+                refSettingValue: selectedOption
+              }
+            ]
           },
           {
             headers: {

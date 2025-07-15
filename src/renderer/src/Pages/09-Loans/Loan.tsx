@@ -225,6 +225,7 @@ const Loan = () => {
             <DataTable
               filters={filters}
               paginator
+              size="small"
               rows={10}
               rowsPerPageOptions={[5, 10, 25, 50]}
               value={userLists}

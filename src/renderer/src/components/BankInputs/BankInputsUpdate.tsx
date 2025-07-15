@@ -4,7 +4,7 @@ import decrypt from '../Helper/Helper'
 import { Slide, toast } from 'react-toastify'
 import { FloatLabel } from 'primereact/floatlabel'
 import { InputText } from 'primereact/inputtext'
-import { RadioButton } from 'primereact/radiobutton'
+// import { RadioButton } from 'primereact/radiobutton'
 
 const BankInputsUpdate = ({ data, closeSidebarUpdate }) => {
   console.log('data', data)
@@ -160,7 +160,13 @@ const BankInputsUpdate = ({ data, closeSidebarUpdate }) => {
 
       <div style={{ margin: '5px 0px', height: '76vh', overflow: 'auto', padding: '10px' }}>
         <div className="flex gap-3">
-          <div className="flex align-items-center">
+          {inputs.refAccountType === 1 ? (
+            <b>This is Bank Account Details</b>
+          ) : (
+            <b>This is Cash FLow Data</b>
+          )}
+
+          {/* <div className="flex align-items-center">
             <RadioButton
               inputId="bank"
               name="accountType"
@@ -185,10 +191,10 @@ const BankInputsUpdate = ({ data, closeSidebarUpdate }) => {
             <label htmlFor="cash" className="ml-2">
               Cash
             </label>
-          </div>
+          </div> */}
         </div>
         <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-          <FloatLabel style={{ width: '100%' }}>
+          <FloatLabel style={{ width: '50%' }}>
             <InputText
               id="refBankName"
               name="refBankName"
@@ -201,50 +207,53 @@ const BankInputsUpdate = ({ data, closeSidebarUpdate }) => {
             />
             <label htmlFor="refBankName">Enter Bank Name</label>
           </FloatLabel>
-          <FloatLabel style={{ width: '100%' }}>
-            <InputText
-              type="number"
-              id="refBankAccountNo"
-              name="refBankAccountNo"
-              value={inputs.refBankAccountNo}
-              onChange={(e: any) => {
-                handleInput(e)
-              }}
-              disabled={edit}
-              required
-            />
-            <label htmlFor="refBankAccountNo">Enter Account Number</label>
-          </FloatLabel>
+          {inputs.refAccountType === 1 && (
+            <FloatLabel style={{ width: '50%' }}>
+              <InputText
+                type="number"
+                id="refBankAccountNo"
+                name="refBankAccountNo"
+                value={inputs.refBankAccountNo}
+                onChange={(e: any) => {
+                  handleInput(e)
+                }}
+                disabled={edit}
+                required
+              />
+              <label htmlFor="refBankAccountNo">Enter Account Number</label>
+            </FloatLabel>
+          )}
         </div>
-
-        <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-          <FloatLabel style={{ width: '100%' }}>
-            <InputText
-              id="refBankAddress"
-              name="refBankAddress"
-              value={inputs.refBankAddress}
-              onChange={(e: any) => {
-                handleInput(e)
-              }}
-              required
-              disabled={edit}
-            />
-            <label htmlFor="refBankAddress">Enter Bank Address</label>
-          </FloatLabel>
-          <FloatLabel style={{ width: '100%' }}>
-            <InputText
-              id="refIFSCsCode"
-              name="refIFSCsCode"
-              value={inputs.refIFSCsCode}
-              onChange={(e: any) => {
-                handleInput(e)
-              }}
-              required
-              disabled={edit}
-            />
-            <label htmlFor="refIFSCsCode">Enter Bank IFSC Code</label>
-          </FloatLabel>
-        </div>
+        {inputs.refAccountType === 1 && (
+          <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
+            <FloatLabel style={{ width: '100%' }}>
+              <InputText
+                id="refBankAddress"
+                name="refBankAddress"
+                value={inputs.refBankAddress}
+                onChange={(e: any) => {
+                  handleInput(e)
+                }}
+                required
+                disabled={edit}
+              />
+              <label htmlFor="refBankAddress">Enter Bank Address</label>
+            </FloatLabel>
+            <FloatLabel style={{ width: '100%' }}>
+              <InputText
+                id="refIFSCsCode"
+                name="refIFSCsCode"
+                value={inputs.refIFSCsCode}
+                onChange={(e: any) => {
+                  handleInput(e)
+                }}
+                required
+                disabled={edit}
+              />
+              <label htmlFor="refIFSCsCode">Enter Bank IFSC Code</label>
+            </FloatLabel>
+          </div>
+        )}
       </div>
     </>
   )

@@ -343,9 +343,11 @@ export default function OverallReport() {
         <p className="text-[1.3rem] font-bold">Overall Report</p>
       </div>
       <div className="w-full flex align-items-center justify-center">
-        <div className="w-[90%] flex justify-around my-2">
+        <div className="w-[90%] flex justify-around my-0">
           <div className="flex flex-col w-[20%] gap-y-1">
-            <label htmlFor="username">Select Loan Data of</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Select Loan Data of
+            </label>
             <Dropdown
               value={selectedLoanOption}
               onChange={(e: DropdownChangeEvent) => {
@@ -355,11 +357,14 @@ export default function OverallReport() {
               options={LoanOption}
               optionLabel="label"
               placeholder="Select a Loan"
-              className="p-1 w-full"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
             />
           </div>
           <div className="flex flex-col w-[20%] gap-y-1">
-            <label htmlFor="username">Select Area</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Select Area
+            </label>
             <MultiSelect
               filter
               value={selectedArea}
@@ -384,13 +389,16 @@ export default function OverallReport() {
               options={areaList}
               optionLabel="label"
               placeholder="Select a Repayment Type"
-              className="w-[100%]"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               required
             />
             {AreaError && <small className="text-[red]">Please select at least one Area.</small>}
           </div>
           <div className="flex flex-col w-[28%] gap-y-1">
-            <label htmlFor="username">Select Loan Type</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Select Loan Type
+            </label>
             <MultiSelect
               filter
               value={selectedRePaymentOption}
@@ -410,7 +418,8 @@ export default function OverallReport() {
               options={repaymentOption}
               optionLabel="label"
               placeholder="Select a Repayment Type"
-              className="w-[100%]"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               required
             />
             {repaymentError && (
@@ -419,7 +428,9 @@ export default function OverallReport() {
           </div>
 
           <div className="flex flex-col w-[28%] gap-y-1">
-            <label htmlFor="username">Select Loan Status</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Select Loan Status
+            </label>
             <MultiSelect
               filter
               value={selectedStatusOption}
@@ -439,7 +450,8 @@ export default function OverallReport() {
               options={statusOption}
               optionLabel="label"
               placeholder="Select a Loan Status"
-              className="w-[100%]"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               required
             />
             {statusError && (
@@ -505,6 +517,7 @@ export default function OverallReport() {
           ref={dt}
           stripedRows
           scrollable
+          size="small"
           paginator
           rows={5}
           rowsPerPageOptions={[5, 10, 25, 50]}
@@ -519,6 +532,7 @@ export default function OverallReport() {
             header="Name"
             style={{ minWidth: '13rem' }}
           />
+          <Column field="refRName" header="Joint Name" style={{ minWidth: '8rem' }} />
           <Column field="refUserMobileNo" header="Mobile" style={{ minWidth: '8rem' }} />
           <Column
             field="refAreaPrefix"

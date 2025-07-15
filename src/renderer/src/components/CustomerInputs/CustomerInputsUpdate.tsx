@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { City, State } from 'country-state-city'
 import { Calendar } from 'primereact/calendar'
-import { Dropdown } from 'primereact/dropdown'
+import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
 import { FloatLabel } from 'primereact/floatlabel'
 import { InputText } from 'primereact/inputtext'
 import { useEffect, useState } from 'react'
@@ -14,6 +14,8 @@ import { Column } from 'primereact/column'
 import { FilterMatchMode } from 'primereact/api'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
+import { useNavigate } from 'react-router-dom'
+
 interface areaDetails {
   areaName: string | null
   areaPrifix: string | null
@@ -25,27 +27,32 @@ interface option {
   areaPrifix?: string
 }
 const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
+  const navigate = useNavigate()
+
   const status = [
     { name: 'Active', code: 'active' },
     { name: 'Inactive', code: 'inactive' }
   ]
-  const areaTypeOption: option[] = [
-    { label: 'Add PinCode in Existing Area', value: 1 },
-    { label: 'Add PinCode as New Area', value: 2 }
-  ]
+  // const areaTypeOption: option[] = [
+  //   { label: 'Add PinCode in Existing Area', value: 1 },
+  //   { label: 'Add PinCode as New Area', value: 2 }
+  // ]
   const [loading, setLoading] = useState(true)
   const [saveloading, setSaveloading] = useState(false)
 
-  const [states, setStates] = useState([])
-  const [districts, setDistricts] = useState([])
+  const [_states, setStates] = useState([])
+  const [_districts, setDistricts] = useState([])
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [addArea, setAddArea] = useState<boolean | null>(null)
-  const [areaName, setAreaName] = useState<areaDetails | null>(null)
-  const [areaTypeSelected, setAreaTypeSelected] = useState<number | null>()
-  const [showAddArea, setShowAddArea] = useState<boolean>(false)
-  const [areaList, setAreaList] = useState<option[]>([])
-  const [selectedAreaId, setSelectedAreaId] = useState<number | null>()
+  // const [addArea, setAddArea] = useState<boolean | null>(null)
+  const [_areaName, setAreaName] = useState<areaDetails | null>(null)
+  // const [areaTypeSelected, setAreaTypeSelected] = useState<number | null>()
+  const [_showAddArea, setShowAddArea] = useState<boolean>(false)
+  // const [areaList, setAreaList] = useState<option[]>([])
+  // const [selectedAreaId, setSelectedAreaId] = useState<number | null>()
   const [audit, setAudit] = useState([])
+  const [mainAreaList, setMainAreaList] = useState<option[] | null>([])
+  const [filteredArea, setFilteredArea] = useState<option[]>([])
+  const [selectedArea, setSelectedArea] = useState<string | null>()
 
   const [edit, setEdit] = useState(true)
 
@@ -76,7 +83,9 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
     refRPhoneNumber: '',
     refRAddress: '',
     refAadharNumber: '',
-    refPanNumber: ''
+    refPanNumber: '',
+    area: null,
+    city: ''
   })
 
   // const referenceMapping = {
@@ -177,14 +186,10 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                   refPerAddress: inputs.address,
                   refPerDistrict: inputs.district,
                   refPerState: inputs.state,
-                  refPerPincode: inputs.pincode
-                },
-                areaData: {
-                  addArea: addArea,
-                  areaType: areaTypeSelected,
-                  areaId: selectedAreaId,
-                  areaName: areaName?.areaName,
-                  areaPrifix: areaName?.areaPrifix
+                  refPerPincode: inputs.pincode,
+                  refPerCity: selectedArea,
+                  refPerAreaId: inputs.area,
+                  refPerTaluk: inputs.city
                 }
               }
             },
@@ -229,54 +234,54 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
     }
   }
 
-  const validatePincode = async (pinCode) => {
-    try {
-      await axios
-        .post(
-          import.meta.env.VITE_API_URL + '/area/validatePinCode',
-          {
-            pinCode: pinCode
-          },
-          {
-            headers: {
-              Authorization: localStorage.getItem('token'),
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-        .then((response: any) => {
-          const data = decrypt(
-            response.data[1],
-            response.data[0],
-            import.meta.env.VITE_ENCRYPTION_KEY
-          )
+  // const validatePincode = async (pinCode) => {
+  //   try {
+  //     await axios
+  //       .post(
+  //         import.meta.env.VITE_API_URL + '/area/validatePinCode',
+  //         {
+  //           pinCode: pinCode
+  //         },
+  //         {
+  //           headers: {
+  //             Authorization: localStorage.getItem('token'),
+  //             'Content-Type': 'application/json'
+  //           }
+  //         }
+  //       )
+  //       .then((response: any) => {
+  //         const data = decrypt(
+  //           response.data[1],
+  //           response.data[0],
+  //           import.meta.env.VITE_ENCRYPTION_KEY
+  //         )
 
-          localStorage.setItem('token', 'Bearer ' + data.token)
-          console.log('data---------------------- 240', data)
-          if (data.success) {
-            const options = data.list.map((d: any) => ({
-              label: `Area : ${d.refAreaName} - Code :  ${d.refAreaPrefix} `,
-              value: d.refAreaId,
-              areaName: d.refAreaName,
-              areaPrifix: d.refAreaPrefix
-            }))
-            setAreaList(options)
-            if (data.data.length > 0) {
-              setAddArea(false)
-              setAreaName({
-                areaName: data.data[0].refAreaName,
-                areaPrifix: data.data[0].refAreaPrefix
-              })
-            } else {
-              setAreaName({ areaName: '', areaPrifix: '' })
-              setAddArea(true)
-            }
-          }
-        })
-    } catch (error) {
-      console.log('error', error)
-    }
-  }
+  //         localStorage.setItem('token', 'Bearer ' + data.token)
+  //         console.log('data---------------------- 240', data)
+  //         if (data.success) {
+  //           const options = data.list.map((d: any) => ({
+  //             label: `Area : ${d.refAreaName} - Code :  ${d.refAreaPrefix} `,
+  //             value: d.refAreaId,
+  //             areaName: d.refAreaName,
+  //             areaPrifix: d.refAreaPrefix
+  //           }))
+  //           setAreaList(options)
+  //           if (data.data.length > 0) {
+  //             setAddArea(false)
+  //             setAreaName({
+  //               areaName: data.data[0].refAreaName,
+  //               areaPrifix: data.data[0].refAreaPrefix
+  //             })
+  //           } else {
+  //             setAreaName({ areaName: '', areaPrifix: '' })
+  //             setAddArea(true)
+  //           }
+  //         }
+  //       })
+  //   } catch (error) {
+  //     console.log('error', error)
+  //   }
+  // }
 
   const [references, setReferences] = useState([
     { refRName: '', refRPhoneNumber: '', refRAddress: '', refAadharNumber: '', refPanNumber: '' }
@@ -415,7 +420,8 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
           console.log('data line ----- 411', data)
           if (data.success) {
             const userData = data.data[0]
-            console.log(data)
+            console.log('userData line ------- 427', userData)
+            // console.log(data)
 
             setOldReference(data.getReference)
 
@@ -439,8 +445,16 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
               profileImg: userData.refUserProfile,
               ProfileImgBase64: userData.ProfileImgBase64,
               PanImgBase64: userData.PanImgBase64,
-              AadharImgBase64: userData.AadharImgBase64
+              AadharImgBase64: userData.AadharImgBase64,
+              city: userData.refUserTaluk,
+              area: userData.refAreaId
             })
+
+            setSelectedArea(userData.refUserCity)
+
+            getAreaList(userData.refUserPincode)
+
+            getFilteredArea(userData.refUserPincode, userData.refUserCity)
 
             setAreaName({ areaName: userData.refAreaName, areaPrifix: userData.refAreaPrefix })
 
@@ -486,6 +500,78 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
           [field]: { name: file.name, data: file } // Store both name and base64 data
         }))
       }
+    }
+  }
+
+  const getAreaList = (data: string) => {
+    console.log('data line ----- 277', data)
+    if (data.length === 6) {
+      console.log(' -> Line Number ----------------------------------- 279')
+      axios
+        .get(`https://api.postalpincode.in/pincode/${data}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then((response: any) => {
+          const data = response.data[0].PostOffice
+          console.log('data line ----- 288', data)
+          setInputs((prevState) => ({
+            ...prevState,
+            state: data[0].State,
+            district: data[0].District,
+            city: data[0].Block
+          }))
+          const options: any = data.map((item: any) => ({
+            label: item.Name,
+            value: item.Name
+          }))
+          console.log('options', options)
+          setMainAreaList(options)
+        })
+    } else {
+      setMainAreaList(null)
+    }
+  }
+
+  const getFilteredArea = (pincode: string | null, cityName: string | null) => {
+    try {
+      if (pincode && cityName) {
+        axios
+          .post(
+            import.meta.env.VITE_API_URL + '/area/allAreaList',
+            {
+              pinCode: pincode,
+              cityName: cityName
+            },
+            {
+              headers: {
+                Authorization: localStorage.getItem('token'),
+                'Content-Type': 'application/json'
+              }
+            }
+          )
+          .then((response: any) => {
+            const data = decrypt(
+              response.data[1],
+              response.data[0],
+              import.meta.env.VITE_ENCRYPTION_KEY
+            )
+
+            localStorage.setItem('token', 'Bearer ' + data.token)
+            if (data.success) {
+              const listArea = data.data.map((data: any) => {
+                return {
+                  label: `${data.refAreaPrefix} - ${data.refAreaName}`,
+                  value: data.refAreaId
+                }
+              })
+              setFilteredArea(listArea)
+            }
+          })
+      }
+    } catch (error) {
+      console.log('error', error)
     }
   }
 
@@ -881,8 +967,39 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                   </div>
                 </div>
 
+                <b className="my-2">Address </b>
+
                 <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
                   <FloatLabel style={{ width: '100%' }}>
+                    <InputText
+                      type="text" // Use text instead of number to allow maxlength to work
+                      name="pincode"
+                      maxLength={6}
+                      style={{ width: '100%' }}
+                      id="pincode"
+                      disabled={edit}
+                      value={inputs.pincode || ''} // Corrected this
+                      onChange={(e) => {
+                        const value = e.target.value
+
+                        if (/^\d{0,6}$/.test(value)) {
+                          handleInput(e) // Only update if it's 0-6 digits
+                          if (value.length === 6) {
+                            // validatePincode(value)
+                            getAreaList(value)
+                            getFilteredArea(value, selectedArea ?? null)
+                            setShowAddArea(true)
+                          } else {
+                            setShowAddArea(false)
+                          }
+                        }
+                      }}
+                      required
+                    />
+
+                    <label htmlFor="pincode">Enter Pincode *</label>
+                  </FloatLabel>
+                  {/* <FloatLabel style={{ width: '100%' }}>
                     <InputText
                       id="address"
                       name="address"
@@ -893,8 +1010,8 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                       }}
                     />
                     <label htmlFor="address">Address</label>
-                  </FloatLabel>
-                  <FloatLabel style={{ width: '100%' }}>
+                  </FloatLabel> */}
+                  {/* <FloatLabel style={{ width: '100%' }}>
                     <Dropdown
                       name="state"
                       style={{ width: '100%', minWidth: '100%', padding: '0' }}
@@ -907,10 +1024,99 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                       onChange={(e) => handleInput(e)}
                     />
                     <label>Select State</label>
+                  </FloatLabel> */}
+                  <FloatLabel style={{ width: '100%' }}>
+                    <InputText
+                      id="address"
+                      name="address"
+                      value={
+                        inputs.state && inputs.district
+                          ? `${inputs.state} - ${inputs.district} ${inputs.city === inputs.district ? '' : `- ${inputs.city}`}`
+                          : ''
+                      }
+                      // onChange={(e: any) => {
+                      //   handleInput(e)
+                      // }}
+                      disabled={edit}
+                      readOnly
+                      required
+                    />
+                    <label htmlFor="address">State - District - Taluk*</label>
                   </FloatLabel>
                 </div>
 
                 <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
+                  <FloatLabel style={{ width: '100%' }}>
+                    <Dropdown
+                      value={selectedArea}
+                      onChange={(e: DropdownChangeEvent) => {
+                        getFilteredArea(inputs.pincode ?? null, e.value)
+
+                        setSelectedArea(e.value)
+                      }}
+                      options={mainAreaList ?? []}
+                      optionLabel="label"
+                      optionValue="value"
+                      className="w-full"
+                      disabled={edit}
+                      required
+                    />
+                    <label>Select Postoffice *</label>
+                  </FloatLabel>
+                  <FloatLabel style={{ width: '100%' }}>
+                    <InputText
+                      id="address"
+                      name="address"
+                      disabled={edit}
+                      value={inputs.address}
+                      onChange={(e: any) => {
+                        handleInput(e)
+                      }}
+                      required
+                    />
+                    <label htmlFor="address">Enter Door No & Area *</label>
+                  </FloatLabel>
+                </div>
+
+                <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
+                  <div className="w-full flex justify-between gap-x-3">
+                    <div className="w-[70%]">
+                      <FloatLabel style={{ width: '100%' }}>
+                        <Dropdown
+                          value={inputs.area}
+                          onChange={(e: any) => {
+                            handleInput(e)
+                          }}
+                          disabled={edit}
+                          options={filteredArea ?? []}
+                          optionLabel="label"
+                          optionValue="value"
+                          className="w-full"
+                          required
+                          name="area"
+                          id="area"
+                        />
+                        <label>Select Area *</label>
+                      </FloatLabel>
+                    </div>
+                    <div className="w-[30%]">
+                      <Button
+                        className="w-full"
+                        disabled={edit}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          navigate('/customize', { state: { enable: 'Area' } })
+                        }}
+                      >
+                        Create Area
+                      </Button>
+                    </div>
+                  </div>
+
+                  <FloatLabel style={{ width: '100%' }}></FloatLabel>
+                </div>
+
+                {/* <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
                   <FloatLabel style={{ width: '100%' }}>
                     <Dropdown
                       className="dropDown"
@@ -951,126 +1157,8 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                       />
                       <label htmlFor="panno">Enter Pincode</label>
                     </FloatLabel>
-                    <FloatLabel style={{ width: '33%' }}>
-                      <InputText
-                        type="text"
-                        name="pincode"
-                        style={{ width: '100%' }}
-                        id="panno"
-                        value={areaName?.areaName}
-                        disabled
-                      />
-                      <label htmlFor="panno">Area Name</label>
-                    </FloatLabel>
-                    <FloatLabel style={{ width: '33%' }}>
-                      <InputText
-                        type="text"
-                        name="pincode"
-                        style={{ width: '100%' }}
-                        id="panno"
-                        value={areaName?.areaPrifix}
-                        disabled
-                      />
-                      <label htmlFor="panno">Area Prifix</label>
-                    </FloatLabel>
                   </div>
-                </div>
-                {addArea && showAddArea && (
-                  <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-                    <FloatLabel style={{ width: '100%' }}>
-                      <Dropdown
-                        className="dropDown"
-                        name="AreaType"
-                        style={{ width: '100%', minWidth: '100%' }}
-                        value={areaTypeSelected}
-                        options={areaTypeOption}
-                        optionLabel="label" // Ensures dropdown displays district names
-                        optionValue="value" // Stores district name as the selected value
-                        onChange={(e) => {
-                          setAreaTypeSelected(e.value)
-
-                          setAreaName({
-                            areaName: '',
-                            areaPrifix: ''
-                          })
-                          setSelectedAreaId(null)
-                        }}
-                        required
-                      />
-                      <label>Area type to Store this Pincode *</label>
-                    </FloatLabel>
-                    {areaTypeSelected === 1 && (
-                      <FloatLabel style={{ width: '100%' }}>
-                        <Dropdown
-                          filter
-                          className="dropDown"
-                          name="Area"
-                          style={{ width: '100%', minWidth: '100%' }}
-                          value={selectedAreaId}
-                          options={areaList}
-                          optionLabel="label" // Ensures dropdown displays district names
-                          optionValue="value" // Stores district name as the selected value
-                          onChange={(e) => {
-                            console.log('e', e)
-                            setSelectedAreaId(e.value)
-                            const selectedValue = e.value
-                            const area = areaList.filter((e) => e.value === selectedValue)
-                            setAreaName({
-                              areaName: area[0]?.areaName || null,
-                              areaPrifix: area[0]?.areaPrifix || null
-                            })
-                          }}
-                          required
-                        />
-                        <label>Select Area To Store the PinCode *</label>
-                      </FloatLabel>
-                    )}
-                    {areaTypeSelected === 2 && (
-                      <div className="w-[100%] flex justify-between">
-                        <FloatLabel style={{ width: '48%' }}>
-                          <InputText
-                            type="text" // Use text instead of number to allow maxlength to work
-                            name="AreaName"
-                            className="capitalize"
-                            style={{ width: '100%' }}
-                            id="areaName"
-                            value={areaName?.areaName} // Corrected this
-                            onChange={(e) => {
-                              const value = e.target.value
-                              setAreaName({
-                                areaName: value,
-                                areaPrifix: areaName?.areaPrifix || ''
-                              })
-                            }}
-                            required
-                          />
-
-                          <label htmlFor="pincode">Enter Area Name</label>
-                        </FloatLabel>
-                        <FloatLabel style={{ width: '48%' }}>
-                          <InputText
-                            type="text" // Use text instead of number to allow maxlength to work
-                            name="areaPrifix"
-                            maxLength={6}
-                            style={{ width: '100%' }}
-                            id="areaPriFix"
-                            value={areaName?.areaPrifix} // Corrected this
-                            onChange={(e) => {
-                              const value = e.target.value.toUpperCase()
-                              setAreaName({
-                                areaName: areaName?.areaName || '',
-                                areaPrifix: value
-                              })
-                            }}
-                            required
-                          />
-
-                          <label htmlFor="pincode">Enter Area PriFix</label>
-                        </FloatLabel>
-                      </div>
-                    )}
-                  </div>
-                )}
+                </div> */}
               </div>
             </TabPanel>
             {/* Reference - Start */}
@@ -1101,6 +1189,7 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
                     filters={filters}
                     paginator
                     rows={4}
+                    size="small"
                     value={oldReference}
                     showGridlines
                     scrollable
@@ -1325,7 +1414,7 @@ const CustomerInputsUpdate = ({ custId, id, closeSidebarUpdate }) => {
             <TabPanel header="Audit">
               <div style={{ margin: '5px 0px', height: '65vh', overflow: 'auto', padding: '10px' }}>
                 {/* DataTable Audit - Start */}
-                <DataTable value={audit} tableStyle={{ minWidth: '50rem' }}>
+                <DataTable value={audit} size="small" tableStyle={{ minWidth: '50rem' }}>
                   <Column header="S.No" body={(_data, options) => options.rowIndex + 1} />
                   <Column
                     header="Action"

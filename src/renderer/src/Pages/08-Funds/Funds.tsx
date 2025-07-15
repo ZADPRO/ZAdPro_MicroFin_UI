@@ -9,6 +9,8 @@ import { ToastContainer } from 'react-toastify'
 import { Button } from 'primereact/button'
 import AddnewFund from '@renderer/components/FundsInputs/AddnewFund'
 import { Calendar } from 'primereact/calendar'
+import { TabPanel, TabView } from 'primereact/tabview'
+import OpenCloseBalanceMain from '@renderer/components/OpenCloseBalance/OpenCloseBalanceMain'
 
 interface FundData {
   refbfTransactionDate: string
@@ -179,121 +181,133 @@ const Funds = () => {
         </div>
       ) : (
         <div className="contentPage">
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              width: '100%',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'start' }}>
-              <Button
-                severity="warning"
-                label="Add Funds"
-                style={{ padding: '10px 20px', fontSize: '1rem', backgroundColor: '#f8d20f' }}
-                onClick={() => setNewData(true)}
-              />
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '1rem'
-              }}
-            >
-              <div className="card flex justify-content-center" style={{ flex: 1 }}>
-                <Calendar
-                  value={startdates}
-                  onChange={(e) => {
-                    setStartDates(e.value ? e.value : null)
-                    setIsFiltered(false)
-                    loadData()
+          <TabView>
+            <TabPanel header="Transactions">
+              <>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    width: '100%',
+                    justifyContent: 'space-between'
                   }}
-                  placeholder="From Date"
-                  readOnlyInput
-                  // Filter format from data table
-                  dateFormat="yy-mm-dd"
-                  style={{ width: '100%' }}
-                />
-              </div>
+                >
+                  <div style={{ display: 'flex', justifyContent: 'start' }}>
+                    <Button
+                      severity="warning"
+                      label="Add or Edit Funds"
+                      style={{ padding: '10px 20px', fontSize: '1rem', backgroundColor: '#f8d20f' }}
+                      onClick={() => setNewData(true)}
+                    />
+                  </div>
 
-              <div className="card flex justify-content-center" style={{ flex: 1 }}>
-                <Calendar
-                  value={enddates}
-                  onChange={(e) => {
-                    setEndDates(e.value ? e.value : null)
-                    setIsFiltered(false)
-                    loadData()
-                  }}
-                  placeholder="To Date"
-                  readOnlyInput
-                  // Filter format from data table
-                  dateFormat="yy-mm-dd"
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                {submitLoading ? (
-                  <i
-                    className="pi pi-spin pi-spinner"
-                    style={{ fontSize: '2rem', color: '#0478df' }}
-                  ></i>
-                ) : (
-                  <Button
+                  <div
                     style={{
-                      padding: '10px 20px',
-                      fontSize: '1rem',
-                      width: '200px',
-                      backgroundColor: isFiltered ? '#dc2626' : '#0478df'
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '1rem'
                     }}
-                    type="button"
-                    severity={isFiltered ? 'danger' : 'info'}
-                    label={isFiltered ? 'Clear' : 'Search'}
-                    onClick={isFiltered ? handleClearFilter : handleFilter}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
+                  >
+                    <div className="card flex justify-content-center" style={{ flex: 1 }}>
+                      <Calendar
+                        value={startdates}
+                        onChange={(e) => {
+                          setStartDates(e.value ? e.value : null)
+                          setIsFiltered(false)
+                          loadData()
+                        }}
+                        placeholder="From Date"
+                        readOnlyInput
+                        // Filter format from data table
+                        dateFormat="yy-mm-dd"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
 
-          <div className="mt-5">
-            <DataTable
-              paginator
-              rows={5}
-              value={userLists}
-              ref={dt}
-              header={header}
-              showGridlines
-              exportFilename="funds_report"
-              scrollable
-              emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
-              tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
-            >
-              <Column field="refbfTransactionDate" header="Transaction Date"></Column>
-              <Column
-                body={TransactionAmount}
-                field="refbfTransactionAmount"
-                header="Transaction Amount"
-              ></Column>
-              <Column field="refBankName" header="Bank Name" filter></Column>
-              <Column field="refFundType" header="Fund Type" filter></Column>
-              <Column field="refAccountTypeName" header="Payment In" filter></Column>
-              <Column body={Status} field="refbfTrasactionType" filter header="Action"></Column>
-            </DataTable>
-          </div>
+                    <div className="card flex justify-content-center" style={{ flex: 1 }}>
+                      <Calendar
+                        value={enddates}
+                        onChange={(e) => {
+                          setEndDates(e.value ? e.value : null)
+                          setIsFiltered(false)
+                          loadData()
+                        }}
+                        placeholder="To Date"
+                        readOnlyInput
+                        // Filter format from data table
+                        dateFormat="yy-mm-dd"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
 
-          <Sidebar
-            visible={newData}
-            style={{ width: '80vw' }}
-            position="right"
-            onHide={() => setNewData(false)}
-          >
-            <AddnewFund closeSidebarNew={closeSidebarNew} />
-          </Sidebar>
+                    <div
+                      style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                    >
+                      {submitLoading ? (
+                        <i
+                          className="pi pi-spin pi-spinner"
+                          style={{ fontSize: '2rem', color: '#0478df' }}
+                        ></i>
+                      ) : (
+                        <Button
+                          style={{
+                            padding: '10px 20px',
+                            fontSize: '1rem',
+                            width: '200px',
+                            backgroundColor: isFiltered ? '#dc2626' : '#0478df'
+                          }}
+                          type="button"
+                          severity={isFiltered ? 'danger' : 'info'}
+                          label={isFiltered ? 'Clear' : 'Search'}
+                          onClick={isFiltered ? handleClearFilter : handleFilter}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <DataTable
+                    paginator
+                    rows={5}
+                    value={userLists}
+                    ref={dt}
+                    size="small"
+                    header={header}
+                    showGridlines
+                    exportFilename="funds_report"
+                    scrollable
+                    emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
+                    tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
+                  >
+                    <Column field="refbfTransactionDate" header="Transaction Date"></Column>
+                    <Column
+                      body={TransactionAmount}
+                      field="refbfTransactionAmount"
+                      header="Transaction Amount"
+                    ></Column>
+                    <Column field="refBankName" header="Bank Name"></Column>
+                    <Column field="refFundType" header="Fund Type"></Column>
+                    <Column field="refAccountTypeName" header="Payment In"></Column>
+                    <Column body={Status} field="refbfTrasactionType" header="Action"></Column>
+                  </DataTable>
+                </div>
+
+                <Sidebar
+                  visible={newData}
+                  style={{ width: '80vw' }}
+                  position="right"
+                  onHide={() => setNewData(false)}
+                >
+                  <AddnewFund closeSidebarNew={closeSidebarNew} />
+                </Sidebar>
+              </>
+            </TabPanel>
+            <TabPanel header="Opening & Closing Balance">
+              <OpenCloseBalanceMain />
+            </TabPanel>
+          </TabView>
         </div>
       )}
     </>

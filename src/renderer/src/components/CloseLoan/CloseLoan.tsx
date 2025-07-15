@@ -6,6 +6,11 @@ import { Accordion, AccordionTab } from 'primereact/accordion'
 import { InputNumber } from 'primereact/inputnumber'
 import { Button } from 'primereact/button'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
+import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
+import { Divider } from 'primereact/divider'
+import { Calendar } from 'primereact/calendar'
+import { formatToCustomDateTime } from '../../helper/date'
+// import { SelectButton } from 'primereact/selectbutton'
 
 interface CloseLoanProps {
   id: number
@@ -44,6 +49,8 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
   const [loanAmt, setLoanAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
+  const [settingData, setSettingData] = useState<SettingData | null>()
+  const [date, setDate] = useState<Date>(new Date())
 
   const getUserLoanData = async () => {
     try {
@@ -74,12 +81,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
     }
   }
 
-  const getLoanDatas = async (LoanId: number) => {
+  const getLoanDatas = async (LoanId: number, todayDate: Date) => {
     axios
       .post(
         import.meta.env.VITE_API_URL + '/rePayment/loanCloseData',
         {
-          LoanId: LoanId
+          LoanId: LoanId,
+          date: formatToCustomDateTime(todayDate)
         },
         {
           headers: {
@@ -99,6 +107,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
 
         if (data.success) {
           const matchedLoan = data.data.find((item) => item.refLoanId === LoanId)
+          console.log('matchedLoan line ------ 105', matchedLoan)
           setLoanDetails(matchedLoan)
           const options = data.bank.map((d: any) => ({
             name: `Name : ${d.refBankName} - A/C : ${d.refBankAccountNo} - IFSC's : ${d.refIFSCsCode}`,
@@ -130,7 +139,8 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
         {
           LoanId: selectedLoan,
           principalAmt: Number(loanAmt),
-          bankId: bankID
+          bankId: bankID,
+          date: formatToCustomDateTime(date)
         },
         {
           headers: {
@@ -163,39 +173,31 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
     setShowCard(true)
     // setErrorShow(false)
     setSelectedLoan(LoanId)
-    getLoanDatas(LoanId)
+    getLoanDatas(LoanId, date)
     getUserLoanData()
+    const getSetData = async () => {
+      const settingdatas = await getSettingData()
+      console.log('settingdatas line ------ 172', settingdatas)
+      setSettingData(settingdatas)
+      if (settingdatas.paymentMethod !== 1) {
+        console.log('settingdatas.paymentMethod line ----- 175', settingdatas.paymentMethod)
+        setBankModeType(settingdatas?.paymentMethod === 2 ? 'Bank' : 'Cash')
+      }
+    }
+    getSetData()
   }, [])
 
   return (
     <div>
       <div className="flex gap-4">
-        {/* <div className="flex-1">
-          <label className="font-bold block mb-2">Select Old Loan</label>
-          <Dropdown
-            value={selectedLoan}
-            filter
-            className="w-full"
-            onChange={(e: DropdownChangeEvent) => {
-              setShowCard(false)
-              setErrorShow(false)
-
-              setSelectedLoan(e.value)
-              getLoanDatas(e.value)
-            }}
-            options={userLoan}
-            optionLabel="name"
-            placeholder="Select Old Loan"
-          />
-        </div> */}
         <div className="flex-1"></div>
       </div>
       {showCard && (
         <>
-          <div className="mt-3">
+          <div className="mt-0">
             <Accordion activeIndex={0}>
               <AccordionTab header="Loan Details">
-                <div className="flex m-3">
+                <div className="flex m-2">
                   <div className="flex-1">
                     <p>
                       Loan Name : <b>{loanDetails?.refProductName}</b>
@@ -203,7 +205,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                   </div>
                   <div className="flex-1">
                     <p>
-                      Loan Amount : <b>₹ {loanDetails?.refProductInterest}</b>
+                      Loan Amount : <b>₹ {loanDetails?.refLoanAmount}</b>
                     </p>
                   </div>
                   <div className="flex-1">
@@ -212,7 +214,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                     </p>
                   </div>
                 </div>
-                <div className="flex m-3">
+                <div className="flex m-2">
                   <div className="flex-1">
                     <p>
                       Loan Duration :
@@ -238,7 +240,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                     </p>
                   </div>
                 </div>
-                <div className="flex m-3">
+                <div className="flex m-2">
                   <div className="flex-1">
                     <p>
                       Interest Paid First :
@@ -273,7 +275,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                     </p>
                   </div>
                 </div>
-                <div className="flex m-3">
+                <div className="flex m-2">
                   <div className="flex-1">
                     <p>
                       Loan Get Date :<b> {loanDetails?.refLoanStartDate}</b>
@@ -307,7 +309,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                     </p>
                   </div>
                 </div>
-                <div className="flex m-3">
+                <div className="flex m-2">
                   <div className="flex-1">
                     <p>
                       Total Interest Paid : ₹ <b> {loanDetails?.totalInterest}</b>
@@ -327,16 +329,35 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
               </AccordionTab>
             </Accordion>
           </div>
+          <Divider />
+          <div className="flex justify-between align-items-center">
+            <div className="w-[30%]">
+              <label className="font-bold block mb-2">Select Paid Date</label>
+              <Calendar
+                placeholder="DD/MM/YYYY"
+                value={date}
+                required
+                onChange={(e) => {
+                  setDate(e.value ?? new Date())
+                  getLoanDatas(LoanId, e.value ?? new Date())
+                }}
+                dateFormat="dd/mm/yy"
+                // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                maxDate={new Date()}
+              />
+            </div>
+          </div>
 
           <div className="flex mt-3 gap-3">
             <div className="flex-1">
-              <label className="font-bold block mb-2">Enter Balance Amount</label>
+              <label className="font-bold block mb-2">Enter Re-Paid Amount</label>
               <InputNumber
                 placeholder="Enter Balance Amount"
                 mode="currency"
                 value={loanAmt}
                 max={loanDetails?.refBalanceAmt}
                 currency="INR"
+                required
                 className="w-full"
                 currencyDisplay="symbol"
                 locale="en-IN"
@@ -352,64 +373,95 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                 }}
               />
             </div>
-            <div className="flex-1">
-              <label className="font-bold block mb-2">Enter Balance Amount</label>
+            {settingData?.paymentMethod === 1 && (
+              <>
+                {' '}
+                <div className="flex-1">
+                  <label className="font-bold block mb-2">Select Payment Flow</label>
 
-              <div className="flex flex-wrap gap-3 mt-3">
-                <div className="flex align-items-center">
-                  <RadioButton
-                    inputId="bankModeType1"
-                    name="Bank"
-                    value="Bank"
-                    onChange={(e: RadioButtonChangeEvent) => setBankModeType(e.value)}
-                    checked={bankModeType === 'Bank'}
-                  />
-                  <label htmlFor="bankModeType1" className="ml-2">
-                    Bank
-                  </label>
+                  <div className="flex flex-wrap gap-3 mt-3">
+                    <div className="flex align-items-center">
+                      <RadioButton
+                        inputId="bankModeType1"
+                        name="Bank"
+                        value="Bank"
+                        onChange={(e: RadioButtonChangeEvent) => {
+                          console.log('e.value', e.value)
+                          setBankModeType(e.value)
+                        }}
+                        checked={bankModeType === 'Bank'}
+                      />
+                      <label htmlFor="bankModeType1" className="ml-2">
+                        Bank
+                      </label>
+                    </div>
+                    <div className="flex align-items-center">
+                      <RadioButton
+                        inputId="bankModeType2"
+                        name="Cash"
+                        value="Cash"
+                        onChange={(e: RadioButtonChangeEvent) => {
+                          console.log('e.value', e.value)
+                          setBankModeType(e.value)
+                        }}
+                        checked={bankModeType === 'Cash'}
+                      />
+                      <label htmlFor="bankModeType2" className="ml-2">
+                        Cash
+                      </label>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex align-items-center">
-                  <RadioButton
-                    inputId="bankModeType2"
-                    name="Cash"
-                    value="Cash"
-                    onChange={(e: RadioButtonChangeEvent) => setBankModeType(e.value)}
-                    checked={bankModeType === 'Cash'}
-                  />
-                  <label htmlFor="bankModeType2" className="ml-2">
-                    Cash
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* {errorShow && (
-            <div className="flex mt-3 ">
+              </>
+            )}
+            {(settingData?.paymentMethod === 2 || settingData?.paymentMethod === 3) && (
               <div className="flex-1">
-                <Message text={errorMessage} />
+                <label className="font-bold block mb-2">
+                  Choose {settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}
+                </label>
+
+                <Dropdown
+                  value={bankID}
+                  filter
+                  onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
+                  options={bankDetailsResponse.filter(
+                    (item) =>
+                      (bankModeType === 'Bank' && item.refAccountType === 1) ||
+                      (bankModeType === 'Cash' && item.refAccountType === 2)
+                  )}
+                  optionValue="value"
+                  optionLabel="name"
+                  placeholder={`Select ${settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}`}
+                  className="w-full"
+                />
               </div>
-            </div>
-          )} */}
+            )}
+          </div>
 
           <div className="flex mt-3 gap-3">
-            <div className="flex-1">
-              <label className="font-bold block mb-2">Choose Bank</label>
+            {settingData?.paymentMethod === 1 && (
+              <div className="flex-1">
+                <label className="font-bold block mb-2">
+                  Choose {bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}
+                </label>
 
-              <Dropdown
-                value={bankID}
-                filter
-                onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
-                options={bankDetailsResponse.filter(
-                  (item) =>
-                    (bankModeType === 'Bank' && item.refAccountType === 1) ||
-                    (bankModeType === 'Cash' && item.refAccountType === 2)
-                )}
-                optionValue="value"
-                optionLabel="name"
-                placeholder="Select a Bank"
-                className="w-full"
-              />
-            </div>
+                <Dropdown
+                  value={bankID}
+                  filter
+                  onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
+                  options={bankDetailsResponse.filter(
+                    (item) =>
+                      (bankModeType === 'Bank' && item.refAccountType === 1) ||
+                      (bankModeType === 'Cash' && item.refAccountType === 2)
+                  )}
+                  optionValue="value"
+                  optionLabel="name"
+                  placeholder={`Select ${bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}`}
+                  className="w-full"
+                />
+              </div>
+            )}
+
             <div className="flex-1"></div>
           </div>
 

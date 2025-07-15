@@ -42,7 +42,8 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
         .post(
           import.meta.env.VITE_API_URL + '/rePayment/loanDetails',
           {
-            loanId: loanId
+            loanId: loanId, //this is Customer Id
+            loanNo: loanNo //this is Loan Id
           },
           {
             headers: {
@@ -61,6 +62,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
           localStorage.setItem('token', 'Bearer ' + data.token)
 
           if (data.success) {
+            console.log(' -> Line Number ----------------------------------- 64')
             data.data.map((audit) => {
               if (audit.refLoanId === loanNo) {
                 setLoanDetails([audit])
@@ -289,7 +291,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                                 </b>
                               </p>
                             </div>
-                            <div className="w-[60%]">
+                            <div className="w-[30%]">
                               <p>
                                 Security :{' '}
                                 <b>
@@ -297,6 +299,17 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                                   {loanDetails[index]?.refSecurity === null
                                     ? 'No Security Provide'
                                     : loanDetails[index]?.refSecurity}
+                                </b>
+                              </p>
+                            </div>
+                            <div className="w-[30%]">
+                              <p>
+                                Loan Closing Balance :{' '}
+                                <b>
+                                  &#8377;{' '}
+                                  {loanDetails[index]?.loanClosingBalance === null
+                                    ? 0.0
+                                    : loanDetails[index]?.loanClosingBalance}
                                 </b>
                               </p>
                             </div>

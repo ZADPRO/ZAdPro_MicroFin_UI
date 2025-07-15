@@ -3,21 +3,28 @@ import { TabPanel, TabView } from 'primereact/tabview'
 import { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { Slide, toast, ToastContainer } from 'react-toastify'
-import { InputNumber } from 'primereact/inputnumber'
+// import { InputNumber } from 'primereact/inputnumber'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Calendar } from 'primereact/calendar'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
+// import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 
 import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import LoanAudit from '../LoanAudit/LoanAudit'
+import { Divider } from 'primereact/divider'
+import { InputText } from 'primereact/inputtext'
+import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
+import { Nullable } from 'primereact/ts-helpers'
+import { formatToCustomDateTime } from '@renderer/helper/date'
 
 interface RePaymentForm {
   interestAmt: number
+  principalAmt: number
+  totalAmt: number
+  TotalPaidAmt: number
   BalanceAmount: number
-  BalanceStatus: boolean
-  interestStatus: boolean
+  loanClosingBalance: number
 }
 
 interface FollowUpForm {
@@ -34,15 +41,17 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   console.log('id', id)
   console.log('rePayId', rePayId)
   console.log('loanId', loanId)
-  const [priamt, setPriAmt] = useState<number>(0)
+  // const [priamt, setPriAmt] = useState<number>(0)
 
   const [loading, setLoading] = useState(false)
   const [rePaymentInfo, setRePaymentInfo] = useState(false)
   const [rePaymentForm, setRePaymentForm] = useState<RePaymentForm>({
     interestAmt: 0,
+    principalAmt: 0,
+    totalAmt: 0,
+    TotalPaidAmt: 0,
     BalanceAmount: 0,
-    BalanceStatus: false,
-    interestStatus: false
+    loanClosingBalance: 0
   })
   const [followUpForm, setFollowUpForm] = useState<FollowUpForm>({
     Message: '',
@@ -51,71 +60,96 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   const [loanDetails, setLoanDetails] = useState<any>()
 
   const [selectBank, setSelectBank] = useState<Bank | null>(null)
+  const [selectCash, setSelectCash] = useState<Bank | null>(null)
   const [bankOption, setBankOption] = useState([])
-  const [paymentType, setPaymentType] = useState<string>('')
-
-  const getLoanData = () => {
-    axios
-      .post(
-        import.meta.env.VITE_API_URL + '/rePayment/rePaymentCalculation',
-        {
-          loanId: loanId,
-          rePayId: rePayId
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-            'Content-Type': 'application/json'
+  const [cashOption, setCashOption] = useState([])
+  // const [paymentType, setPaymentType] = useState<string>('')
+  const [paymentSettingData, setPaymentSettingData] = useState<SettingData>()
+  const [amountInCash, setAmountInCash] = useState<string | null>(null)
+  const [amountInBank, setAmountInBank] = useState<string | null>(null)
+  const [date, setDate] = useState<Nullable<Date>>(new Date())
+  const getLoanData = async () => {
+    try {
+      await axios
+        .post(
+          import.meta.env.VITE_API_URL + '/rePayment/rePaymentCalculation',
+          {
+            loanId: loanId,
+            rePayId: rePayId
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      )
-      .then((response) => {
-        const data = decrypt(
-          response.data[1],
-          response.data[0],
-          import.meta.env.VITE_ENCRYPTION_KEY
         )
-        console.log('data line ----- 205', data)
-        localStorage.setItem('token', 'Bearer ' + data.token)
-
-        if (data.success) {
-          setLoading(false)
-          setLoanDetails(data.data[0])
-
-          console.log('line ---- 7777')
-          console.log('data.data[0].refInterestStatus', data.data[0].refInterestStatus)
-          setRePaymentForm({
-            ...rePaymentForm,
-            interestAmt: Number(data.data[0].InteresePay),
-            BalanceAmount: Number(data.data[0].refPrincipal),
-            BalanceStatus: data.data[0].refPrincipalStatus === 'paid' ? true : false,
-            interestStatus: data.data[0].refInterestStatus === 'paid' ? true : false
-          })
-          setPriAmt(
-            data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal)
+        .then((response) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
           )
+          console.log('data line ----- 205', data)
+          localStorage.setItem('token', 'Bearer ' + data.token)
 
-          const options = data.bank.map((data: any) => ({
-            label: `Bank Name : ${data.refBankName} - Bank Ac.No : ${data.refBankAccountNo} - IFSC Code : ${data.refIFSCsCode}`,
-            value: data.refBankId
-          }))
-          console.log('options', options)
-          setBankOption(options)
-        }
-      })
+          if (data.success) {
+            setLoading(false)
+            setLoanDetails(data.data[0])
+
+            console.log('line ---- 7777')
+            console.log('data.data[0].refInterestStatus', data.data[0].refInterestStatus)
+            setRePaymentForm({
+              ...rePaymentForm,
+              interestAmt: Number(data.data[0].refInterest),
+              BalanceAmount: Number(data.data[0].refArears),
+              principalAmt: Number(data.data[0].refPrincipal),
+              totalAmt: Number(data.data[0].refRepaymentAmount),
+              TotalPaidAmt:
+                Number(data.data[0].refPaidInterest) + Number(data.data[0].refPaidPrincipal),
+              loanClosingBalance: Number(data.data[0].loanClosingBalance)
+            })
+            // setPriAmt(
+            //   data.data[0].refPrincipalStatus === 'paid' ? 0 : Number(data.data[0].refPrincipal)
+            // )
+
+            const options = data.bank
+              .filter((item: any) => item.refAccountType === 1)
+              .map((item: any) => ({
+                label: `Bank Name: ${item.refBankName} - Bank Ac.No: ${item.refBankAccountNo} - IFSC Code: ${item.refIFSCsCode}`,
+                value: item.refBankId
+              }))
+
+            setBankOption(options)
+            const options1 = data.bank
+              .filter((item: any) => item.refAccountType === 2)
+              .map((item: any) => ({
+                label: `Cash Name: ${item.refBankName}`,
+                value: item.refBankId
+              }))
+
+            setCashOption(options1)
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
   }
 
   const updateRepayment = () => {
-    console.log('paymentType line ----- 101', paymentType)
+    console.log('selectBank', selectBank)
+    console.log('selectCash', selectCash)
     axios
       .post(
         import.meta.env.VITE_API_URL + '/rePayment/updateRePayment',
         {
-          priAmt: rePaymentForm.BalanceAmount,
-          interest: rePaymentForm.interestAmt,
+          payDate: formatToCustomDateTime(date ?? new Date()),
+          rePayId: rePayId,
+          cashAmt: amountInCash,
+          onlineAmt: amountInBank,
+          paidTotalAmount: Number(amountInCash) + Number(amountInBank),
           bankId: selectBank,
-          paymentType: paymentType === 'online' ? 1 : 2,
-          rePayId: rePayId
+          cashId: selectCash
         },
         {
           headers: {
@@ -218,6 +252,12 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
 
   useEffect(() => {
     getLoanData()
+    const getSetData = async () => {
+      const settingdatas = await getSettingData()
+      console.log('settingdatas line ------ 172', settingdatas)
+      setPaymentSettingData(settingdatas)
+    }
+    getSetData()
   }, [])
 
   const [activeIndex, setActiveIndex] = useState(0)
@@ -292,9 +332,9 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                   <div className="w-[30%]">
                     <p>
                       Loan Duration : {loanDetails?.refProductDuration}{' '}
-                      {loanDetails.refProductDurationType === 1
+                      {loanDetails.refLoanDueType === 1
                         ? 'Months'
-                        : loanDetails.refProductDurationType === 2
+                        : loanDetails.refLoanDueType === 2
                           ? 'Weeks'
                           : 'Days'}
                     </p>
@@ -346,7 +386,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                   <div className="w-[30%]">
                     <p>
                       Interest Calculation :{' '}
-                      {loanDetails.refProductMonthlyCal === 2
+                      {loanDetails.refInterestCalType === 2
                         ? 'Month Wise Interest'
                         : 'Day wise Interest'}
                     </p>
@@ -366,147 +406,147 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
             <TabPanel header="Re-Payment">
               <div className="my-0 w-full">
                 <div className="my-1">
-                  <b className="text-[1.2rem]">Re-Payment Form</b>
+                  <b className="text-[1.2rem]">Re-Payment Details</b>
+                </div>
+                <div className="flex flex-col gap-0 shadow-3 p-2 rounded-md">
+                  <div className="flex gap-x-5">
+                    <div className="flex-1 p-1 rounded-md">
+                      <p>
+                        Interest Amount : &#8377; <b>{rePaymentForm.interestAmt}</b>{' '}
+                      </p>
+                    </div>
+                    <div className="flex-1 p-1 rounded-md">
+                      <p>
+                        Principal Amount : &#8377; <b>{rePaymentForm.principalAmt}</b>
+                      </p>
+                    </div>
+                    <div className="flex-1 p-1 rounded-md">
+                      <p>
+                        Total Due Amount : &#8377; <b>{rePaymentForm.totalAmt}</b>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-x-5">
+                    <div className="flex-1 p-1 rounded-md">
+                      <p>
+                        Paid Due Amount : &#8377; <b>{rePaymentForm.TotalPaidAmt}</b>{' '}
+                      </p>
+                    </div>
+                    <div className="flex-1 p-1 rounded-md">
+                      <p>
+                        Pending Due Amount : &#8377; <b>{rePaymentForm.BalanceAmount}</b>{' '}
+                      </p>
+                    </div>
+                    <div className="flex-1  p-1 rounded-md">
+                      <p>
+                        Loan Closing Amount : &#8377; <b>{rePaymentForm.loanClosingBalance}</b>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Divider />
+                <div className="my-3 flex justify-between">
+                  <div>
+                    <b className="text-[1.2rem]">New Entry</b>
+                  </div>
+                  <div>
+                    <Calendar
+                      value={date}
+                      onChange={(e) => setDate(e.value)}
+                      dateFormat="dd/mm/yy"
+                      maxDate={new Date()}
+                      // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                    />
+                  </div>
                 </div>
                 <form
+                  className="flex flex-col gap-2"
                   onSubmit={(e) => {
-                    e.preventDefault(), updateRepayment()
+                    e.preventDefault()
+                    updateRepayment()
                   }}
-                  className="w-full"
                 >
-                  <div className="w-[100%] flex flex-col align-items-center gap-3">
-                    <div className="flex flex-row w-[80%] justify-between">
-                      <div className="w-[30%]">
-                        <label htmlFor="Interest" className="font-bold block mb-2">
-                          Interest Amount
-                        </label>
-                        <InputNumber
-                          disabled
-                          className="w-full"
-                          inputId="percent"
-                          value={
-                            rePaymentForm.interestStatus ? 0 : Number(rePaymentForm.interestAmt)
-                          }
-                          onValueChange={(e) =>
-                            setRePaymentForm({
-                              ...rePaymentForm,
-                              interestAmt: e.value ?? 0
-                            })
-                          }
-                          prefix="&#8377; "
-                        />
-                      </div>
-                      <div className="w-[30%]">
-                        <label htmlFor="Principal" className="font-bold block mb-2">
-                          Principal Amount
-                        </label>
-                        <InputNumber
-                          required
-                          className="w-full"
-                          inputId="percent"
-                          value={rePaymentForm.BalanceStatus ? 0 : rePaymentForm.BalanceAmount}
-                          min={priamt}
-                          max={loanDetails?.refBalanceAmt}
-                          onChange={(e) => {
-                            let val = e.value ?? 0
-
-                            const min = rePaymentForm.BalanceAmount
-                            const max = loanDetails?.refBalanceAmt ?? Number.MAX_SAFE_INTEGER
-
-                            if (val < min) val = min
-                            if (val > max) val = max
-
-                            setRePaymentForm({
-                              ...rePaymentForm,
-                              BalanceAmount: val
-                            })
-                          }}
-                          prefix="₹ "
-                        />
-                      </div>
-                      <div className="w-[30%]">
-                        <label htmlFor="Principal" className="font-bold block mb-2">
-                          Total Amount
-                        </label>
-                        <InputNumber
-                          required
-                          className="w-full"
-                          inputId="percent"
-                          value={
-                            rePaymentForm.BalanceAmount +
-                            (rePaymentForm.interestStatus ? 0 : rePaymentForm.interestAmt)
-                          }
-                          disabled
-                          prefix="&#8377; "
-                        />
-                      </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label>Enter Collected Amount in Cash</label>
+                      <InputText
+                        keyfilter="int"
+                        required
+                        placeholder="Amount in Cash"
+                        value={amountInCash}
+                        onChange={(e) => setAmountInCash(e.target.value)}
+                      />
                     </div>
-                    {/* <div className="flex-auto w-[60%]">
-
-                                        </div> */}
-                    <div className="flex flex-col w-[60%]">
-                      <label htmlFor="Principal" className="font-bold block mb-2">
-                        Payment Type
-                      </label>
-
-                      <div className="flex flex-start gap-3">
-                        <div className="flex align-items-center">
-                          <RadioButton
-                            required
-                            inputId="ingredient1"
-                            name="pizza"
-                            value="online"
-                            onChange={(e: RadioButtonChangeEvent) => setPaymentType(e.value)}
-                            checked={paymentType === 'online'}
-                          />
-                          <label htmlFor="ingredient1" className="ml-2">
-                            Online
-                          </label>
-                        </div>
-                        <div className="flex align-items-center">
-                          <RadioButton
-                            required
-                            inputId="ingredient2"
-                            name="pizza"
-                            value="cash"
-                            onChange={(e: RadioButtonChangeEvent) => setPaymentType(e.value)}
-                            checked={paymentType === 'cash'}
-                          />
-                          <label htmlFor="ingredient2" className="ml-2">
-                            Cash
-                          </label>
-                        </div>
-                      </div>
+                    <div className="flex-1">
+                      <label>Enter Collected Amount in Bank</label>
+                      <InputText
+                        keyfilter="int"
+                        required
+                        placeholder="Amount in Bank"
+                        value={amountInBank}
+                        onChange={(e) => setAmountInBank(e.target.value)}
+                      />
                     </div>
-                    {paymentType === 'online' && (
-                      <div className="w-[60%]">
-                        <label htmlFor="Interest" className="font-bold block mb-2">
-                          Select Bank
-                        </label>
-
+                    <div className="flex-1">
+                      <label>Total Amount Collected</label>
+                      <InputText
+                        keyfilter="int"
+                        required
+                        placeholder="Total Amount"
+                        value={String(Number(amountInCash) + Number(amountInBank))}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    {((paymentSettingData?.paymentMethod === 1 &&
+                      paymentSettingData.rePaymentMethod === 1 &&
+                      loanDetails?.refAccountType === 1) ||
+                      (paymentSettingData?.paymentMethod === 1 &&
+                        paymentSettingData.rePaymentMethod === 2) ||
+                      paymentSettingData?.paymentMethod === 2) && (
+                      <div className="flex-1">
+                        <label>Select Bank Account</label>
                         <Dropdown
-                          filter
-                          required
                           value={selectBank}
-                          onChange={(e: DropdownChangeEvent) => {
-                            console.log('line --------------------- 452', e.value)
-                            setSelectBank(e.value)
-                          }}
+                          onChange={(e: DropdownChangeEvent) => setSelectBank(e.value)}
                           options={bankOption}
+                          required={Number(amountInBank) > 0}
                           optionLabel="label"
-                          placeholder="Select a Bank"
+                          optionValue="value"
+                          placeholder="Select an Account"
                           className="w-full"
-                          checkmark={true}
-                          highlightOnSelect={false}
                         />
                       </div>
                     )}
 
+                    {((paymentSettingData?.paymentMethod === 1 &&
+                      paymentSettingData.rePaymentMethod === 1 &&
+                      loanDetails?.refAccountType === 2) ||
+                      (paymentSettingData?.paymentMethod === 1 &&
+                        paymentSettingData.rePaymentMethod === 2) ||
+                      paymentSettingData?.paymentMethod === 3) && (
+                      <div className="flex-1">
+                        <label>Select Cash Flow</label>
+                        <Dropdown
+                          value={selectCash}
+                          onChange={(e: DropdownChangeEvent) => setSelectCash(e.value)}
+                          options={cashOption}
+                          optionValue="value"
+                          optionLabel="label"
+                          required={Number(amountInCash) > 0}
+                          placeholder="Select an Account"
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-center">
                     <button
                       type="submit"
-                      className=" bg-[green] hover:bg-[#008000f3] text-white p-2 px-5 rounded-lg"
+                      className="bg-[green] w-[50%] p-2 px-7 text-white my-3 rounded-lg hover:bg-[#008000f1]"
                     >
-                      Payment Collected
+                      Submit Loan Due amount
                     </button>
                   </div>
                 </form>

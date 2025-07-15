@@ -50,7 +50,6 @@ export default function MonthlyReport() {
   const [areaList, setAreaList] = useState<option[]>([])
   const [AreaError, setAreaError] = useState<boolean>(false)
 
-
   const [repaymentError, setRepaymentError] = useState(false)
   const [statusError, setStatusError] = useState(false)
   const [overAllData, setOverAllData] = useState<LoanDetails[]>([])
@@ -220,7 +219,9 @@ export default function MonthlyReport() {
       <div className="w-full flex align-items-center justify-center">
         <div className="w-[90%] flex align-items-center justify-around my-2">
           <div className="flex flex-col w-[18%] gap-y-1">
-            <label htmlFor="username">Select Loan of</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Select Loan of
+            </label>
             <Dropdown
               value={selectedLoanOption}
               onChange={(e: DropdownChangeEvent) => {
@@ -237,11 +238,14 @@ export default function MonthlyReport() {
               options={LoanOption}
               optionLabel="label"
               placeholder="Select a Loan"
-              className=" w-full"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
             />
           </div>
           <div className="flex flex-col w-[18%] gap-y-1">
-            <label htmlFor="username">Select Area</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Select Area
+            </label>
             <MultiSelect
               filter
               value={selectedArea}
@@ -268,13 +272,16 @@ export default function MonthlyReport() {
               options={areaList}
               optionLabel="label"
               placeholder="Select a Repayment Type"
-              className="w-[100%] h-[2.5rem] flex align-items-center"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               required
             />
             {AreaError && <small className="text-[red]">Please select at least one Area.</small>}
           </div>
           <div className="flex flex-col w-[18%] gap-y-1">
-            <label htmlFor="username">Interest Status</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Interest Status
+            </label>
 
             <MultiSelect
               filter
@@ -302,7 +309,8 @@ export default function MonthlyReport() {
               options={loanStatus}
               optionLabel="label"
               placeholder="Select a Repayment Type"
-              className="w-[100%] h-[2.5rem] flex align-items-center"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               required
             />
             {repaymentError && (
@@ -310,7 +318,9 @@ export default function MonthlyReport() {
             )}
           </div>
           <div className="flex flex-col w-[18%] gap-y-1">
-            <label htmlFor="username">Principal Status</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Principal Status
+            </label>
 
             <MultiSelect
               filter
@@ -338,7 +348,8 @@ export default function MonthlyReport() {
               options={loanStatus}
               optionLabel="label"
               placeholder="Select a Loan Status"
-              className="w-[100%] h-[2.5rem] flex align-items-center"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               required
             />
             {statusError && (
@@ -346,7 +357,9 @@ export default function MonthlyReport() {
             )}
           </div>
           <div className="flex flex-col w-[10%] gap-y-1">
-            <label htmlFor="username">Start Month</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              Start Month
+            </label>
 
             <Calendar
               value={startDate}
@@ -376,11 +389,15 @@ export default function MonthlyReport() {
               }}
               view="month"
               dateFormat="mm/yy"
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               // maxDate={new Date()}
             />
           </div>
           <div className="flex flex-col w-[10%] gap-y-1">
-            <label htmlFor="username">End Month</label>
+            <label htmlFor="username" className="text-[0.9rem]">
+              End Month
+            </label>
 
             <Calendar
               value={endDate}
@@ -400,6 +417,8 @@ export default function MonthlyReport() {
               dateFormat="mm/yy"
               minDate={startDate || undefined}
               disabled={!startDate}
+              className="w-full md:h-2rem text-sm align-items-center" // smaller text, padding
+              panelClassName="text-sm"
               // maxDate={new Date()}
             />
           </div>
@@ -424,6 +443,7 @@ export default function MonthlyReport() {
           showGridlines
           ref={dt}
           stripedRows
+          size="small"
           scrollable
           paginator
           rows={5}
@@ -440,6 +460,7 @@ export default function MonthlyReport() {
             header="Name"
             style={{ minWidth: '13rem' }}
           />
+          <Column field="refRName" header="Joint Name" style={{ minWidth: '8rem' }} />
           <Column field="refUserMobileNo" header="Mobile" style={{ minWidth: '8rem' }} />
           <Column
             field="refAreaPrefix"

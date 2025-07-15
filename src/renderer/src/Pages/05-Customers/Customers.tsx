@@ -13,8 +13,10 @@ import { FilterMatchMode } from 'primereact/api'
 import CustomerInputsUpdate from '@renderer/components/CustomerInputs/CustomerInputsUpdate'
 import { Button } from 'primereact/button'
 import CustomerInputNew from '@renderer/components/CustomerInputs/CustomerInputNew'
+// import { useLocation } from 'react-router-dom'
 
 const Customers = () => {
+  // const _location = useLocation()
   const [userLists, setUserLists] = useState([])
 
   const [username, setUsername] = useState('')
@@ -66,8 +68,11 @@ const Customers = () => {
   const AddressBody = (rowData: any) => {
     return (
       <>
-        {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
-        {rowData.refUserPincode}
+        {/* {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
+        {rowData.refUserPincode} */}
+        {rowData.refUserCity ? ` ${rowData.refUserCity},` : ''}
+        {rowData.refUserTaluk ? ` ${rowData.refUserTaluk},` : ''}
+        {rowData.refUserDistrict ? ` ${rowData.refUserDistrict}` : ''}
       </>
     )
   }
@@ -183,38 +188,27 @@ const Customers = () => {
         </div>
       ) : (
         <div className="contentPage">
-          {/* New User Button - Start */}
+          <div className="flex justify-between mb-2">
+            <Button
+              label="New Customer"
+              severity="warning"
+              style={{ backgroundColor: '#f8d20f' }}
+              onClick={() => {
+                setNewData(true)
+              }}
+            />
 
-          <Button
-            label="New Customer"
-            severity="warning"
-            style={{ backgroundColor: '#f8d20f' }}
-            onClick={() => {
-              setNewData(true)
-            }}
-          />
-
-          {/* New User Button - End */}
-
-          {/* Search Input - Start */}
-          <div
-            style={{
-              width: '100%',
-              marginBottom: '10px',
-              display: 'flex',
-              justifyContent: 'flex-end'
-            }}
-          >
-            <IconField style={{ width: '30%' }} iconPosition="left">
-              <InputIcon className="pi pi-search"></InputIcon>
-              <InputText
-                placeholder="Search Customers"
-                value={globalFilterValue}
-                onChange={onGlobalFilterChange}
-              />
-            </IconField>
+            <div className="w-[25%]">
+              <IconField style={{ width: '100%' }} iconPosition="left">
+                <InputIcon className="pi pi-search"></InputIcon>
+                <InputText
+                  placeholder="Search Customers"
+                  value={globalFilterValue}
+                  onChange={onGlobalFilterChange}
+                />
+              </IconField>
+            </div>
           </div>
-          {/* Search Input - End */}
 
           {/* Datatable - Start */}
 
@@ -223,6 +217,7 @@ const Customers = () => {
               filters={filters}
               paginator
               rows={5}
+              size="small"
               value={userLists}
               showGridlines
               scrollable
@@ -233,27 +228,34 @@ const Customers = () => {
                 style={{ minWidth: '3rem' }}
                 field="refCustId"
                 body={CustomerId}
-                header="User ID"
+                header="Customer ID"
               ></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refUserFname"
-                header="First Name"
+                header="Name"
+                body={(rowData) => {
+                  return (
+                    <>
+                      {rowData.refUserFname} {rowData.refUserLname}
+                    </>
+                  )
+                }}
               ></Column>
-              <Column style={{ minWidth: '8rem' }} field="refUserLname" header="Last Name"></Column>
+              <Column style={{ minWidth: '8rem' }} field="refRName" header="Joint Name"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refUserMobileNo"
                 header="Phone Number"
               ></Column>
-              <Column style={{ minWidth: '10rem' }} field="refUserEmail" header="Email"></Column>
+              {/* <Column style={{ minWidth: '10rem' }} field="refUserEmail" header="Email"></Column> */}
               <Column style={{ minWidth: '10rem' }} body={AddressBody} header="Address"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refAadharNo"
                 header="Aadhar Number"
               ></Column>
-              <Column style={{ minWidth: '8rem' }} field="refPanNo" header="Pan Number"></Column>
+              {/* <Column style={{ minWidth: '8rem' }} field="refPanNo" header="Pan Number"></Column> */}
               <Column body={StatusBody} header="Status"></Column>
             </DataTable>
           </div>

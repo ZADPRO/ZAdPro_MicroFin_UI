@@ -218,6 +218,7 @@ export default function Expense({}: Props) {
             <DataTable
               paginator
               rows={5}
+              size="small"
               filters={filters}
               className="w-[95%]"
               value={expense}

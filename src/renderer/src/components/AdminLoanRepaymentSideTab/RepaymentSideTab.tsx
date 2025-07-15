@@ -37,6 +37,7 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
   console.log('rePayId', rePayId)
   console.log('loanId', loanId)
 
+  const [date, setDate] = useState<Date | null>(new Date())
   const [loading, setLoading] = useState(false)
   const [rePaymentInfo, setRePaymentInfo] = useState(false)
   const [priamt, setPriAmt] = useState<number>(0)
@@ -130,6 +131,7 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
         .post(
           import.meta.env.VITE_API_URL + '/AdminRePayment/updateRePayment',
           {
+            todayDate: date,
             priAmt: rePaymentForm.BalanceAmount,
             interest: rePaymentForm.interestAmt,
             bankId: selectBank,
@@ -405,15 +407,34 @@ const AdminLoanRepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, reP
           >
             <TabPanel header="Re-Payment">
               <div className="my-0 w-full">
-                <div className="my-1">
-                  <b className="text-[1.2rem]">Re-Payment Form</b>
-                </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault(), updateRepayment()
                   }}
                   className="w-full"
                 >
+                  <div className="my-2 flex justify-between">
+                    <div>
+                      <b className="text-[1.2rem]">Re-Payment Form</b>
+                    </div>
+                    <div>
+                      <label>
+                        <b>Select Data :</b>{' '}
+                      </label>
+                      <Calendar
+                        placeholder="DD/MM/YYYY"
+                        value={date}
+                        required
+                        onChange={(e) => {
+                          setDate(e.value ?? new Date())
+                        }}
+                        dateFormat="dd/mm/yy"
+                        // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                        maxDate={new Date()}
+                      />
+                    </div>
+                  </div>
+
                   <div className="w-[100%] flex flex-col align-items-center gap-3">
                     <div className="flex flex-row w-[80%] justify-between">
                       <div className="w-[30%]">

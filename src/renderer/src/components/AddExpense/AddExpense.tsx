@@ -6,6 +6,7 @@ import decrypt from '../Helper/Helper'
 import { InputText } from 'primereact/inputtext'
 import { InputNumber } from 'primereact/inputnumber'
 import { Slide, toast, ToastContainer } from 'react-toastify'
+import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
 
 interface AddNewSupplierProps {
   closeSidebarNew: () => void
@@ -28,6 +29,8 @@ export const AddExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [bank, setBank] = useState<number | null>()
   const [categoryOption, setCategoryOption] = useState<option[]>([])
   const [bankOption, setBankOption] = useState<option[]>([])
+  const [settingData, setSettingData] = useState<SettingData | null>()
+
   const handleBack = () => {
     closeSidebarNew()
   }
@@ -67,6 +70,7 @@ export const AddExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
               refAccountType: d.refAccountType,
               amount: d.refBalance
             }))
+            console.log('options line ------- 73', options)
             setBankOption(options)
             const options1: option[] = data.category.map((item: any) => ({
               label: item.refExpenseCategory,
@@ -169,8 +173,26 @@ export const AddExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
     }
   }
 
+  const filteredOptions = () => {
+    if (settingData?.paymentMethod === 2) {
+      return bankOption.filter((e) => e.refAccountType === 1) // For Bank
+    }
+
+    if (settingData?.paymentMethod === 3) {
+      return bankOption.filter((e) => e.refAccountType === 2) // For Cash
+    }
+
+    return bankOption // Default: show all
+  }
+
   useEffect(() => {
     getOption()
+    const getSetData = async () => {
+      const settingdatas = await getSettingData()
+      console.log('settingdatas line ------ 172', settingdatas)
+      setSettingData(settingdatas)
+    }
+    getSetData()
   }, [])
   return (
     <div>
@@ -197,6 +219,7 @@ export const AddExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                 onChange={(e) => setDate(e.value)}
                 dateFormat="dd / mm / yy"
                 maxDate={new Date()}
+                // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
                 readOnlyInput
               />
             </div>
@@ -276,12 +299,10 @@ export const AddExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
               <Dropdown
                 filter
                 value={bank}
-                onChange={(e) => {
-                  setBank(e.value)
-                }}
-                options={bankOption}
+                onChange={(e) => setBank(e.value)}
+                options={filteredOptions()}
                 required
-                optionLabel="label"
+                optionLabel="label" // ensure your bankOption objects have a 'label' property
                 placeholder="Select Amount Source"
                 className="w-full"
               />

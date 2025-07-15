@@ -20,7 +20,7 @@ const BankDetails = () => {
   const [username, setUsername] = useState('')
 
   const [loadingStatus, setLoadingStatus] = useState(true)
-
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<number | null>()
   const [userData, setUserData] = useState({
     refBankId: '',
     refBankName: '',
@@ -67,10 +67,12 @@ const BankDetails = () => {
 
   useEffect(() => {
     loadData()
+    GetPaymentSettingsData()
   }, [])
 
   const reLoadPage = () => {
     loadData()
+    GetPaymentSettingsData()
   }
 
   const CustomerId = (rowData: any) => {
@@ -105,6 +107,33 @@ const BankDetails = () => {
         <div>₹ {rowData.refBalance}</div>
       </>
     )
+  }
+
+  const GetPaymentSettingsData = () => {
+    try {
+      axios
+        .get(import.meta.env.VITE_API_URL + '/settings/paymentMethod/getOption', {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
+          }
+        })
+        .then((response: any) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          localStorage.setItem('token', 'Bearer ' + data.token)
+
+          if (data.success) {
+            const seetingData = data.settings.filter((e) => e.refSettingId === 6)
+            setSelectedPaymentOption(seetingData[0].refSettingValue)
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
   }
 
   const [newData, setNewData] = useState(false)
@@ -146,19 +175,20 @@ const BankDetails = () => {
 
   // EXPORT AS CSV
 
-  const exportCSV = (selectionOnly: boolean) => {
-    dt.current?.exportCSV({ selectionOnly })
-  }
+  // const exportCSV = (selectionOnly: boolean) => {
+  //   dt.current?.exportCSV({ selectionOnly })
+  // }
 
   const header = (
-    <div className="flex align-items-center justify-content-end gap-2">
-      <Button
+    <div className="flex align-items-center justify-content-start gap-2">
+      {/* <Button
         type="button"
         icon="pi pi-file"
         rounded
         onClick={() => exportCSV(false)}
         data-pr-tooltip="CSV"
-      />
+      /> */}
+      <b>Payment Flow Details & Balance</b>
     </div>
   )
 
@@ -184,7 +214,7 @@ const BankDetails = () => {
           {/* New User Button - Start */}
 
           <Button
-            label="Add Bank Details"
+            label="Add Payment FLow"
             severity="warning"
             style={{ backgroundColor: '#f8d20f' }}
             onClick={() => {
@@ -216,12 +246,84 @@ const BankDetails = () => {
 
           {/* Datatable - Start */}
 
-          <div>
+          {(selectedPaymentOption === 1 || selectedPaymentOption === 2) && (
+            <>
+              <div>
+                <DataTable
+                  value={userLists}
+                  filters={filters}
+                  paginator
+                  first={first}
+                  size="small"
+                  onPage={(e) => setFirst(e.first)}
+                  rows={5}
+                  rowsPerPageOptions={[5, 10, 25, 50]}
+                  paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                  footer={footer}
+                  header={header}
+                  ref={dt}
+                  showGridlines
+                  scrollable
+                  emptyMessage={<div style={{ textAlign: 'center' }}>No Payment Flow Found</div>}
+                  tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
+                >
+                  <Column
+                    header="S.No"
+                    body={(_rowData, options) => options.rowIndex + 1 + first}
+                    style={{ width: '80px', textAlign: 'center' }}
+                  />
+
+                  <Column body={CustomerId} header="Bank Name"></Column>
+                  <Column field="refBalance" body={BankBalance} header="Bank Balance"></Column>
+                  <Column field="refBankAccountNo" header="Account Number"></Column>
+                  <Column field="refBankAddress" header="Bank Address"></Column>
+                  <Column field="refIFSCsCode" header="IFSC Code"></Column>
+                </DataTable>
+              </div>
+            </>
+          )}
+
+          {selectedPaymentOption === 3 && (
+            <>
+              <div>
+                <DataTable
+                  value={userLists}
+                  filters={filters}
+                  paginator
+                  first={first}
+                  size="small"
+                  onPage={(e) => setFirst(e.first)}
+                  rows={5}
+                  rowsPerPageOptions={[5, 10, 25, 50]}
+                  paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                  footer={footer}
+                  header={header}
+                  ref={dt}
+                  showGridlines
+                  scrollable
+                  emptyMessage={<div style={{ textAlign: 'center' }}>No Payment Flow Found</div>}
+                  tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
+                >
+                  <Column
+                    header="S.No"
+                    body={(_rowData, options) => options.rowIndex + 1 + first}
+                    style={{ width: '80px', textAlign: 'center' }}
+                  />
+
+                  <Column body={CustomerId} header="Bank Name"></Column>
+                  <Column field="refBalance" body={BankBalance} header="Bank Balance"></Column>
+                </DataTable>
+              </div>
+            </>
+          )}
+
+          {/* <div>
             <DataTable
               value={userLists}
               filters={filters}
               paginator
               first={first}
+              size="small"
               onPage={(e) => setFirst(e.first)}
               rows={5}
               rowsPerPageOptions={[5, 10, 25, 50]}
@@ -231,7 +333,7 @@ const BankDetails = () => {
               ref={dt}
               showGridlines
               scrollable
-              emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
+              emptyMessage={<div style={{ textAlign: 'center' }}>No Payment Flow Found</div>}
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
               <Column
@@ -242,11 +344,15 @@ const BankDetails = () => {
 
               <Column body={CustomerId} header="Bank Name"></Column>
               <Column field="refBalance" body={BankBalance} header="Bank Balance"></Column>
-              <Column field="refBankAccountNo" header="Account Number"></Column>
-              <Column field="refBankAddress" header="Bank Address"></Column>
-              <Column field="refIFSCsCode" header="IFSC Code"></Column>
+              {selectedPaymentOption !== 3 && (
+                <>
+                  <Column field="refBankAccountNo" header="Account Number"></Column>
+                  <Column field="refBankAddress" header="Bank Address"></Column>
+                  <Column field="refIFSCsCode" header="IFSC Code"></Column>
+                </>
+              )}
             </DataTable>
-          </div>
+          </div> */}
 
           {/* Datatable - End */}
 
@@ -254,7 +360,7 @@ const BankDetails = () => {
 
           <Sidebar
             visible={newData}
-            style={{ width: '80vw' }}
+            style={{ width: '60vw' }}
             position="right"
             onHide={() => setNewData(false)}
           >
@@ -267,7 +373,7 @@ const BankDetails = () => {
 
           <Sidebar
             visible={updateData}
-            style={{ width: '80vw' }}
+            style={{ width: '50vw' }}
             position="right"
             onHide={() => setUpdateData(false)}
           >

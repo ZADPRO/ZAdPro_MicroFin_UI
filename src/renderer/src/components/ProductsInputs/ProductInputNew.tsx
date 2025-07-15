@@ -1,19 +1,41 @@
-import axios from 'axios'
 import { Button } from 'primereact/button'
-import { Dropdown } from 'primereact/dropdown'
-import { FloatLabel } from 'primereact/floatlabel'
+import { Divider } from 'primereact/divider'
+import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
 import { InputText } from 'primereact/inputtext'
-import { useState } from 'react'
-import decrypt from '../Helper/Helper'
-import { Slide, toast } from 'react-toastify'
 import { InputTextarea } from 'primereact/inputtextarea'
+import { useEffect, useState } from 'react'
+import decrypt from '../Helper/Helper'
+import axios from 'axios'
+import { Slide, toast } from 'react-toastify'
 
-const ProductInputNew = ({ closeSidebarNew }) => {
-  const status = [
-    { name: 'Active', code: 'active' },
-    { name: 'Inactive', code: 'inactive' }
-  ]
+// import React from 'react'
 
+export interface productData {
+  productName?: string
+  interest?: string
+  repaymentType?: number
+  loanDueType?: number
+  duration?: string
+  InterestCalType?: number
+  status?: string
+  description?: string
+  productId?: number
+}
+
+interface LoanType {
+  name: string
+  value: number
+}
+interface ProductInputNewProps {
+  closeSidebarNew: () => void // required function
+  updateProductData?: productData // optional
+}
+
+const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNewProps) => {
+  const [productData, setProductData] = useState<productData | null>()
+  const [rePaymentTypeOptions, setRePaymentTypeOptions] = useState<LoanType[] | null>([])
+  const [update, setUpdate] = useState<boolean>(false)
+  const [enableUpdate, setEnableUpdate] = useState<boolean>(false)
   const durationType = [
     { name: 'Monthly', code: 1 },
     { name: 'Weekly', code: 2 },
@@ -21,241 +43,299 @@ const ProductInputNew = ({ closeSidebarNew }) => {
   ]
 
   const interestCalculationType = [
-    { name: 'DayWise Monthly Calculation', code: 1 },
-    { name: 'Monthly Calculation', code: 2 }
+    { name: 'DayWise Calculation', code: 1 },
+    { name: 'Overall Calculation', code: 2 }
   ]
 
-  const [submitLoading, setSubmitLoading] = useState(false)
-  const [selectedDurationType, setSelectedDurationType] = useState({ name: 'Monthly', code: 1 })
-  const [selectedInterestCal, setSelectedInterestCal] = useState<number>(1)
+  const status = [
+    { name: 'Active', code: 'active' },
+    { name: 'Inactive', code: 'inactive' }
+  ]
 
-  const [inputs, setInputs]: any = useState({
-    refProductName: '',
-    refProductInterest: '',
-    refProductDuration: '',
-    refProductStatus: 'active',
-    refProductDescription: ''
-  })
+  const valueChange = (e) => {
+    console.log('e', e)
+    const { name, value } = e
+    console.log('value', value)
+    console.log('name', name)
 
-  const handleInput = (e: any) => {
-    const { name, value } = e.target
-
-    setInputs((prevState) => ({
-      ...prevState,
+    setProductData((prev) => ({
+      ...(prev ?? {}),
       [name]: value
     }))
   }
 
-  const handleNewUser = async () => {
-    setSubmitLoading(true)
+  const goBack = () => {
+    setUpdate(false)
+    setEnableUpdate(false)
+    closeSidebarNew()
+  }
 
+  const getOptions = () => {
     try {
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + '/adminRoutes/addProduct',
-        {
-          refProductName: inputs.refProductName,
-          refProductInterest: inputs.refProductInterest,
-          refProductDuration: inputs.refProductDuration,
-          refProductStatus: inputs.refProductStatus,
-          refProductDescription: inputs.refProductDescription,
-          refProductDurationType: selectedDurationType.code,
-          refProductMonthlyCal: selectedInterestCal
-        },
-        {
+      axios
+        .get(import.meta.env.VITE_API_URL + '/product/productOptions', {
           headers: {
             Authorization: localStorage.getItem('token'),
             'Content-Type': 'application/json'
           }
-        }
-      )
-
-      const data = decrypt(response.data[1], response.data[0], import.meta.env.VITE_ENCRYPTION_KEY)
-      console.log(data)
-      localStorage.setItem('token', 'Bearer ' + data.token)
-
-      if (data.success) {
-        toast.success('Successfully Added', {
-          position: 'top-right',
-          autoClose: 2999,
-          hideProgressBar: false,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: 'light',
-          transition: Slide
         })
-        setSubmitLoading(false)
-        closeSidebarNew()
-      }
-    } catch (e: any) {
-      console.log(e)
+        .then((response) => {
+          console.log('response', response)
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          localStorage.setItem('token', 'Bearer ' + data.token)
+          console.log('data line ------ 350 ', data)
+          if (data.success) {
+            const rePaymentOption = data.rePaymentType.map((data) => {
+              return {
+                name: data.refRepaymentTypeName,
+                value: data.refRepaymentTypeId
+              }
+            })
+            setRePaymentTypeOptions(rePaymentOption)
+            setProductData({ ...productData, status: 'active' })
+            if (updateProductData) {
+              setUpdate(true)
+              setEnableUpdate(true)
+              setProductData(updateProductData)
+            }
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
     }
   }
 
-  return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          borderBottom: '1.5px solid grey',
-          paddingBottom: '10px'
-        }}
-      >
-        <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#000' }}>Add New Product</div>
-      </div>
+  const handelSubmit = () => {
+    const route = update
+      ? import.meta.env.VITE_API_URL + '/product/upDateProduct'
+      : import.meta.env.VITE_API_URL + '/product/addNewProduct'
+    try {
+      axios
+        .post(
+          route,
+          {
+            productData
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response) => {
+          console.log('response', response)
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          localStorage.setItem('token', 'Bearer ' + data.token)
+          console.log('data line ------ 350 ', data)
+          if (data.success) {
+            const message = update
+              ? 'Loan Product is Update Successfully'
+              : 'New Product Added Successfully'
+            toast.success(message, {
+              position: 'top-right',
+              autoClose: 2999,
+              hideProgressBar: false,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: 'light',
+              transition: Slide
+            })
+            goBack()
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+      const message = update ? 'Error in updating the product data' : 'Error In Adding New Product'
+      toast.error(message, {
+        position: 'top-right',
+        autoClose: 2999,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+        transition: Slide
+      })
+    }
+  }
 
+  useEffect(() => {
+    getOptions()
+  }, [])
+  return (
+    <div>
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          handleNewUser()
+          handelSubmit()
         }}
       >
-        <div style={{ margin: '5px 0px', height: '78vh', overflow: 'auto', padding: '10px' }}>
-          <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-            <FloatLabel style={{ width: '100%' }}>
+        <div className="flex flex-col gap-2">
+          <div className="flex w-full gap-x-5 align-items-end">
+            <div className=" flex-1 flex flex-column gap-2">
+              <label htmlFor="username">Enter Product Name</label>
               <InputText
-                id="refProductName"
-                name="refProductName"
-                value={inputs.refProductName}
-                onChange={(e: any) => {
-                  handleInput(e)
-                }}
+                disabled={enableUpdate}
+                value={productData?.productName}
+                name="productName"
                 required
-              />
-              <label htmlFor="refProductName">Enter Product Name</label>
-            </FloatLabel>
-            <FloatLabel style={{ width: '100%' }}>
-              <InputText
-                id="refProductDuration"
-                name="refProductDuration"
-                value={inputs.refProductDuration}
-                type="number"
-                onChange={(e: any) => {
-                  handleInput(e)
-                }}
-                required
-              />
-              <label htmlFor="refProductDuration">Enter Product Duration</label>
-            </FloatLabel>
-          </div>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => valueChange(e.target)}
+              />{' '}
+            </div>
+            <Divider layout="vertical" className="m-0" />
 
-          <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-            <FloatLabel style={{ width: '100%' }}>
+            <div className="flex-1 flex flex-col gap-2">
+              <label> Select Repayment Type</label>
               <Dropdown
-                inputId="durationType"
-                value={selectedDurationType}
-                onChange={(e) => {
-                  setSelectedDurationType(e.value)
-                  if (e.value.code === 1) {
-                    setSelectedInterestCal(1)
-                  } else {
-                    setSelectedInterestCal(0)
-                  }
-                }}
-                options={durationType}
-                optionLabel="name"
-                placeholder="Select Duration"
+                value={productData?.repaymentType}
+                required
+                disabled={enableUpdate}
+                name="repaymentType"
                 className="w-full"
-                required
-              />
-              <label htmlFor="durationType">Select Duration Type</label>
-            </FloatLabel>
-            <FloatLabel style={{ width: '100%' }}>
-              <InputText
-                id="refProductInterest"
-                name="refProductInterest"
-                value={inputs.refProductInterest}
-                onChange={(e: any) => {
-                  handleInput(e)
+                onChange={(e: DropdownChangeEvent) => {
+                  valueChange(e.target)
                 }}
-                required
+                options={rePaymentTypeOptions ?? []}
+                optionLabel="name"
               />
-              <label htmlFor="refProductInterest">Enter Interest (%)</label>
-            </FloatLabel>
+            </div>
           </div>
-
-          <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-            <FloatLabel style={{ width: '100%' }}>
-              <InputTextarea
-                value={inputs.refProductDescription}
-                name="refProductDescription"
-                onChange={(e: any) => {
-                  handleInput(e)
-                }}
-                required
-              />
-
-              <label htmlFor="refProductDescription">Enter Description</label>
-            </FloatLabel>
-          </div>
-
-          <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-            {selectedDurationType.code === 1 && (
-              <FloatLabel style={{ width: '50%' }}>
+          <div className="flex w-full gap-x-5 align-items-end">
+            <div className="flex-1 flex gap-3">
+              <div className="flex-1 flex flex-col gap-2">
+                <label> Select Loan Due Type</label>
                 <Dropdown
-                  value={selectedInterestCal}
+                  className="w-full md:h-[2.5rem] text-sm align-items-center"
+                  inputId="durationType"
+                  value={productData?.loanDueType}
+                  required
+                  disabled={enableUpdate}
+                  name="loanDueType"
+                  onChange={(e: DropdownChangeEvent) => {
+                    valueChange(e.target)
+                  }}
+                  options={durationType}
+                  optionLabel="name"
+                  optionValue="code"
+                />
+              </div>
+            </div>
+            <Divider layout="vertical" className="m-0" />
+            <div className="flex-1 flex gap-x-3 align-items-end">
+              <div className=" flex-1 flex flex-column gap-2">
+                <label htmlFor="username">Interest %</label>
+                <InputText
+                  required
+                  type="number"
+                  disabled={enableUpdate}
+                  value={productData?.interest}
+                  name="interest"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => valueChange(e.target)}
+                />
+              </div>
+              <div className="flex-1  flex flex-column gap-2">
+                <label htmlFor="username">
+                  {productData?.repaymentType === 3 ? 'Minimum Duration' : 'Loan Duration'}
+                </label>
+                <InputText
+                  value={productData?.duration}
+                  name="duration"
+                  type="number"
+                  required
+                  disabled={enableUpdate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => valueChange(e.target)}
+                />{' '}
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full gap-x-5 align-items-center">
+            <div className="flex-1 flex gap-x-3">
+              <div className="flex-2 flex flex-col">
+                <label>Select Interest Calculation Type</label>
+                <Dropdown
+                  value={productData?.InterestCalType}
                   options={interestCalculationType}
                   optionLabel="name"
                   optionValue="code"
-                  onChange={(e: any) => {
-                    console.log('e', e)
-                    setSelectedInterestCal(e.value)
+                  disabled={enableUpdate}
+                  name="InterestCalType"
+                  onChange={(e: DropdownChangeEvent) => {
+                    valueChange(e.target)
                   }}
-                  className="w-full"
                   required
                 />
-                <label htmlFor="refProductStatus">Monthly Interest Calculation Type</label>
-              </FloatLabel>
-            )}
+              </div>
+              <div className="flex-1 flex flex-col">
+                <label>Status</label>
+                <Dropdown
+                  name="status"
+                  value={productData?.status}
+                  options={status}
+                  optionLabel="name"
+                  disabled={enableUpdate}
+                  optionValue="code"
+                  onChange={(e: DropdownChangeEvent) => {
+                    valueChange(e.target)
+                  }}
+                  required
+                />
+              </div>
+            </div>
+            <Divider layout="vertical" className="m-0" />
+            <div className="flex-1">
+              <label htmlFor="description">Description</label>
 
-            <FloatLabel style={{ width: '50%' }}>
-              <Dropdown
-                name="refProductStatus"
-                value={inputs.refProductStatus}
-                options={status}
-                optionLabel="name"
-                optionValue="code"
-                onChange={(e: any) => {
-                  handleInput(e)
-                }}
-                className="w-full"
+              <InputTextarea
+                id="description"
+                value={productData?.description}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => valueChange(e.target)}
+                name="description"
                 required
+                disabled={enableUpdate}
+                rows={5}
+                cols={30}
               />
-              <label htmlFor="refProductStatus">Active Status</label>
-            </FloatLabel>
+            </div>
           </div>
-
-          {submitLoading ? (
-            <div
-              style={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                marginTop: '35px'
-              }}
-            >
-              <i
-                className="pi pi-spin pi-spinner"
-                style={{ fontSize: '2rem', color: '#0478df' }}
-              ></i>
-            </div>
-          ) : (
-            <div
-              style={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                marginTop: '35px'
-              }}
-            >
-              <Button style={{ width: '20%' }} type="submit" label="Submit" />
-            </div>
+          {update && enableUpdate && (
+            <>
+              <div className="w-full flex justify-around my-2">
+                <Button
+                  className="w-[50%] flex justify-center align-items-center"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setEnableUpdate(false)
+                  }}
+                >
+                  Edit Product Details
+                </Button>
+              </div>
+            </>
+          )}
+          {!enableUpdate && (
+            <>
+              <div className="w-full flex justify-around my-2">
+                <Button className="w-[50%] flex justify-center align-items-center" type="submit">
+                  {update ? 'Update Product' : 'Create Product'}
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </form>
-    </>
+    </div>
   )
 }
 
