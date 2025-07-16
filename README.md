@@ -1,4 +1,4 @@
-# testing-app
+# ZA-Micro-Fi
 
 An Electron application with React and TypeScript
 

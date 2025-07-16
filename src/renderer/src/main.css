@@ -4,6 +4,18 @@ label td p label {
   color: black !important;
 }
 
+/* Tailwind or custom CSS */
+.no-header thead {
+  display: none;
+  
+}
+
+.no-header
+{
+  border: 1px solid rgb(204, 204, 204);
+
+}
+
 
 
 body {

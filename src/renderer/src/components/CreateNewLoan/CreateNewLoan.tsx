@@ -9,16 +9,15 @@ import { Slide, toast, ToastContainer } from 'react-toastify'
 
 import { InputNumber } from 'primereact/inputnumber'
 import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
-import {
-
-  calInitialInterest,
-  calInterestPayFirst,
-  interestCal
-} from '@renderer/helper/loanFile'
+import { calInitialInterest, calInterestPayFirst, interestCal } from '@renderer/helper/loanFile'
 // import { getRemainingDaysInCurrentMonth } from '../../helper/loanFile'
 import { getDateAfterMonths } from '@renderer/helper/date'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { getSettingData } from '@renderer/helper/SettingsData'
+import { Button } from 'primereact/button'
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+// import { AnyCnameRecord } from 'node:dns'
 
 interface CreateNewLoanProps {
   id?: number
@@ -64,6 +63,23 @@ interface UserDetails {
   value: number
 }
 
+// interface SummaryData {
+//   newLoanAmount: number
+//   oldLoanAmount: number
+//   FinalLoanAmount: string // toFixed returns a string
+//   productName: string | undefined
+//   Interest: string // formatted as string with '%'
+//   Duration: string
+//   rePaymentType: string | undefined
+//   rePaymentDate: string | undefined // ISO date string (e.g., '2025-07-15')
+//   interestCalType: number
+//   InitialInterest: string
+//   interestPaidFirstCount: number
+//   interestPaidFirst: string
+//   documentFee: number
+//   finalAmountToUser: string
+// }
+
 const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => {
   const handleBack = () => {
     goToHistoryTab()
@@ -104,7 +120,11 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [viewDate, setViewDate] = useState<Date | null>()
   const [step, setStep] = useState(0)
   const [loanCalculationData, setLoanCalculationData] = useState<interestCal>()
-
+  const [loanSummary, setLoanSummary] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [summaryData, setSummaryData] = useState<
+    { label: string; value: string | number | undefined }[]
+  >([])
   function getNextWeekRange(startDay: string, endDay: string) {
     const daysOfWeek: Record<string, number> = {
       Sunday: 0,
@@ -132,7 +152,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
 
   const getDateRange = async (durationType: number) => {
     const today = new Date(date ?? new Date())
-    switch (durationType) { 
+
+    switch (durationType) {
       case 1:
         setMinDate(new Date(today.getFullYear(), today.getMonth() + 1, 1))
         setMaxDate(new Date(today.getFullYear(), today.getMonth() + 2, 0))
@@ -362,6 +383,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         console.log('data line ----------- 269', data)
         localStorage.setItem('token', 'Bearer ' + data.token)
         if (data.success) {
+          setLoading(false)
           toast.success('Loan Created Successfully', {
             position: 'top-right',
             autoClose: 1900,
@@ -378,6 +400,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             handleBack()
           }, 1000)
         } else {
+          setLoading(false)
           toast.error(data.message, {
             position: 'top-right',
             autoClose: 2999,
@@ -457,488 +480,556 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     getUserList()
   }, [])
 
+  function formatLabel(key: string) {
+    return key
+      .replace(/([A-Z])/g, ' $1') // insert space before capital letters
+      .replace(/^./, (str) => str.toUpperCase()) // capitalize first letter
+  }
+  const formatINRCurrency = (amount: number | undefined | null) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2
+    }).format(amount ?? 0)
+  }
+
+  const summary = () => {
+    console.log('productId line ------ 465', productId)
+    console.log('productId?.refProductId', productId?.refProductId)
+    setLoanSummary(true)
+    if (loanCalculationData) {
+      console.log(' -> Line Number ----------------------------------- 468')
+      loanCalculation(loanCalculationData)
+      const summaryDatas = {
+        newLoanAmount: formatINRCurrency(newLoanAmt),
+        oldLoanAmount: formatINRCurrency(oldBalanceAmt),
+        FinalLoanAmount: formatINRCurrency(FinalLoanAmt),
+        productName: productId?.refProductName.split('|')[0],
+        Interest: `${productId?.refProductInterest} %`,
+        Duration: `${productId?.refProductDuration} ${productId?.refLoanDueType === 1 ? 'Months' : productId?.refLoanDueType === 2 ? 'Weeks' : 'Days'}`,
+        rePaymentType: productId?.refRepaymentTypeName,
+        rePaymentDate: rePaymentDate?.toLocaleDateString('en-CA'),
+
+        interestCalType:
+          productId?.refInterestCalType === 1 ? 'Day Wise Calculation' : 'Overall Calculation',
+        InitialInterest: formatINRCurrency(initialInterestAmt),
+        interestPaidFirstCount: monthCount,
+        interestPaidFirst: formatINRCurrency(interestFirstAmt),
+        documentFee: formatINRCurrency(docFee),
+        security: security,
+        finalAmountToUser: formatINRCurrency(
+          (newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0) - (docFee ?? 0)
+        )
+      }
+      const summaryDataRowWise = Object.entries(summaryDatas).map(([key, value]) => ({
+        label: formatLabel(key),
+        value: value ?? '-' // show dash if undefined/null
+      }))
+      setSummaryData(summaryDataRowWise)
+
+      console.log('summaryDatas line ------- 490', summaryDatas)
+    } else {
+      toast.error('Please select all the fields', {
+        position: 'top-right',
+        autoClose: 2999,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+        transition: Slide
+      })
+    }
+  }
+
   return (
     <div>
       <ToastContainer />
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          handelSubmit()
-        }}
-      >
-        <div className="w-[100%] flex flex-col justify-content-between">
-          <div className="w-full flex gap-x-5 justify-center">
-            <div className="w-[73%]">
-              <label className="font-bold block mb-2">Select Customer</label>
-              <Dropdown
-                value={customerId}
-                className="w-full"
-                filter
-                onChange={(e: DropdownChangeEvent) => {
-                  console.log('e line ----------- 405', e)
-                  setCustomerId(e.target.value)
-                  setStep(0.5)
-                  setSelectedLoanType(null)
-                  setSelectedLoan(null)
-                  setShowLoanInfo(false)
-                  setShowForm(false)
-                }}
-                required
-                options={customerList}
-                optionLabel="label"
-                placeholder="Select Customer To Provide Loan"
-              />
-            </div>
-            <div className="w-[20%]">
-              <label className="font-bold block mb-2">Select Calendar</label>
-              <Calendar
-                placeholder="DD/MM/YYYY"
-                value={date}
-                onChange={(e) => {
-                  setDate(e.value ?? new Date())
-                  setSelectedLoanType(null)
-                }}
-                dateFormat="dd/mm/yy"
-                // minDate={firstDayOfMonth}
-                maxDate={today}
-              />
-            </div>
-          </div>
-          <div className="w-full flex justify-content-around my-1">
-            <div className="w-[45%]">
-              <label className="font-bold block mb-2">Select Loan Type</label>
-              <Dropdown
-                value={selectedLoanType}
-                className="w-full"
-                disabled={step < 0.5}
-                onChange={(e: DropdownChangeEvent) => {
-                  setSelectedLoanType(e.value)
-                  getUserLoanData()
-                  getAllLoanData()
-                  setProductId(null)
-                  setSelectedLoan(null)
-                  show(e.value, null)
-                  setStep(0.6)
-                  setSelectedRepaymentType(null)
-                }}
-                required
-                options={loanTypeOptions ?? []}
-                optionLabel="name"
-                placeholder="Select Loan Type"
-              />
-            </div>
-            <div className="w-[45%]">
-              <label className="font-bold block mb-2">Select Old Loan</label>
-              <Dropdown
-                value={selectedLoan}
-                disabled={selectedLoanType === 1 || selectedLoanType === 0}
-                className="w-full"
-                onChange={(e: DropdownChangeEvent) => {
-                  setSelectedLoan(e.value)
-                  getLoanEntireDetails(e.value)
-                  show(selectedLoanType || 0, e.value)
-                }}
-                filter
-                options={userLoan}
-                optionLabel="name"
-                placeholder="Select Old Loan"
-              />
-            </div>
-          </div>
-
-          {showLoanInfo && (
-            <div className="flex justify-center">
-              <div className="mt-3 w-[95%]">
-                <Accordion activeIndex={0}>
-                  <AccordionTab header="Loan Details">
-                    <div className="flex">
-                      <div className="flex-1">
-                        <p>
-                          Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Loan Duration :{' '}
-                          <b>
-                            {' '}
-                            {loadDetailsResponse?.loanDuration}{' '}
-                            {loadDetailsResponse?.durationType === 1
-                              ? 'Months'
-                              : loadDetailsResponse?.durationType === 2
-                                ? 'Weeks'
-                                : 'Days'}
-                          </b>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex mt-3">
-                      <div className="flex-1">
-                        <p>
-                          Initial Interest - Amt : <b>₹ {loadDetailsResponse?.initialInterest}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Interest Paid (First) :{' '}
-                          <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
-                        </p>
-                      </div>
-
-                      <div className="flex-1">
-                        <p>
-                          Interest Paid (First) :{' '}
-                          <b>
-                            {' '}
-                            {loadDetailsResponse?.interestFirstMonth}{' '}
-                            {loadDetailsResponse?.durationType === 1
-                              ? 'Months'
-                              : loadDetailsResponse?.durationType === 2
-                                ? 'Weeks'
-                                : 'Days'}
-                          </b>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex mt-3">
-                      <div className="flex-1">
-                        <p>
-                          Total Principal Amt : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Total Interest Amt : <b>₹ {loadDetailsResponse?.totalInterest}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1"></div>
-                    </div>
-                    <Divider layout="horizontal" className="flex">
-                      <b>Calculation</b>
-                    </Divider>
-                    <div className="flex">
-                      <div className="flex-1">
-                        <p>
-                          Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Total Interest Paid : <b>₹ {loadDetailsResponse?.totalInterestPaid}</b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Initial Interest Paid :{' '}
-                          <b>₹ {loadDetailsResponse?.totalInitialInterest}</b>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex mt-3">
-                      <div className="flex-1">
-                        <p>
-                          Loan Duration :{' '}
-                          <b>
-                            {' '}
-                            {loadDetailsResponse?.loanDuration}{' '}
-                            {loadDetailsResponse?.durationType === 1
-                              ? 'Months'
-                              : loadDetailsResponse?.durationType === 2
-                                ? 'Weeks'
-                                : 'Days'}
-                          </b>
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p>
-                          Balance Amt : <b>₹ {loadDetailsResponse?.finalBalanceAmt}</b>
-                        </p>
-                      </div>
-                    </div>
-                  </AccordionTab>
-                </Accordion>
-              </div>
-            </div>
-          )}
-
-          {showForm && (
-            <div>
-              <Divider layout="horizontal" className="flex" />
-              <div className="w-full flex justify-content-around my-1">
-                <div className="w-[95%]">
-                  <label className="font-bold block mb-2">Select Product</label>
+      {!loanSummary && (
+        <>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              // handelSubmit()
+              summary()
+            }}
+          >
+            <div className="w-[100%] flex flex-col justify-content-between">
+              <div className="w-full flex gap-x-5 justify-center">
+                <div className="w-[73%]">
+                  <label className="font-bold block mb-2">Select Customer</label>
                   <Dropdown
-                    filter
-                    value={productId}
-                    required
+                    value={customerId}
                     className="w-full"
-                    onChange={async (e: DropdownChangeEvent) => {
-                      console.log('e', e)
-                      setProductId(e.value)
-                      console.log('e.value', e.value)
-                      setStep(2)
-                      const selected = loanProduct.find(
-                        (data) => data.refProductId === e.value.refProductId
-                      )
-                      console.log('loanProduct', loanProduct)
-                      console.log('selected', selected)
-                      setSelectedRepaymentType(selected ? selected.refRePaymentType : null)
-                      getDateRange(e.value.refLoanDueType)
-                      setNewLoanAmt(null)
-                      const data: interestCal = {
-                        ...loanCalculationData,
-                        interest: Number(e.value.refProductInterest),
-                        interestCalType: Number(e.value.refInterestCalType),
-                        duration: Number(e.value.refProductDuration),
-                        loanDueType: Number(e.value.refLoanDueType),
-                        rePaymentType: Number(e.value.refRePaymentType),
-                        todayDate: date ?? undefined
-                      }
-                      setLoanCalculationData(data)
-                      await loanCalculation(data)
+                    filter
+                    onChange={(e: DropdownChangeEvent) => {
+                      console.log('e line ----------- 405', e)
+                      setCustomerId(e.target.value)
+                      setStep(0.5)
+                      setSelectedLoanType(null)
+                      setSelectedLoan(null)
+                      setShowLoanInfo(false)
+                      setShowForm(false)
                     }}
-                    options={loanProduct}
-                    optionLabel="refProductName"
-                    placeholder="Select Product"
+                    required
+                    options={customerList}
+                    optionLabel="label"
+                    placeholder="Select Customer To Provide Loan"
+                  />
+                </div>
+                <div className="w-[20%]">
+                  <label className="font-bold block mb-2">Select Calendar</label>
+                  <Calendar
+                    placeholder="DD/MM/YYYY"
+                    value={date}
+                    onChange={(e) => {
+                      setDate(e.value ?? new Date())
+                      setSelectedLoanType(null)
+                    }}
+                    dateFormat="dd/mm/yy"
+                    // minDate={firstDayOfMonth}
+                    maxDate={today}
                   />
                 </div>
               </div>
-              <div className="w-full  flex justify-content-around my-1">
-                <div className="w-[45%]  flex flex-row justify-content-between gap-x-2">
-                  <div className="w-full">
-                    <label className="font-bold block mb-2">Enter Loan Amount</label>
-                    <InputNumber
-                      className="w-full"
-                      placeholder="Enter Loan Amount"
-                      inputId="currency-india"
-                      required
-                      disabled={step < 2}
-                      value={newLoanAmt}
-                      onChange={async (e: any) => {
-                        setNewLoanAmt(e.value)
-                        setStep(3)
-                        setBankId(null)
-                        const value = parseFloat(e.value) || 0
-                        const balance = oldBalanceAmt ?? 0
-                        setFinalLoanAmt(value + Number(balance))
-                        const data: interestCal = {
-                          ...loanCalculationData,
-                          loanAmount: value + Number(balance)
-                        }
-                        setLoanCalculationData(data)
-                        await loanCalculation(data)
-                      }}
-                      mode="currency"
-                      currency="INR"
-                      currencyDisplay="symbol"
-                      locale="en-IN"
-                    />
+              <div className="w-full flex justify-content-around my-1">
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Select Loan Type</label>
+                  <Dropdown
+                    value={selectedLoanType}
+                    className="w-full"
+                    disabled={step < 0.5}
+                    onChange={(e: DropdownChangeEvent) => {
+                      setSelectedLoanType(e.value)
+                      getUserLoanData()
+                      getAllLoanData()
+                      setProductId(null)
+                      setSelectedLoan(null)
+                      show(e.value, null)
+                      setStep(0.6)
+                      setSelectedRepaymentType(null)
+                    }}
+                    required
+                    options={loanTypeOptions ?? []}
+                    optionLabel="name"
+                    placeholder="Select Loan Type"
+                  />
+                </div>
+                <div className="w-[45%]">
+                  <label className="font-bold block mb-2">Select Old Loan</label>
+                  <Dropdown
+                    value={selectedLoan}
+                    disabled={selectedLoanType === 1 || selectedLoanType === 0}
+                    className="w-full"
+                    onChange={(e: DropdownChangeEvent) => {
+                      setSelectedLoan(e.value)
+                      getLoanEntireDetails(e.value)
+                      show(selectedLoanType || 0, e.value)
+                    }}
+                    filter
+                    options={userLoan}
+                    optionLabel="name"
+                    placeholder="Select Old Loan"
+                  />
+                </div>
+              </div>
+
+              {showLoanInfo && (
+                <div className="flex justify-center">
+                  <div className="mt-3 w-[95%]">
+                    <Accordion activeIndex={0}>
+                      <AccordionTab header="Loan Details">
+                        <div className="flex">
+                          <div className="flex-1">
+                            <p>
+                              Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Loan Duration :{' '}
+                              <b>
+                                {' '}
+                                {loadDetailsResponse?.loanDuration}{' '}
+                                {loadDetailsResponse?.durationType === 1
+                                  ? 'Months'
+                                  : loadDetailsResponse?.durationType === 2
+                                    ? 'Weeks'
+                                    : 'Days'}
+                              </b>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex mt-3">
+                          <div className="flex-1">
+                            <p>
+                              Initial Interest - Amt :{' '}
+                              <b>₹ {loadDetailsResponse?.initialInterest}</b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Interest Paid (First) :{' '}
+                              <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
+                            </p>
+                          </div>
+
+                          <div className="flex-1">
+                            <p>
+                              Interest Paid (First) :{' '}
+                              <b>
+                                {' '}
+                                {loadDetailsResponse?.interestFirstMonth}{' '}
+                                {loadDetailsResponse?.durationType === 1
+                                  ? 'Months'
+                                  : loadDetailsResponse?.durationType === 2
+                                    ? 'Weeks'
+                                    : 'Days'}
+                              </b>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex mt-3">
+                          <div className="flex-1">
+                            <p>
+                              Total Principal Amt : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Total Interest Amt : <b>₹ {loadDetailsResponse?.totalInterest}</b>
+                            </p>
+                          </div>
+                          <div className="flex-1"></div>
+                        </div>
+                        <Divider layout="horizontal" className="flex">
+                          <b>Calculation</b>
+                        </Divider>
+                        <div className="flex">
+                          <div className="flex-1">
+                            <p>
+                              Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Total Interest Paid :{' '}
+                              <b>₹ {loadDetailsResponse?.totalInterestPaid}</b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Initial Interest Paid :{' '}
+                              <b>₹ {loadDetailsResponse?.totalInitialInterest}</b>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex mt-3">
+                          <div className="flex-1">
+                            <p>
+                              Loan Duration :{' '}
+                              <b>
+                                {' '}
+                                {loadDetailsResponse?.loanDuration}{' '}
+                                {loadDetailsResponse?.durationType === 1
+                                  ? 'Months'
+                                  : loadDetailsResponse?.durationType === 2
+                                    ? 'Weeks'
+                                    : 'Days'}
+                              </b>
+                            </p>
+                          </div>
+                          <div className="flex-1">
+                            <p>
+                              Balance Amt : <b>₹ {loadDetailsResponse?.finalBalanceAmt}</b>
+                            </p>
+                          </div>
+                        </div>
+                      </AccordionTab>
+                    </Accordion>
                   </div>
-                  {(selectedLoanType === 2 || selectedLoanType === 3) && (
-                    <div className="w-full">
-                      <label className="font-bold block mb-2">Balance Amount</label>
+                </div>
+              )}
+
+              {showForm && (
+                <div>
+                  <Divider layout="horizontal" className="flex" />
+                  <div className="w-full flex justify-content-around my-1">
+                    <div className="w-[95%]">
+                      <label className="font-bold block mb-2">Select Product</label>
+                      <Dropdown
+                        filter
+                        value={productId}
+                        required
+                        className="w-full"
+                        onChange={async (e: DropdownChangeEvent) => {
+                          // console.log('e', e)
+                          setProductId(e.value)
+                          // console.log('e.value', e.value)
+                          // setStep(2)
+                          const selected = loanProduct.find(
+                            (data) => data.refProductId === e.value.refProductId
+                          )
+                          // console.log('loanProduct', loanProduct)
+                          // console.log('selected', selected)
+                          setSelectedRepaymentType(selected ? selected.refRePaymentType : null)
+                          getDateRange(e.value.refLoanDueType)
+                          // setNewLoanAmt(null)
+                          const data: interestCal = {
+                            ...loanCalculationData,
+                            interest: Number(e.value.refProductInterest),
+                            interestCalType: Number(e.value.refInterestCalType),
+                            duration: Number(e.value.refProductDuration),
+                            loanDueType: Number(e.value.refLoanDueType),
+                            rePaymentType: Number(e.value.refRePaymentType),
+                            todayDate: date ?? undefined
+                          }
+                          setLoanCalculationData(data)
+                          // await loanCalculation(data)
+                        }}
+                        options={loanProduct}
+                        optionLabel="refProductName"
+                        placeholder="Select Product"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full  flex justify-content-around my-1">
+                    <div className="w-[45%]  flex flex-row justify-content-between gap-x-2">
+                      <div className="w-full">
+                        <label className="font-bold block mb-2">Enter Loan Amount</label>
+                        <InputNumber
+                          className="w-full"
+                          placeholder="Enter Loan Amount"
+                          inputId="currency-india"
+                          required
+                          // disabled={step < 2}
+                          value={newLoanAmt}
+                          onChange={async (e: any) => {
+                            setNewLoanAmt(e.value)
+                            // setStep(3)
+                            // setBankId(null)
+                            const value = parseFloat(e.value) || 0
+                            const balance = oldBalanceAmt ?? 0
+                            setFinalLoanAmt(value + Number(balance))
+                            const data: interestCal = {
+                              ...loanCalculationData,
+                              loanAmount: value + Number(balance)
+                            }
+                            setLoanCalculationData(data)
+                            // await loanCalculation(data)
+                          }}
+                          mode="currency"
+                          currency="INR"
+                          currencyDisplay="symbol"
+                          locale="en-IN"
+                        />
+                      </div>
+                      {(selectedLoanType === 2 || selectedLoanType === 3) && (
+                        <div className="w-full">
+                          <label className="font-bold block mb-2">Balance Amount</label>
+                          <InputNumber
+                            className="w-full"
+                            disabled
+                            placeholder="Old Loan Amount"
+                            inputId="currency-india"
+                            value={oldBalanceAmt}
+                            required
+                            mode="currency"
+                            currency="INR"
+                            currencyDisplay="symbol"
+                            locale="en-IN"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-[45%]">
+                      <label className="font-bold block mb-2">Select Amount Source</label>
+                      <Dropdown
+                        value={bankId}
+                        filter
+                        // disabled={step < 3}
+                        className="w-full"
+                        required
+                        onChange={(e: DropdownChangeEvent) => {
+                          setBankId(e.value)
+                          // setStep(4)
+                          // setRePaymentDate(null)
+                        }}
+                        options={bankList}
+                        optionLabel="refBankName"
+                        placeholder="Select Amount From"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-content-around my-1">
+                    <div className="w-[45%]  ml-2">
+                      <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
+                      <Calendar
+                        placeholder="Repayment Schedule Date"
+                        // disabled={step < 4}
+                        dateFormat="dd/mm/yy"
+                        className="w-full"
+                        required
+                        value={rePaymentDate ?? undefined}
+                        onChange={async (e: any) => {
+                          // console.log('e', e)
+                          setRePaymentDate(e.value)
+                          // setStep(5)
+                          // setInterestFirst(null)
+                          const data: interestCal = {
+                            ...loanCalculationData,
+                            rePaymentDate: e.value
+                          }
+                          setLoanCalculationData(data)
+                          // await loanCalculation(data)
+                        }}
+                        minDate={minDate ?? undefined}
+                        maxDate={maxDate ?? undefined}
+                        viewDate={viewDate}
+                      />
+                    </div>
+                    <div className="w-[45%] flex align-items-center pl-4">
+                      <div className="w-[40%]">
+                        <label className="font-bold block mb-2">Interest First</label>
+                        <div className="flex flex-row gap-x-5 w-[100%]">
+                          <div className="flex align-items-center">
+                            <RadioButton
+                              inputId="ingredient1"
+                              name="pizza"
+                              value="true"
+                              required
+                              // disabled={step < 5}
+                              onChange={async (_e: RadioButtonChangeEvent) => {
+                                setInterestFirst(true)
+                                // setDocFee(null)
+                                setMonthCount(1)
+                                // setStep(6)
+                                const data: interestCal = {
+                                  ...loanCalculationData,
+                                  interestMonth: 1
+                                }
+                                setLoanCalculationData(data)
+                                // await loanCalculation(data)
+                              }}
+                              checked={interestFirst === true}
+                            />
+                            <label htmlFor="ingredient1" className="ml-2">
+                              Yes
+                            </label>
+                          </div>
+                          <div className="flex align-items-center">
+                            <RadioButton
+                              inputId="ingredient2"
+                              name="pizza"
+                              // disabled={step < 5}
+                              value="Mushroom"
+                              required
+                              onChange={async (_e: RadioButtonChangeEvent) => {
+                                // setDocFee(null)
+                                setInterestFirst(false)
+                                setMonthCount(0)
+                                setInterestFirstAmt(0)
+                                // setStep(6)
+                                const data: interestCal = {
+                                  ...loanCalculationData,
+                                  interestMonth: 0
+                                }
+                                setLoanCalculationData(data)
+                                // await loanCalculation(data)
+                              }}
+                              checked={interestFirst === false}
+                            />
+                            <label htmlFor="ingredient2" className="ml-2">
+                              No
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      {interestFirst && (
+                        <div className="w-[60%]">
+                          <label className="font-bold block mb-2">
+                            Enter Number Of{' '}
+                            {productId.refLoanDueType === 1
+                              ? 'Month'
+                              : productId.refLoanDueType === 2
+                                ? 'Weeks'
+                                : 'Days'}
+                          </label>
+                          <InputNumber
+                            className="w-full"
+                            inputId="expiry"
+                            // disabled={step < 6}
+                            value={monthCount}
+                            required
+                            onChange={async (e: any) => {
+                              setMonthCount(e.value)
+                              // setDocFee(null)
+                              const data: interestCal = {
+                                ...loanCalculationData,
+                                interestMonth: e.value
+                              }
+                              setLoanCalculationData(data)
+                              // await loanCalculation(data)
+                            }}
+                            suffix={
+                              productId.refLoanDueType === 1
+                                ? ' Month'
+                                : productId.refLoanDueType === 2
+                                  ? ' Weeks'
+                                  : ' Days'
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div></div>
+                  </div>
+
+                  <div className="w-full flex justify-content-around my-1">
+                    <div className="w-[45%]">
+                      <label className="font-bold block mb-2">Enter Documentation Fee</label>
                       <InputNumber
                         className="w-full"
-                        disabled
-                        placeholder="Old Loan Amount"
+                        placeholder="Document Fee"
                         inputId="currency-india"
-                        value={oldBalanceAmt}
+                        // disabled={step < 6}
+                        value={docFee}
                         required
                         mode="currency"
                         currency="INR"
                         currencyDisplay="symbol"
                         locale="en-IN"
+                        onChange={(e: any) => {
+                          setDocFee(e.value)
+                          // setSecurity('')
+                          // setSecurity('')
+                          // setStep(7)
+                        }}
                       />
                     </div>
-                  )}
-                </div>
-                <div className="w-[45%]">
-                  <label className="font-bold block mb-2">Select Amount Source</label>
-                  <Dropdown
-                    value={bankId}
-                    filter
-                    disabled={step < 3}
-                    className="w-full"
-                    required
-                    onChange={(e: DropdownChangeEvent) => {
-                      setBankId(e.value)
-                      setStep(4)
-                      setRePaymentDate(null)
-                    }}
-                    options={bankList}
-                    optionLabel="refBankName"
-                    placeholder="Select Amount From"
-                  />
-                </div>
-              </div>
-              <div className="w-full flex justify-content-around my-1">
-                <div className="w-[45%]  ml-2">
-                  <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
-                  <Calendar
-                    placeholder="Repayment Schedule Date"
-                    disabled={step < 4}
-                    dateFormat="dd/mm/yy"
-                    className="w-full"
-                    required
-                    value={rePaymentDate ?? undefined}
-                    onChange={async (e: any) => {
-                      console.log('e', e)
-                      setRePaymentDate(e.value)
-                      setStep(5)
-                      setInterestFirst(null)
-                      const data: interestCal = {
-                        ...loanCalculationData,
-                        rePaymentDate: e.value
-                      }
-                      setLoanCalculationData(data)
-                      await loanCalculation(data)
-                    }}
-                    minDate={minDate ?? undefined}
-                    maxDate={maxDate ?? undefined}
-                    viewDate={viewDate}
-                  />
-                </div>
-                <div className="w-[45%] flex align-items-center pl-4">
-                  <div className="w-[40%]">
-                    <label className="font-bold block mb-2">Interest First</label>
-                    <div className="flex flex-row gap-x-5 w-[100%]">
-                      <div className="flex align-items-center">
-                        <RadioButton
-                          inputId="ingredient1"
-                          name="pizza"
-                          value="true"
-                          required
-                          disabled={step < 5}
-                          onChange={async (_e: RadioButtonChangeEvent) => {
-                            setInterestFirst(true)
-                            setDocFee(null)
-                            setMonthCount(1)
-                            setStep(6)
-                            const data: interestCal = {
-                              ...loanCalculationData,
-                              interestMonth: 1
-                            }
-                            setLoanCalculationData(data)
-                            await loanCalculation(data)
-                          }}
-                          checked={interestFirst === true}
-                        />
-                        <label htmlFor="ingredient1" className="ml-2">
-                          Yes
-                        </label>
-                      </div>
-                      <div className="flex align-items-center">
-                        <RadioButton
-                          inputId="ingredient2"
-                          name="pizza"
-                          disabled={step < 5}
-                          value="Mushroom"
-                          required
-                          onChange={async (_e: RadioButtonChangeEvent) => {
-                            setDocFee(null)
-                            setInterestFirst(false)
-                            setMonthCount(0)
-                            setInterestFirstAmt(0)
-                            setStep(6)
-                            const data: interestCal = {
-                              ...loanCalculationData,
-                              interestMonth: 0
-                            }
-                            setLoanCalculationData(data)
-                            await loanCalculation(data)
-                          }}
-                          checked={interestFirst === false}
-                        />
-                        <label htmlFor="ingredient2" className="ml-2">
-                          No
-                        </label>
-                      </div>
+                    <div className="w-[45%]">
+                      <label className="font-bold block mb-2">Security</label>
+                      <InputTextarea
+                        className="w-full"
+                        value={security}
+                        // disabled={step < 7}
+                        onChange={(e) => {
+                          setSecurity(e.target.value)
+                          // setStep(8)
+                        }}
+                      />
                     </div>
                   </div>
-                  {interestFirst && (
-                    <div className="w-[60%]">
-                      <label className="font-bold block mb-2">
-                        Enter Number Of{' '}
-                        {productId.refLoanDueType === 1
-                          ? 'Month'
-                          : productId.refLoanDueType === 2
-                            ? 'Weeks'
-                            : 'Days'}
-                      </label>
-                      <InputNumber
-                        className="w-full"
-                        inputId="expiry"
-                        disabled={step < 6}
-                        value={monthCount}
-                        required
-                        onChange={async (e: any) => {
-                          setMonthCount(e.value)
-                          setDocFee(null)
-                          const data: interestCal = {
-                            ...loanCalculationData,
-                            interestMonth: e.value
-                          }
-                          setLoanCalculationData(data)
-                          await loanCalculation(data)
-                        }}
-                        suffix={
-                          productId.refLoanDueType === 1
-                            ? ' Month'
-                            : productId.refLoanDueType === 2
-                              ? ' Weeks'
-                              : ' Days'
-                        }
-                      />
-                    </div>
-                  )}
                 </div>
-                <div></div>
-              </div>
+              )}
 
-              <div className="w-full flex justify-content-around my-1">
-                <div className="w-[45%]">
-                  <label className="font-bold block mb-2">Enter Documentation Fee</label>
-                  <InputNumber
-                    className="w-full"
-                    placeholder="Document Fee"
-                    inputId="currency-india"
-                    disabled={step < 6}
-                    value={docFee}
-                    required
-                    mode="currency"
-                    currency="INR"
-                    currencyDisplay="symbol"
-                    locale="en-IN"
-                    onChange={(e: any) => {
-                      setDocFee(e.value)
-                      setSecurity('')
-                      setSecurity('')
-                      setStep(7)
-                    }}
-                  />
-                </div>
-                <div className="w-[45%]">
-                  <label className="font-bold block mb-2">Security</label>
-                  <InputTextarea
-                    className="w-full"
-                    value={security}
-                    disabled={step < 7}
-                    onChange={(e) => {
-                      setSecurity(e.target.value)
-                      setStep(8)
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step >= 7 && (
+              {/* {step >= 7 && (
             <div className="my-3 shadow-2xl border-0 rounded-lg p-5">
               <b>Loan Details</b>
               <div className="flex w-full justify-content-between my-2">
@@ -1014,18 +1105,144 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
-          <div></div>
-        </div>
-        {step >= 7 && (
-          <div className="w-full flex justify-center">
-            <button className="bg-[green] text-white py-2 px-10 rounded-md shadow-md">
-              Create Loan
-            </button>
+              <div></div>
+            </div>
+            {/* {step >= 7 && ( */}
+            <div className="w-full flex justify-center">
+              <button className="bg-[green] text-white py-2 px-10 rounded-md shadow-md">
+                View Loan Details
+              </button>
+            </div>
+            {/* )} */}
+          </form>
+        </>
+      )}
+
+      {loanSummary && (
+        <>
+          <div>
+            <b className="text-[1.2rem]">Loan Details</b>
           </div>
-        )}
-      </form>
+          <div className="my-5 flex flex-col gap-y-5">
+            {/* <div className="my-3 shadow-2xl border-0 rounded-lg p-5">
+              <b>Loan Details</b>
+              <div className="flex w-full justify-content-between my-2">
+                <div>
+                  <p>
+                    Total Loan Amount : ₹ <b>{FinalLoanAmt.toFixed(2)}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    New Loan Amount : ₹ <b>{newLoanAmt}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    Old Loan Amount : ₹ <b>{oldBalanceAmt}</b>
+                  </p>
+                </div>
+              </div>
+              <div className="flex w-full justify-content-between my-2 ">
+                <div>
+                  <p>
+                    Initial Interest : ₹ <b>{initialInterestAmt.toFixed(2)}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    Interest for {monthCount}{' '}
+                    {productId.refLoanDueType === 1
+                      ? ' Month'
+                      : productId.refLoanDueType === 2
+                        ? ' Weeks'
+                        : ' Days'}{' '}
+                    : ₹ <b>{interestFirstAmt.toFixed(2)}</b>
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    Documentation Fee : ₹ <b>{(docFee ?? 0).toFixed(2)}</b>
+                  </p>
+                </div>
+              </div>
+              <b>Calculation</b>
+              <div className="flex w-full justify-content-between my-2 ">
+                <div>
+                  <p>
+                    Formula :{' '}
+                    <b>
+                      {' '}
+                      [ Total Loan Amount - ( Initial Interest - Interest Paid {monthCount}{' '}
+                      {productId.refLoanDueType === 1
+                        ? ' Month'
+                        : productId.refLoanDueType === 2
+                          ? ' Weeks'
+                          : ' Days'}{' '}
+                      - Documentation Fee ) ]
+                    </b>
+                  </p>
+                </div>
+
+                <div>
+                  <p>
+                    Amount to User : ₹{' '}
+                    <b>
+                      {(
+                        (newLoanAmt ?? 0) -
+                        (initialInterestAmt ?? 0) -
+                        (interestFirstAmt ?? 0) -
+                        (docFee ?? 0)
+                      ).toFixed(2)}
+                    </b>
+                  </p>
+                </div>
+              </div>
+            </div> */}
+            <div className="w-full flex justify-center">
+              <DataTable
+                value={summaryData}
+                className="w-[70%] text-center no-header"
+                size="small"
+                showGridlines
+              >
+                <Column
+                  field="label"
+                  body={(row) => <div className="font-bold">{row.label}</div>}
+                />
+                <Column field="value" body={(row) => <div className="">{row.value}</div>} />
+              </DataTable>
+            </div>
+            <div>
+              <div className="w-full flex justify-between">
+                <Button
+                  label="Back to Edit"
+                  icon="pi pi-arrow-left"
+                  severity="danger"
+                  onClick={() => {
+                    setLoanSummary(false)
+                  }}
+                />
+
+                <Button
+                  label="Provide New Loan"
+                  severity="success"
+                  icon="pi pi-check"
+                  loading={loading}
+                  onClick={() => {
+                    console.log(' -> Line Number ----------------------------------- 1243')
+                    setLoading(true)
+                    handelSubmit()
+                  }}
+                />
+              </div>
+              <div></div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

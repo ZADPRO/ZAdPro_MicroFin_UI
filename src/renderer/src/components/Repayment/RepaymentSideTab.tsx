@@ -452,7 +452,9 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                   <div>
                     <Calendar
                       value={date}
-                      onChange={(e) => setDate(e.value)}
+                      onChange={(e) => {
+                        setDate(e.value)
+                      }}
                       dateFormat="dd/mm/yy"
                       maxDate={new Date()}
                       // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}

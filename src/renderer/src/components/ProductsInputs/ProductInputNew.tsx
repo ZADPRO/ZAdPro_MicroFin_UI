@@ -206,6 +206,14 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
                 className="w-full"
                 onChange={(e: DropdownChangeEvent) => {
                   valueChange(e.target)
+                  console.log('e.target', e.target.value)
+                  if (e.target.value === 3) {
+                    console.log(' -> Line Number ----------------------------------- 210', );
+                    setProductData((prev) => ({
+                      ...(prev ?? {}),
+                      duration: '1'
+                    }))
+                  }
                 }}
                 options={rePaymentTypeOptions ?? []}
                 optionLabel="name"
@@ -245,19 +253,23 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => valueChange(e.target)}
                 />
               </div>
-              <div className="flex-1  flex flex-column gap-2">
-                <label htmlFor="username">
-                  {productData?.repaymentType === 3 ? 'Minimum Duration' : 'Loan Duration'}
-                </label>
-                <InputText
-                  value={productData?.duration}
-                  name="duration"
-                  type="number"
-                  required
-                  disabled={enableUpdate}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => valueChange(e.target)}
-                />{' '}
-              </div>
+              {productData?.repaymentType !== 3 && (
+                <>
+                  <div className="flex-1  flex flex-column gap-2">
+                    <label htmlFor="username">
+                      {productData?.repaymentType === 3 ? 'Minimum Duration' : 'Loan Duration'}
+                    </label>
+                    <InputText
+                      value={productData?.duration}
+                      name="duration"
+                      type="number"
+                      required
+                      disabled={enableUpdate}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => valueChange(e.target)}
+                    />{' '}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className="flex w-full gap-x-5 align-items-center">

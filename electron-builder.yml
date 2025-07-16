@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: testing-app
+productName: ZA-Micro-Fi
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: testing-app
+  executableName: ZA-Micro-Fi
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

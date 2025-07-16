@@ -221,7 +221,7 @@ const AdminRepayments = () => {
             <DataTable
               filters={filters}
               paginator
-              rows={5}
+              rows={10}
               size="small"
               value={userLists}
               showGridlines
