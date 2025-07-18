@@ -11,6 +11,9 @@ import { Sidebar } from 'primereact/sidebar'
 import OverallReport from '@renderer/components/OverallReport/OverallReport'
 import MonthlyReport from '@renderer/components/MonthlyReport/MonthlyReport'
 import ExpenseReport from '@renderer/components/ExpenseReport/ExpenseReport'
+// import { Dialog } from 'primereact/dialog'
+import RePaymentReport from '@renderer/components/Reports/RePaymentReport'
+import { TbFileReport } from 'react-icons/tb'
 
 type Props = {}
 
@@ -21,6 +24,7 @@ export default function Report({}: Props) {
   const [overallReport, setOverallReport] = useState<boolean>(false)
   const [monthlyReport, setMonthlyReport] = useState<boolean>(false)
   const [expenseReport, setExpenseReport] = useState<boolean>(false)
+  const [rePaymentReport, setRePaymentReport] = useState<boolean>(false)
 
   const loadData = () => {
     console.log('line --------- 25')
@@ -60,6 +64,7 @@ export default function Report({}: Props) {
     setOverallReport(false)
     setMonthlyReport(false)
     setExpenseReport(false)
+    setRePaymentReport(false)
   }
   const reLoadPage = () => {
     loadData()
@@ -131,6 +136,21 @@ export default function Report({}: Props) {
                 </p>
               </div>
             </div>
+            <div
+              className="w-[10%] flex flex-col align-items-center"
+              onClick={() => {
+                setRePaymentReport(true)
+              }}
+            >
+              <div className="m-3 invoice-icon p-5 w-[100%] flex justify-center flex-col align-items-center ">
+                <TbFileReport />
+              </div>
+              <div>
+                <p>
+                  <b>Re-Payment Report</b>
+                </p>
+              </div>
+            </div>
           </div>
           <Sidebar
             visible={overallReport}
@@ -156,6 +176,22 @@ export default function Report({}: Props) {
           >
             <ExpenseReport />
           </Sidebar>
+          <Sidebar
+            visible={rePaymentReport}
+            style={{ width: '95vw' }}
+            position="right"
+            onHide={closeSidebarNew}
+          >
+            <RePaymentReport />
+          </Sidebar>
+          {/* <Dialog
+            header="Payment Configuration"
+            visible={rePaymentReport}
+            style={{ width: '95vw' }}
+            onHide={closeSidebarNew}
+          >
+            <RePaymentReport />
+          </Dialog> */}
         </div>
       )}
     </>
