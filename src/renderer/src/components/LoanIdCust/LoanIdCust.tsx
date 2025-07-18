@@ -25,6 +25,10 @@ export default function LoanIdCust() {
   const [rePaymentType, setRePaymentType] = useState<Option[] | null>([])
   const [selectedLoanDueType, setSelectedLoanDueType] = useState<number | null>()
   const [loanDueType, setLoanDueType] = useState<Option[] | null>([])
+  const [intialInterestCalType, setInitialInterestCalType] = useState<Option[] | []>([])
+  const [selectedInitialInterestCal, setSelectedInitialInterestCal] = useState<number[] | null>(
+    null
+  )
   const [selectedLoanType, setSelectedLoanType] = useState<number[] | null>([])
   const [selectedRePaymentType, setSelectedRePaymentType] = useState<number[] | null>([])
   const [loanAdvanceType, setLoanAdvanceType] = useState<Option[] | []>([])
@@ -134,7 +138,17 @@ export default function LoanIdCust() {
               }
             })
             setLoanAdvanceType(advanceType)
+            const initialInterestCalData = data.interestCalTypeData.map((data) => {
+              return {
+                name: data.refInterestCalName,
+                code: data.refInterestCalId
+              }
+            })
+            setInitialInterestCalType(initialInterestCalData)
             setSelectedLoanType(data.loanTypeVisible.map((data) => data.refLoanTypeId))
+            setSelectedInitialInterestCal(
+              data.enabledInitialInterestData.map((data) => data.refInterestCalId)
+            )
             setSelectedRePaymentType(
               data.rePaymentTypeVisible.map((data) => data.refRepaymentTypeId)
             )
@@ -179,7 +193,8 @@ export default function LoanIdCust() {
               }
             ],
             loanType: selectedLoanType,
-            rePaymentType: selectedRePaymentType
+            rePaymentType: selectedRePaymentType,
+            initialInterestCalEnable: selectedInitialInterestCal
           },
           {
             headers: {
@@ -296,10 +311,38 @@ export default function LoanIdCust() {
                   checked={checked}
                   onChange={(e: InputSwitchChangeEvent) => {
                     setChecked(e.value)
+                    if (e.value) {
+                      setSelectedInitialInterestCal([1, 2, 3])
+                    } else {
+                      setSelectedInitialInterestCal(null)
+                    }
                   }}
                 />
               </div>
             </div>
+            {checked && (
+              <>
+                <Divider className="my-1" />
+                <div className="w-[100%] flex flex-col gap-y-1">
+                  <label htmlFor="lname">Select Initial Interest Collection Type</label>
+
+                  <MultiSelect
+                    name="status"
+                    className="w-full md:h-[2.5rem] text-sm align-items-center"
+                    value={selectedInitialInterestCal}
+                    options={intialInterestCalType}
+                    optionLabel="name"
+                    optionValue="code"
+                    disabled={!edit || !checked}
+                    onChange={(e: any) => {
+                      console.log('e.value', e.value)
+                      setSelectedInitialInterestCal(e.value)
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
             <Divider className="my-1" />
             <div className="w-[100%] flex flex-col gap-y-1">
               <label htmlFor="lname">Loan Closing Calculation Type</label>
