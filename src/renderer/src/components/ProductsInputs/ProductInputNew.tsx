@@ -25,6 +25,7 @@ export interface productData {
   initialInterestCal?: number | null
 }
 
+
 interface LoanType {
   name: string
   value: number
