@@ -7,19 +7,22 @@ import { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import axios from 'axios'
 import { Slide, toast } from 'react-toastify'
+import { InputSwitch, InputSwitchChangeEvent } from 'primereact/inputswitch'
 
 // import React from 'react'
 
 export interface productData {
   productName?: string
   interest?: string
-  repaymentType?: number
+  repaymentType?: number | null
   loanDueType?: number
   duration?: string
   InterestCalType?: number
   status?: string
   description?: string
   productId?: number
+  ifInitialInterest?: boolean | null
+  initialInterestCal?: number | null
 }
 
 interface LoanType {
@@ -32,8 +35,11 @@ interface ProductInputNewProps {
 }
 
 const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNewProps) => {
-  const [productData, setProductData] = useState<productData | null>()
+  const [productData, setProductData] = useState<productData | null>({
+    ifInitialInterest: false
+  })
   const [rePaymentTypeOptions, setRePaymentTypeOptions] = useState<LoanType[] | null>([])
+  const [initialInterestCalOption, setInitialInterestCalOption] = useState<LoanType[] | []>([])
   const [update, setUpdate] = useState<boolean>(false)
   const [enableUpdate, setEnableUpdate] = useState<boolean>(false)
   const durationType = [
@@ -53,10 +59,13 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
   ]
 
   const valueChange = (e) => {
-    console.log('e', e)
     const { name, value } = e
-    console.log('value', value)
-    console.log('name', name)
+    if (name === 'ifInitialInterest') {
+      setProductData((prev) => ({
+        ...(prev ?? {}),
+        initialInterestCal: null
+      }))
+    }
 
     setProductData((prev) => ({
       ...(prev ?? {}),
@@ -96,8 +105,16 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
               }
             })
             setRePaymentTypeOptions(rePaymentOption)
+            const initialInterestData = data.initialInterestCalOption.map((data) => {
+              return {
+                name: data.refInterestCalName,
+                value: data.refInterestCalId
+              }
+            })
+            setInitialInterestCalOption(initialInterestData)
             setProductData({ ...productData, status: 'active' })
             if (updateProductData) {
+              console.log('updateProductData line ------- 117', updateProductData)
               setUpdate(true)
               setEnableUpdate(true)
               setProductData(updateProductData)
@@ -113,6 +130,7 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
     const route = update
       ? import.meta.env.VITE_API_URL + '/product/upDateProduct'
       : import.meta.env.VITE_API_URL + '/product/addNewProduct'
+    console.log('productData line ------ 133', productData)
     try {
       axios
         .post(
@@ -196,33 +214,31 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
             </div>
             <Divider layout="vertical" className="m-0" />
 
-            <div className="flex-1 flex flex-col gap-2">
-              <label> Select Repayment Type</label>
-              <Dropdown
-                value={productData?.repaymentType}
-                required
-                disabled={enableUpdate}
-                name="repaymentType"
-                className="w-full"
-                onChange={(e: DropdownChangeEvent) => {
-                  valueChange(e.target)
-                  console.log('e.target', e.target.value)
-                  if (e.target.value === 3) {
-                    console.log(' -> Line Number ----------------------------------- 210', );
-                    setProductData((prev) => ({
-                      ...(prev ?? {}),
-                      duration: '1'
-                    }))
-                  }
-                }}
-                options={rePaymentTypeOptions ?? []}
-                optionLabel="name"
-              />
-            </div>
-          </div>
-          <div className="flex w-full gap-x-5 align-items-end">
-            <div className="flex-1 flex gap-3">
-              <div className="flex-1 flex flex-col gap-2">
+            <div className="flex-1 flex gap-2">
+              <div className="flex-1">
+                <label> Select Repayment Type</label>
+                <Dropdown
+                  value={productData?.repaymentType}
+                  required
+                  disabled={enableUpdate}
+                  name="repaymentType"
+                  className="w-full"
+                  onChange={(e: DropdownChangeEvent) => {
+                    valueChange(e.target)
+                    console.log('e.target', e.target.value)
+                    if (e.target.value === 3) {
+                      console.log(' -> Line Number ----------------------------------- 210')
+                      setProductData((prev) => ({
+                        ...(prev ?? {}),
+                        duration: '1'
+                      }))
+                    }
+                  }}
+                  options={rePaymentTypeOptions ?? []}
+                  optionLabel="name"
+                />
+              </div>
+              <div className="flex-1">
                 <label> Select Loan Due Type</label>
                 <Dropdown
                   className="w-full md:h-[2.5rem] text-sm align-items-center"
@@ -238,6 +254,41 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
                   optionLabel="name"
                   optionValue="code"
                 />
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full gap-x-5 align-items-end">
+            <div className="flex-1 flex gap-3">
+              <div className="flex-1 flex flex-row gap-2">
+                <div className="flex-1 flex flex-col">
+                  <label>Initial Interest</label>
+
+                  <InputSwitch
+                    checked={productData?.ifInitialInterest ?? false}
+                    name="ifInitialInterest"
+                    onChange={(e: InputSwitchChangeEvent) => {
+                      valueChange(e.target)
+                    }}
+                  />
+                </div>
+                <div className="flex-3 flex flex-col">
+                  <label>Select Initial Interest Collection Type</label>
+
+                  <Dropdown
+                    className="w-full md:h-[2.5rem] text-sm align-items-center"
+                    inputId="durationType"
+                    value={productData?.initialInterestCal}
+                    required={productData?.ifInitialInterest ?? false}
+                    disabled={enableUpdate || !productData?.ifInitialInterest}
+                    name="initialInterestCal"
+                    onChange={(e: DropdownChangeEvent) => {
+                      valueChange(e.target)
+                    }}
+                    options={initialInterestCalOption}
+                    optionLabel="name"
+                    optionValue="value"
+                  />
+                </div>
               </div>
             </div>
             <Divider layout="vertical" className="m-0" />

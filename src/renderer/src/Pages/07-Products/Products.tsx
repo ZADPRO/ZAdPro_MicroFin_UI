@@ -74,7 +74,9 @@ const Products = () => {
               InterestCalType: Number(rowData.refInterestCalType),
               status: rowData.refStatus,
               description: rowData.refProductDescurption,
-              productId: Number(rowData.refProductId)
+              productId: Number(rowData.refProductId),
+              ifInitialInterest: rowData.refInitialInterest,
+              initialInterestCal: Number(rowData.refIntislInterestCalId)
             })
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
@@ -288,7 +290,7 @@ const Products = () => {
           </Dialog>
 
           <Dialog
-            header="Update Product Product"
+            header="Update Product"
             visible={updateData}
             style={{ width: '75vw' }}
             onHide={closeSidebarNew}

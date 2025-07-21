@@ -332,6 +332,44 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     }
   }
 
+  const getLoanSummary = async () => {
+    try {
+      setLoanSummary(true)
+      axios
+        .post(
+          import.meta.env.VITE_API_URL + '/loanCalculation/InterestCal',
+          {
+            newLoanAmt: newLoanAmt,
+            oldLoaAmt: oldBalanceAmt,
+            productId: productId?.refProductId,
+            interestFirst: interestFirst,
+            interestFirstMonth: monthCount,
+            todayDate: date,
+            rePaymentStartDate: rePaymentDate?.toLocaleDateString('en-CA')
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          console.log('data', data)
+          if (data.success) {
+            console.log(' -> Line Number ----------------------------------- 364')
+          }
+        })
+    } catch (error) {
+      console.log('error line ----- 342', error)
+    }
+  }
+
   const handelSubmit = () => {
     console.log('selectedLoan', selectedLoan)
     console.log('rePaymentDate', rePaymentDate)
@@ -552,7 +590,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             onSubmit={(e) => {
               e.preventDefault()
               // handelSubmit()
-              summary()
+              getLoanSummary()
             }}
           >
             <div className="w-[100%] flex flex-col justify-content-between">
@@ -878,7 +916,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         required
                         value={rePaymentDate ?? undefined}
                         onChange={async (e: any) => {
-                          // console.log('e', e)
+                          console.log('e line ------- 881', e.value.toLocaleDateString('en-CA'))
                           setRePaymentDate(e.value)
                           // setStep(5)
                           // setInterestFirst(null)
