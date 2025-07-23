@@ -19,6 +19,7 @@ import { Nullable } from 'primereact/ts-helpers'
 import { OverlayPanel } from 'primereact/overlaypanel'
 // import type { OverlayPanel as OverlayPanelType } from 'primereact/overlaypanel'
 import { Divider } from 'primereact/divider'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 const Repayments = () => {
   const [userLists, setUserLists] = useState([])
@@ -31,28 +32,29 @@ const Repayments = () => {
   const [endDate, setEndDate] = useState<Nullable<Date>>(null)
   const userType = [
     { name: 'Over All', code: 0 },
-    { name: 'Month', code: 1 }
+    { name: 'Date Range', code: 1 },
+    { name: 'Month', code: 2 }
   ]
 
-  function formatToDDMMYYYY(dateString) {
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
-    const year = date.getFullYear()
+  // function formatToDDMMYYYY(dateString) {
+  //   const date = new Date(dateString)
+  //   const day = String(date.getDate()).padStart(2, '0')
+  //   const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
+  //   const year = date.getFullYear()
 
-    return `${day}-${month}-${year}`
-  }
+  //   return `${day}-${month}-${year}`
+  // }
 
   const loadData = () => {
     try {
       axios
-        .post(
-          import.meta.env.VITE_API_URL + '/rePayment/userList',
-          {
-            ifMonth: userListType.code === 0 ? false : true,
-            startDate: startDate ? formatToDDMMYYYY(startDate) : '',
-            endDate: endDate ? formatToDDMMYYYY(endDate) : ''
-          },
+        .get(
+          import.meta.env.VITE_API_URL + '/rePayment/dueList',
+          // {
+          //   ifMonth: userListType.code === 0 ? false : true,
+          //   startDate: startDate ? formatToDDMMYYYY(startDate) : '',
+          //   endDate: endDate ? formatToDDMMYYYY(endDate) : ''
+          // },
           {
             headers: {
               Authorization: localStorage.getItem('token'),
@@ -88,18 +90,18 @@ const Repayments = () => {
     loadData()
   }, [startDate, endDate])
 
-  const AddressBody = (rowData: any) => {
-    return (
-      <>
-        {/* {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
-        {rowData.refUserPincode} */}
-        {rowData.refAreaName ? ` ${rowData.refAreaName},` : ''}
-        {rowData.refUserCity ? ` ${rowData.refUserCity},` : ''}
-        {rowData.refUserTaluk ? ` ${rowData.refUserTaluk},` : ''}
-        {rowData.refUserDistrict ? ` ${rowData.refUserDistrict}` : ''}
-      </>
-    )
-  }
+  // const AddressBody = (rowData: any) => {
+  //   return (
+  //     <>
+  //       {/* {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
+  //       {rowData.refUserPincode} */}
+  //       {rowData.refAreaName ? ` ${rowData.refAreaName},` : ''}
+  //       {rowData.refUserCity ? ` ${rowData.refUserCity},` : ''}
+  //       {rowData.refUserTaluk ? ` ${rowData.refUserTaluk},` : ''}
+  //       {rowData.refUserDistrict ? ` ${rowData.refUserDistrict}` : ''}
+  //     </>
+  //   )
+  // }
 
   const ProductBody = (rowData: any) => {
     const op = useRef<OverlayPanel | null>(null)
@@ -146,7 +148,7 @@ const Repayments = () => {
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
         >
-          {rowData.refCustId}
+          {rowData.refCustLoanId}
         </div>
       </>
     )
@@ -298,7 +300,7 @@ const Repayments = () => {
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
               tableStyle={{ minWidth: '50rem', overflow: 'auto' }}
             >
-              <Column style={{ minWidth: '3rem' }} body={CustomerId} header="User ID"></Column>
+              <Column style={{ minWidth: '3rem' }} body={CustomerId} header="Loan ID"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refUserFname"
@@ -311,15 +313,19 @@ const Repayments = () => {
                 field="refUserMobileNo"
                 header="Phone Number"
               ></Column>
-              <Column style={{ minWidth: '10rem' }} body={AddressBody} header="Address"></Column>
-              <Column style={{ minWidth: '8rem' }} field="refPaymentDate" header="Month"></Column>
+              <Column style={{ minWidth: '10rem' }} field="Area" header="Address"></Column>
+              <Column
+                style={{ minWidth: '8rem' }}
+                field="refLoanStartDate"
+                header="Loan Taken"
+              ></Column>
 
               <Column style={{ minWidth: '10rem' }} body={ProductBody} header="Product"></Column>
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refLoanAmount"
                 body={(rowData) => {
-                  return <>₹ {rowData.refLoanAmount}</>
+                  return <b>{formatINRCurrency(rowData.refLoanAmount)}</b>
                 }}
                 header="Principal Amount"
               ></Column>

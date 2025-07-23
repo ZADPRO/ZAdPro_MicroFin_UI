@@ -20,6 +20,8 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { IoIosArrowDown } from 'react-icons/io'
+import { IoIosArrowUp } from 'react-icons/io'
 interface AddNewSupplierProps {
   closeSidebarNew: () => void
 }
@@ -77,8 +79,10 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
   const [showForm, setShowForm] = useState<boolean>(false)
   const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
   const [ifInitialIntrest, setIfInitialInterest] = useState<boolean>(true)
+  const [ifLoanCalculation, setIfLoanCalculation] = useState<boolean>(true)
   const [loanSummary, setLoanSummary] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
+  const [loanSeetingData, setLoanSeetingData] = useState<boolean>(false)
   const [summaryData, setSummaryData] = useState<
     { label: string; value: string | number | undefined }[]
   >([])
@@ -95,6 +99,16 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
     },
     {
       name: 'No',
+      value: false
+    }
+  ]
+  const loanAmountCalculation: any[] = [
+    {
+      name: 'Use Application Loan Calculation Formula',
+      value: true
+    },
+    {
+      name: 'Loan Details Entered Manually',
       value: false
     }
   ]
@@ -355,7 +369,8 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
           refDocFee: docFee,
           refSecurity: security,
           refProductDurationType: selectedDurationType?.code,
-          refProductMonthlyCal: selectedInterestCal
+          refProductMonthlyCal: selectedInterestCal,
+          ifLoanCalculation: ifLoanCalculation
         },
         {
           headers: {
@@ -522,7 +537,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
               summary()
             }}
           >
-            <div className="w-[100%] flex flex-col justify-content-between">
+            <div className="w-[100%] flex flex-col justify-content-between align-items-center">
               <div className="w-full flex justify-content-around my-1">
                 <div className="w-[73%]">
                   <label className="font-bold block mb-2">Select vendor</label>
@@ -719,8 +734,91 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                 </div>
               )}
 
+              <div className="my-3 w-[95%] shadow-2 border-0 rounded-lg p-1 flex-col justify-center">
+                <div className="w-[95%] flex justify-between align-items-center p-1">
+                  <div>
+                    <b>Loan Customization Option</b>
+                  </div>
+
+                  <div>
+                    {!loanSeetingData && (
+                      <>
+                        <button
+                          type="button"
+                          className="rounded-[50%] border-[blue] border-2 p-[2px]"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setLoanSeetingData(true)
+                          }}
+                        >
+                          <IoIosArrowDown size={'1.5rem'} color="blue" />
+                        </button>
+                      </>
+                    )}
+
+                    {loanSeetingData && (
+                      <>
+                        <button
+                          type="button"
+                          className="rounded-[50%] border-[red] border-2 p-[2px]"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setLoanSeetingData(false)
+                          }}
+                        >
+                          <IoIosArrowUp size={'1.5rem'} color="red" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {loanSeetingData && (
+                  <>
+                    <Divider className="my-1" />
+                    <div className="flex justify-center">
+                      <div className="flex w-[95%] justify-between my-2">
+                        <div className="w-[45%]">
+                          <label className="font-bold block mb-2">Loan Amount Calculation</label>
+                          <Dropdown
+                            value={ifLoanCalculation}
+                            className="w-full"
+                            required
+                            onChange={(e: DropdownChangeEvent) => {
+                              setIfLoanCalculation(e.target.value)
+                            }}
+                            options={loanAmountCalculation}
+                            optionLabel="name"
+                            optionValue="value"
+                            placeholder="Select Loan Calculation Needed"
+                          />
+                        </div>
+                        <div className="w-[45%]">
+                          <label className="font-bold block mb-2">Initial Interest</label>
+                          <Dropdown
+                            value={ifInitialIntrest}
+                            className="w-full"
+                            required
+                            onChange={(e: DropdownChangeEvent) => {
+                              setIfInitialInterest(e.target.value)
+                              initialInterest(
+                                Number(newLoanAmt) + Number(oldBalanceAmt ?? 0),
+                                e.target.value
+                              )
+                            }}
+                            options={initialInterestOption}
+                            optionLabel="name"
+                            optionValue="value"
+                            placeholder="Select Initial Interest"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               {showForm && (
-                <div>
+                <div className="w-full">
                   <Divider layout="horizontal" className="flex" />
                   <div className="w-full flex justify-content-around my-1">
                     <div className="w-[45%] flex justify-between">
@@ -897,7 +995,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                   </div>
                   <div className="w-full flex flex-row justify-content-around my-1">
                     <div className="w-[45%] ml-[1rem] flex justify-between">
-                      <div className="w-[65%]">
+                      <div className="w-full">
                         <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
                         <Calendar
                           placeholder="Repayment Schedule Date"
@@ -918,7 +1016,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                           viewDate={viewDate}
                         />
                       </div>
-                      <div className="w-[30%]">
+                      {/* <div className="w-[30%]">
                         <label className="font-bold block mb-2">Initial Interest</label>
                         <Dropdown
                           value={ifInitialIntrest}
@@ -939,7 +1037,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                           optionValue="value"
                           placeholder="Select Initial Interest"
                         />
-                      </div>
+                      </div> */}
                     </div>
                     <div className="w-[45%] flex align-items-center">
                       <div className="w-[40%] ml-[2rem]">
@@ -951,7 +1049,7 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                               name="pizza"
                               value="true"
                               required
-                              disabled={step < 5.5}
+                              disabled={step < 5}
                               onChange={(_e: RadioButtonChangeEvent) => {
                                 setInterestFirst(true)
                                 setMonthCount(1)
@@ -1082,65 +1180,6 @@ const AdminLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
                   </div>
                 </div>
               )}
-
-              {/* {step >= 7 && (
-                <div className="my-3 shadow-2xl border-0 rounded-lg p-5">
-                  <b>Loan Details</b>
-                  <div className="flex w-full justify-content-between my-2">
-                    <div>
-                      <p>
-                        Total Loan Amount : ₹ <b>{FinalLoanAmt}</b>
-                      </p>
-                    </div>
-                    <div>
-                      <p>
-                        New Loan Amount : ₹ <b>{newLoanAmt}</b>
-                      </p>
-                    </div>
-                    <div>
-                      <p>
-                        Old Loan Amount : ₹ <b>{oldBalanceAmt}</b>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex w-full justify-content-between my-2 ">
-                    <div>
-                      <p>
-                        Interest For This{' '}
-                        {selectedDurationType?.code === 1
-                          ? 'Month'
-                          : selectedDurationType?.code === 2
-                            ? 'Weeks'
-                            : 'Days'}{' '}
-                        : ₹ <b>{initialInterestAmt.toFixed(2)}</b>
-                      </p>
-                    </div>
-                    <div>
-                      <p>
-                        Interest for {monthCount}{' '}
-                        {selectedDurationType?.code === 1
-                          ? 'Month'
-                          : selectedDurationType?.code === 2
-                            ? 'Weeks'
-                            : 'Days'}{' '}
-                        : ₹ <b>{interestFirstAmt.toFixed(2)}</b>
-                      </p>
-                    </div>
-                    <div>
-                      <p>
-                        Amount to User : ₹{' '}
-                        <b>
-                          {(
-                            (newLoanAmt ?? 0) -
-                            (initialInterestAmt ?? 0) -
-                            (interestFirstAmt ?? 0)
-                          ).toFixed(2)}
-                        </b>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )} */}
 
               <div></div>
             </div>

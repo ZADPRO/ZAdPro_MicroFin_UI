@@ -17,6 +17,9 @@ import { InputText } from 'primereact/inputtext'
 import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
 import { Nullable } from 'primereact/ts-helpers'
 import { formatToCustomDateTime } from '@renderer/helper/date'
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 interface RePaymentForm {
   interestAmt: number
@@ -25,6 +28,18 @@ interface RePaymentForm {
   TotalPaidAmt: number
   BalanceAmount: number
   loanClosingBalance: number
+}
+
+interface dueDetails {
+  refArears: string
+  refDuePaymentFor: string | null
+  refInitialInterest: string | null
+  refInterest: string
+  refPaidInterest: string | null
+  refPaidPrincipal: string | null
+  refPaymentDate: string
+  refPrincipal: string
+  arearsAmt: string
 }
 
 interface FollowUpForm {
@@ -39,8 +54,6 @@ interface Bank {
 
 const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) => {
   console.log('id', id)
-  console.log('rePayId', rePayId)
-  console.log('loanId', loanId)
   // const [priamt, setPriAmt] = useState<number>(0)
 
   const [loading, setLoading] = useState(false)
@@ -53,6 +66,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
     BalanceAmount: 0,
     loanClosingBalance: 0
   })
+  const [dueData, setDueData] = useState<dueDetails[] | []>([])
   const [followUpForm, setFollowUpForm] = useState<FollowUpForm>({
     Message: '',
     Date: null
@@ -68,6 +82,44 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
   const [amountInCash, setAmountInCash] = useState<string | null>(null)
   const [amountInBank, setAmountInBank] = useState<string | null>(null)
   const [date, setDate] = useState<Nullable<Date>>(new Date())
+  const [totalDueAmt, setTotalDueAmt] = useState<string>()
+
+  const getDueData = async () => {
+    console.log('date', formatToCustomDateTime(date ?? new Date()))
+    try {
+      await axios
+        .post(
+          import.meta.env.VITE_API_URL + '/rePayment/dueAmountDetails',
+          {
+            loanId: loanId,
+            date: formatToCustomDateTime(date ?? new Date())
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          console.log('data line ----- 205', data)
+          localStorage.setItem('token', 'Bearer ' + data.token)
+
+          if (data.success) {
+            setDueData(data.data)
+            setTotalDueAmt(data.data[0].arearsAmt)
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
   const getLoanData = async () => {
     try {
       await axios
@@ -143,6 +195,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
       .post(
         import.meta.env.VITE_API_URL + '/rePayment/updateRePayment',
         {
+          loanId: loanId,
           payDate: formatToCustomDateTime(date ?? new Date()),
           rePayId: rePayId,
           cashAmt: amountInCash,
@@ -252,13 +305,14 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
 
   useEffect(() => {
     getLoanData()
+    getDueData()
     const getSetData = async () => {
       const settingdatas = await getSettingData()
       console.log('settingdatas line ------ 172', settingdatas)
       setPaymentSettingData(settingdatas)
     }
     getSetData()
-  }, [])
+  }, [date])
 
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -405,44 +459,56 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
           >
             <TabPanel header="Re-Payment">
               <div className="my-0 w-full">
-                <div className="my-1">
-                  <b className="text-[1.2rem]">Re-Payment Details</b>
+                <div className="my-1 flex justify-between">
+                  <b className="text-[1rem]">Un-Paid Due Details</b>
+                  <b className="text-[1rem]">
+                    Total Areas Amount : {formatINRCurrency(Number(totalDueAmt))}
+                  </b>
                 </div>
                 <div className="flex flex-col gap-0 shadow-3 p-2 rounded-md">
-                  <div className="flex gap-x-5">
-                    <div className="flex-1 p-1 rounded-md">
-                      <p>
-                        Interest Amount : &#8377; <b>{rePaymentForm.interestAmt}</b>{' '}
-                      </p>
-                    </div>
-                    <div className="flex-1 p-1 rounded-md">
-                      <p>
-                        Principal Amount : &#8377; <b>{rePaymentForm.principalAmt}</b>
-                      </p>
-                    </div>
-                    <div className="flex-1 p-1 rounded-md">
-                      <p>
-                        Total Due Amount : &#8377; <b>{rePaymentForm.totalAmt}</b>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-x-5">
-                    <div className="flex-1 p-1 rounded-md">
-                      <p>
-                        Paid Due Amount : &#8377; <b>{rePaymentForm.TotalPaidAmt}</b>{' '}
-                      </p>
-                    </div>
-                    <div className="flex-1 p-1 rounded-md">
-                      <p>
-                        Pending Due Amount : &#8377; <b>{rePaymentForm.BalanceAmount}</b>{' '}
-                      </p>
-                    </div>
-                    <div className="flex-1  p-1 rounded-md">
-                      <p>
-                        Loan Closing Amount : &#8377; <b>{rePaymentForm.loanClosingBalance}</b>
-                      </p>
-                    </div>
-                  </div>
+                  <DataTable value={dueData} size="small" showGridlines>
+                    <Column field="refPaymentDate" header="Due Amount of"></Column>
+                    <Column
+                      body={(rowData) => {
+                        return (
+                          <>
+                            {formatINRCurrency(
+                              Number(rowData.refInterest) + Number(rowData.refInitialInterest)
+                            )}
+                          </>
+                        )
+                      }}
+                      header="Interest"
+                    ></Column>
+                    <Column
+                      field="refPrincipal"
+                      body={(rowData) => {
+                        return <>{formatINRCurrency(rowData.refPrincipal)}</>
+                      }}
+                      header="Principal"
+                    ></Column>
+                    <Column
+                      field="refPaidInterest"
+                      body={(rowData) => {
+                        return <>{formatINRCurrency(rowData.refPaidInterest)}</>
+                      }}
+                      header="Paid Interest"
+                    ></Column>
+                    <Column
+                      field="refPaidPrincipal"
+                      body={(rowData) => {
+                        return <>{formatINRCurrency(rowData.refPaidPrincipal)}</>
+                      }}
+                      header="Paid Principal"
+                    ></Column>
+                    <Column
+                      field="refArears"
+                      body={(rowData) => {
+                        return <>{formatINRCurrency(rowData.refArears)}</>
+                      }}
+                      header="Areas Amount"
+                    ></Column>
+                  </DataTable>
                 </div>
                 <Divider />
                 <div className="my-3 flex justify-between">

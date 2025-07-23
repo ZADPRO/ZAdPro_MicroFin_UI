@@ -252,6 +252,8 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
         <Column field="refLoanStatus" header="Loan Status" />
       </DataTable>
 
+      {/* Admin loan Creation Module */}
+
       <Sidebar
         visible={newData}
         style={{ width: '80vw' }}
@@ -260,6 +262,8 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
       >
         <AdminLoanCreation closeSidebarNew={closeSidebarNew} />
       </Sidebar>
+
+      {/* view Loan Details Module */}
       <Sidebar
         visible={loanDetailsSidebar}
         style={{ width: '80vw' }}

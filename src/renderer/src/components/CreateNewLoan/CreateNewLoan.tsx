@@ -116,8 +116,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [monthCount, setMonthCount] = useState<number>(0)
   const [bankId, setBankId] = useState<number | null | any>(null)
   const [productId, setProductId] = useState<number | null | any>(null)
-  const [interestFirstAmt, setInterestFirstAmt] = useState<number>(0)
-  const [initialInterestAmt, setInitialInterestAmt] = useState<number>(0)
+  const [_interestFirstAmt, setInterestFirstAmt] = useState<number>(0)
+  const [_initialInterestAmt, setInitialInterestAmt] = useState<number>(0)
   const [docFee, setDocFee] = useState<number | null>()
   const [security, setSecurity] = useState<string>()
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
@@ -127,7 +127,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [showForm, setShowForm] = useState<boolean>(false)
   const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
   const [loanTypeOptions, setLoanTypeOptions] = useState<LoanType[] | null>([])
-  const [summaryProduct, setSummaryProduct] = useState<productStructure>()
+  const [_summaryProduct, setSummaryProduct] = useState<productStructure>()
   const [loanSummardData, setLoanSummaryData] = useState<LoanCalculationSummary>()
   const [selectedRepaymentType, setSelectedRepaymentType] = useState<number | null>(null)
   const [userLoan, setUserLoan] = useState<any[]>([])
@@ -294,6 +294,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             const name = `Name : ${data.refBankName} | Balance : ₹ ${data.refBalance}`
             filterBankList[index] = { ...filterBankList[index], refBankName: name }
           })
+          console.log('filterBankList line ----- 297', filterBankList)
           setBankList(filterBankList)
         }
       })
@@ -447,9 +448,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           refInterestMonthCount: monthCount,
           refInitialInterest: loanSummardData?.totalInitialInterest,
           refRepaymentType: selectedRepaymentType,
-          refTotalInterest: (
-            (loanSummardData?.totalInitialInterest ?? 0) + (loanSummardData?.interestPaidFirst ?? 0)
-          ).toFixed(2),
+          refTotalInterestFirst: (loanSummardData?.interestPaidFirst ?? 0).toFixed(2),
           refToUseAmt: loanSummardData?.amtToUser - Number(docFee ?? 0),
           oldBalanceAmt: oldBalanceAmt ?? 0,
           refDocFee: docFee,
@@ -583,55 +582,55 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     }).format(amount ?? 0)
   }
 
-  const summary = () => {
-    console.log('productId line ------ 465', productId)
-    console.log('productId?.refProductId', productId?.refProductId)
-    setLoanSummary(true)
-    if (loanCalculationData) {
-      console.log(' -> Line Number ----------------------------------- 468')
-      loanCalculation(loanCalculationData)
-      const summaryDatas = {
-        newLoanAmount: formatINRCurrency(newLoanAmt),
-        oldLoanAmount: formatINRCurrency(oldBalanceAmt),
-        FinalLoanAmount: formatINRCurrency(FinalLoanAmt),
-        productName: productId?.refProductName.split('|')[0],
-        Interest: `${productId?.refProductInterest} %`,
-        Duration: `${productId?.refProductDuration} ${productId?.refLoanDueType === 1 ? 'Months' : productId?.refLoanDueType === 2 ? 'Weeks' : 'Days'}`,
-        rePaymentType: productId?.refRepaymentTypeName,
-        rePaymentDate: rePaymentDate?.toLocaleDateString('en-CA'),
+  // const summary = () => {
+  //   console.log('productId line ------ 465', productId)
+  //   console.log('productId?.refProductId', productId?.refProductId)
+  //   setLoanSummary(true)
+  //   if (loanCalculationData) {
+  //     console.log(' -> Line Number ----------------------------------- 468')
+  //     loanCalculation(loanCalculationData)
+  //     const summaryDatas = {
+  //       newLoanAmount: formatINRCurrency(newLoanAmt),
+  //       oldLoanAmount: formatINRCurrency(oldBalanceAmt),
+  //       FinalLoanAmount: formatINRCurrency(FinalLoanAmt),
+  //       productName: productId?.refProductName.split('|')[0],
+  //       Interest: `${productId?.refProductInterest} %`,
+  //       Duration: `${productId?.refProductDuration} ${productId?.refLoanDueType === 1 ? 'Months' : productId?.refLoanDueType === 2 ? 'Weeks' : 'Days'}`,
+  //       rePaymentType: productId?.refRepaymentTypeName,
+  //       rePaymentDate: rePaymentDate?.toLocaleDateString('en-CA'),
 
-        interestCalType:
-          productId?.refInterestCalType === 1 ? 'Day Wise Calculation' : 'Overall Calculation',
-        InitialInterest: formatINRCurrency(initialInterestAmt),
-        interestPaidFirstCount: monthCount,
-        interestPaidFirst: formatINRCurrency(interestFirstAmt),
-        documentFee: formatINRCurrency(docFee),
-        security: security,
-        finalAmountToUser: formatINRCurrency(
-          (newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0) - (docFee ?? 0)
-        )
-      }
-      const summaryDataRowWise = Object.entries(summaryDatas).map(([key, value]) => ({
-        label: formatLabel(key),
-        value: value ?? '-' // show dash if undefined/null
-      }))
-      setSummaryData(summaryDataRowWise)
+  //       interestCalType:
+  //         productId?.refInterestCalType === 1 ? 'Day Wise Calculation' : 'Overall Calculation',
+  //       InitialInterest: formatINRCurrency(initialInterestAmt),
+  //       interestPaidFirstCount: monthCount,
+  //       interestPaidFirst: formatINRCurrency(interestFirstAmt),
+  //       documentFee: formatINRCurrency(docFee),
+  //       security: security,
+  //       finalAmountToUser: formatINRCurrency(
+  //         (newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0) - (docFee ?? 0)
+  //       )
+  //     }
+  //     const summaryDataRowWise = Object.entries(summaryDatas).map(([key, value]) => ({
+  //       label: formatLabel(key),
+  //       value: value ?? '-' // show dash if undefined/null
+  //     }))
+  //     setSummaryData(summaryDataRowWise)
 
-      console.log('summaryDatas line ------- 490', summaryDatas)
-    } else {
-      toast.error('Please select all the fields', {
-        position: 'top-right',
-        autoClose: 2999,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'light',
-        transition: Slide
-      })
-    }
-  }
+  //     console.log('summaryDatas line ------- 490', summaryDatas)
+  //   } else {
+  //     toast.error('Please select all the fields', {
+  //       position: 'top-right',
+  //       autoClose: 2999,
+  //       hideProgressBar: false,
+  //       closeOnClick: false,
+  //       pauseOnHover: true,
+  //       draggable: true,
+  //       progress: undefined,
+  //       theme: 'light',
+  //       transition: Slide
+  //     })
+  //   }
+  // }
 
   return (
     <div>
@@ -881,7 +880,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                             todayDate: date ?? undefined
                           }
                           setLoanCalculationData(data)
-                          // await loanCalculation(data)
+                          await loanCalculation(data)
                         }}
                         options={loanProduct}
                         optionLabel="refProductName"
