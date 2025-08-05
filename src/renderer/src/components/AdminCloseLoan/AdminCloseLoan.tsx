@@ -10,6 +10,9 @@ import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton'
 import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
 import { Divider } from 'primereact/divider'
 import { Calendar } from 'primereact/calendar'
+import { InputSwitch, InputSwitchChangeEvent } from 'primereact/inputswitch'
+import { Dialog } from 'primereact/dialog'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 interface CloseLoanProps {
   id: number
@@ -42,19 +45,19 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
   const [loanDetails, setLoanDetails] = useState<any>()
   const [showCard, setShowCard] = useState(false)
   const [date, setDate] = useState<Date>(new Date())
-
+  const [closeLoan, setCloseLoan] = useState<boolean>(false)
   const [loanAmt, setLoanAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
   const [settingData, setSettingData] = useState<SettingData | null>()
-
-  const getLoanDatas = async () => {
+  const [summary, setSummary] = useState<boolean>(false)
+  const getLoanDatas = async (LoanId: number, todayDate: Date) => {
     axios
       .post(
         import.meta.env.VITE_API_URL + '/adminLoan/loanCloseData',
         {
-          LoanId: id,
-          todayDate: date
+          LoanId: LoanId,
+          todayDate: todayDate.toLocaleDateString('en-CA')
         },
         {
           headers: {
@@ -74,7 +77,7 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
 
         if (data.success) {
           const matchedLoan = data.data.find((item) => item.refLoanId === id)
-          console.log('Loan', matchedLoan)
+          console.log('Loan line ------- 80', matchedLoan)
           setLoanDetails(matchedLoan)
           const options = data.bank.map((d: any) => ({
             name: `Name : ${d.refBankName} - A/C : ${d.refBankAccountNo} - IFSC's : ${d.refIFSCsCode}`,
@@ -87,6 +90,31 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
         }
       })
   }
+
+  const headerElement = (
+    <div className="inline-flex align-items-center justify-content-center">
+      <span className="font-bold white-space-nowrap">Conform The Entered Amount</span>
+    </div>
+  )
+
+  const footerContent = (
+    <div>
+      <Button
+        size="small"
+        label="Edit"
+        icon="pi pi-pencil"
+        onClick={() => setSummary(false)}
+        autoFocus
+      />
+      <Button
+        size="small"
+        label="Make Payment"
+        icon="pi pi-check"
+        onClick={() => loanUpdate()}
+        autoFocus
+      />
+    </div>
+  )
 
   function formatToFirstOfMonth(dateString: string): string {
     const date = new Date(dateString)
@@ -103,10 +131,11 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
       .post(
         import.meta.env.VITE_API_URL + '/adminLoan/payPrincipalAmt',
         {
-          todayDate: date,
+          todayDate: date.toLocaleDateString('en-CA'),
           LoanId: id,
           principalAmt: Number(loanAmt),
-          bankId: bankID
+          bankId: bankID,
+          closeLoan: closeLoan
         },
         {
           headers: {
@@ -125,10 +154,13 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          setLoanDetails(null)
-          setBankModeType('')
-          setBankid(null)
-          setLoanAmt(null)
+          console.log(' -> Line Number ----------------------------------- 157')
+          // setLoanDetails(null)
+          // setBankModeType('')
+          // setBankid(null)
+          // setLoanAmt(null)
+          // handleBack()
+          setSummary(false)
           handleBack()
         }
       })
@@ -136,7 +168,7 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
 
   useEffect(() => {
     setShowCard(false)
-    getLoanDatas()
+    getLoanDatas(id, date)
     const getSetData = async () => {
       const settingdatas = await getSettingData()
       console.log('settingdatas line ------ 172', settingdatas)
@@ -147,7 +179,7 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
       }
     }
     getSetData()
-  }, [])
+  }, [date])
 
   return (
     <div>
@@ -287,188 +319,230 @@ const AdminCloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab }) => {
               </AccordionTab>
             </Accordion>
           </div>
+          {!loanDetails?.loanCalculation && (
+            <div>
+              <p className="text-amber-500 italic">
+                <b>Note : </b>The above balance amount is an approximate value and may not reflect
+                the exact loan balance.
+              </p>
+            </div>
+          )}
+
           <Divider />
-          <div className="flex justify-between align-items-center">
-            <div className="w-[30%]">
-              <label className="font-bold block mb-2">Select Paid Date</label>
-              <Calendar
-                placeholder="DD/MM/YYYY"
-                value={date}
-                required
-                onChange={(e) => {
-                  setDate(e.value ?? new Date())
-                }}
-                dateFormat="dd/mm/yy"
-                // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
-                maxDate={new Date()}
-              />
-            </div>
-          </div>
-          <div className="flex mt-3 gap-3">
-            <div className="flex-1">
-              <label className="font-bold block mb-2">Enter Balance Amount</label>
-              <InputNumber
-                placeholder="Enter Balance Amount"
-                mode="currency"
-                value={loanAmt}
-                max={loanDetails?.refBalanceAmt}
-                currency="INR"
-                className="w-full"
-                currencyDisplay="symbol"
-                locale="en-IN"
-                onChange={(e: any) => {
-                  const enteredValue = e.value
-                  console.log('enteredValue line ----- 319', enteredValue)
-                  const maxValue = loanDetails?.refBalanceAmt
-
-                  if (enteredValue <= maxValue) {
-                    console.log('enteredValue line ----- 323', enteredValue)
-
-                    console.log(' -> Line Number ----------------------------------- 323')
-                    setLoanAmt(enteredValue)
-                  } else {
-                    console.log(' -> Line Number ----------------------------------- 326')
-                    console.log('enteredValue line ----- 330', enteredValue)
-
-                    setLoanAmt(maxValue) // force the value to max
-                  }
-                }}
-              />
-            </div>
-            {settingData?.paymentMethod === 1 && <></>}
-            {/* <div className="flex-1">
-              <label className="font-bold block mb-2">Select Amount Type</label>
-
-              <div className="flex flex-wrap gap-3 mt-3">
-                <div className="flex align-items-center">
-                  <RadioButton
-                    inputId="bankModeType1"
-                    name="Bank"
-                    value="Bank"
-                    onChange={(e: RadioButtonChangeEvent) => setBankModeType(e.value)}
-                    checked={bankModeType === 'Bank'}
-                  />
-                  <label htmlFor="bankModeType1" className="ml-2">
-                    Bank
-                  </label>
-                </div>
-                <div className="flex align-items-center">
-                  <RadioButton
-                    inputId="bankModeType2"
-                    name="Cash"
-                    value="Cash"
-                    onChange={(e: RadioButtonChangeEvent) => setBankModeType(e.value)}
-                    checked={bankModeType === 'Cash'}
-                  />
-                  <label htmlFor="bankModeType2" className="ml-2">
-                    Cash
-                  </label>
-                </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              setSummary(true)
+            }}
+          >
+            <div className="flex justify-between align-items-center">
+              <div className="w-[30%]">
+                <label className="font-bold block mb-2">Select Paid Date</label>
+                <Calendar
+                  placeholder="DD/MM/YYYY"
+                  value={date}
+                  required
+                  onChange={(e) => {
+                    setDate(e.value ?? new Date())
+                    getLoanDatas(id, e.value ?? new Date())
+                  }}
+                  dateFormat="dd/mm/yy"
+                  // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                  maxDate={new Date()}
+                />
               </div>
-            </div> */}
-            {settingData?.paymentMethod === 1 && (
-              <>
-                {' '}
-                <div className="flex-1">
-                  <label className="font-bold block mb-2">Select Payment Flow</label>
+            </div>
+            <div className="flex mt-3 gap-3">
+              <div className="flex-1">
+                <label className="font-bold block mb-2">Enter Balance Amount</label>
+                <InputNumber
+                  placeholder="Enter Balance Amount"
+                  mode="currency"
+                  required
+                  value={loanAmt}
+                  max={
+                    loanDetails.loanCalculation
+                      ? loanDetails?.refBalanceAmt
+                      : loanDetails?.refBalanceAmt * 3
+                  }
+                  currency="INR"
+                  className="w-full"
+                  currencyDisplay="symbol"
+                  locale="en-IN"
+                  onChange={(e: any) => {
+                    const enteredValue = e.value
+                    console.log('enteredValue line ----- 319', enteredValue)
+                    const maxValue = loanDetails?.refBalanceAmt
 
-                  <div className="flex flex-wrap gap-3 mt-3">
-                    <div className="flex align-items-center">
-                      <RadioButton
-                        inputId="bankModeType1"
-                        name="Bank"
-                        value="Bank"
-                        onChange={(e: RadioButtonChangeEvent) => {
-                          console.log('e.value', e.value)
-                          setBankModeType(e.value)
-                        }}
-                        checked={bankModeType === 'Bank'}
-                      />
-                      <label htmlFor="bankModeType1" className="ml-2">
-                        Bank
-                      </label>
-                    </div>
-                    <div className="flex align-items-center">
-                      <RadioButton
-                        inputId="bankModeType2"
-                        name="Cash"
-                        value="Cash"
-                        onChange={(e: RadioButtonChangeEvent) => {
-                          console.log('e.value', e.value)
-                          setBankModeType(e.value)
-                        }}
-                        checked={bankModeType === 'Cash'}
-                      />
-                      <label htmlFor="bankModeType2" className="ml-2">
-                        Cash
-                      </label>
+                    if (enteredValue <= maxValue) {
+                      setLoanAmt(enteredValue)
+                    } else {
+                      setLoanAmt(maxValue)
+                    }
+                  }}
+                />
+              </div>
+
+              {settingData?.paymentMethod === 1 && (
+                <>
+                  {' '}
+                  <div className="flex-1">
+                    <label className="font-bold block mb-2">Select Payment Flow</label>
+
+                    <div className="flex flex-wrap gap-3 mt-3">
+                      <div className="flex align-items-center">
+                        <RadioButton
+                          inputId="bankModeType"
+                          required
+                          name="bankModeType"
+                          value="Bank"
+                          onChange={(e: RadioButtonChangeEvent) => {
+                            console.log('e.value', e.value)
+                            setBankModeType(e.value)
+                          }}
+                          checked={bankModeType === 'Bank'}
+                        />
+                        <label htmlFor="bankModeType" className="ml-2">
+                          Bank
+                        </label>
+                      </div>
+                      <div className="flex align-items-center">
+                        <RadioButton
+                          inputId="bankModeType"
+                          required
+                          name="bankModeType"
+                          value="Cash"
+                          onChange={(e: RadioButtonChangeEvent) => {
+                            console.log('e.value', e.value)
+                            setBankModeType(e.value)
+                          }}
+                          checked={bankModeType === 'Cash'}
+                        />
+                        <label htmlFor="bankModeType" className="ml-2">
+                          Cash
+                        </label>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </>
-            )}
-            {(settingData?.paymentMethod === 2 || settingData?.paymentMethod === 3) && (
-              <div className="flex-1">
-                <label className="font-bold block mb-2">
-                  Choose {settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}
-                </label>
+                </>
+              )}
+              {(settingData?.paymentMethod === 2 || settingData?.paymentMethod === 3) && (
+                <div className="flex-1">
+                  <label className="font-bold block mb-2">
+                    Choose {settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}
+                  </label>
 
-                <Dropdown
-                  value={bankID}
-                  filter
-                  onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
-                  options={bankDetailsResponse.filter(
-                    (item) =>
-                      (bankModeType === 'Bank' && item.refAccountType === 1) ||
-                      (bankModeType === 'Cash' && item.refAccountType === 2)
-                  )}
-                  optionValue="value"
-                  optionLabel="name"
-                  placeholder={`Select ${settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}`}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </div>
-          {/* {errorShow && (
-            <div className="flex mt-3 ">
-              <div className="flex-1">
-                <Message text={errorMessage} />
+                  <Dropdown
+                    value={bankID}
+                    filter
+                    required
+                    onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
+                    options={bankDetailsResponse.filter(
+                      (item) =>
+                        (bankModeType === 'Bank' && item.refAccountType === 1) ||
+                        (bankModeType === 'Cash' && item.refAccountType === 2)
+                    )}
+                    optionValue="value"
+                    optionLabel="name"
+                    placeholder={`Select ${settingData.paymentMethod === 2 ? 'Bank Account' : 'Cash Flow'}`}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex mt-3 gap-3">
+              {settingData?.paymentMethod === 1 && (
+                <div className="flex-1">
+                  <label className="font-bold block mb-2">
+                    Choose {bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}
+                  </label>
+
+                  <Dropdown
+                    value={bankID}
+                    required
+                    filter
+                    name="paymentType"
+                    onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
+                    options={bankDetailsResponse.filter(
+                      (item) =>
+                        (bankModeType === 'Bank' && item.refAccountType === 1) ||
+                        (bankModeType === 'Cash' && item.refAccountType === 2)
+                    )}
+                    optionValue="value"
+                    optionLabel="name"
+                    placeholder={`Select ${bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}`}
+                    className="w-full"
+                  />
+                </div>
+              )}
+              <div className="flex-1"></div>
+            </div>
+
+            <div className="flex mt-3 justify-between">
+              {!loanDetails?.loanCalculation && (
+                <div>
+                  <InputSwitch
+                    checked={closeLoan}
+                    onChange={(e: InputSwitchChangeEvent) => setCloseLoan(e.value)}
+                  />
+                  <p className="italic text-amber-500">
+                    Note: This entry should be used to close the loan as the final transaction.
+                  </p>
+                </div>
+              )}
+              {loanDetails?.loanCalculation && <div></div>}
+
+              <div>
+                <Button label="Update Loan" severity="success" />
               </div>
             </div>
-          )} */}
-
-          <div className="flex mt-3 gap-3">
-            {settingData?.paymentMethod === 1 && (
-              <div className="flex-1">
-                <label className="font-bold block mb-2">
-                  Choose {bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}
-                </label>
-
-                <Dropdown
-                  value={bankID}
-                  filter
-                  onChange={(e: DropdownChangeEvent) => setBankid(e.value)}
-                  options={bankDetailsResponse.filter(
-                    (item) =>
-                      (bankModeType === 'Bank' && item.refAccountType === 1) ||
-                      (bankModeType === 'Cash' && item.refAccountType === 2)
-                  )}
-                  optionValue="value"
-                  optionLabel="name"
-                  placeholder={`Select ${bankModeType === 'Bank' ? 'Bank Account' : 'Cash Flow'}`}
-                  className="w-full"
-                />
-              </div>
-            )}
-            <div className="flex-1"></div>
-          </div>
-
-          <div className="flex mt-3 justify-content-end">
-            <Button label="Update Loan" severity="success" onClick={loanUpdate} />
-          </div>
+          </form>
         </>
       )}
+      <Dialog
+        visible={summary}
+        modal
+        header={headerElement}
+        footer={footerContent}
+        style={{ width: '50rem' }}
+        onHide={() => {
+          if (!summary) return
+          setSummary(false)
+        }}
+      >
+        <div className="flex flex-col gap-y-4">
+          <div className="flex">
+            <div className="flex-1 flex gap-x-2">
+              <p>Payment Date : </p>
+              <b>{date.toLocaleDateString('en-GB')}</b>
+            </div>
+            <div className="flex-1 flex gap-x-2">
+              <p>Entered Amount : </p>
+              <b>{formatINRCurrency(loanAmt)}</b>
+            </div>
+          </div>
+          <div className="flex">
+            <div className="flex-1 flex gap-x-2">
+              <p>Payment Type : </p>
+              <b>{bankModeType}</b>
+            </div>
+            <div className="flex-1 flex gap-x-2">
+              <p>Debit Amount From : </p>
+              <b>
+                {bankDetailsResponse.find((data) => data.refBankId === bankID)?.refBankName ??
+                  'N/A'}
+              </b>
+            </div>
+          </div>
+          {!loanDetails?.loanCalculation && (
+            <div className="flex gap-x-2">
+              <p className="italic">Make this Payment As The Last To Close the Loan : </p>
+              <b>{closeLoan ? 'Yes' : 'NO'}</b>
+            </div>
+          )}
+        </div>
+      </Dialog>
     </div>
   )
 }

@@ -20,7 +20,6 @@ export function getDateAfterMonths(dateStr: string, monthRange: number): string 
   return `${year}-${month}-${day}`
 }
 
-
 export function formatToCustomDateTime(dateInput: string | Date): string {
   const date = new Date(dateInput)
 
@@ -37,4 +36,12 @@ export function formatToCustomDateTime(dateInput: string | Date): string {
   const formattedHours = String(hours).padStart(2, '0')
 
   return `${day}/${month}/${year}, ${formattedHours}:${minutes}:${seconds} ${period}`
+}
+
+export function formatToDDMMYYYY(dateInput: string | Date): string {
+  const date = new Date(dateInput)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-based
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
 }

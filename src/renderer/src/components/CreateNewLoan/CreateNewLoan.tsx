@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { Accordion, AccordionTab } from 'primereact/accordion'
 import { Divider } from 'primereact/divider'
 import axios from 'axios'
 import decrypt from '../Helper/Helper'
@@ -17,6 +16,8 @@ import { getSettingData } from '@renderer/helper/SettingsData'
 import { Button } from 'primereact/button'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { IoOpenOutline } from 'react-icons/io5'
+import { Dialog } from 'primereact/dialog'
 // import { AnyCnameRecord } from 'node:dns'
 
 interface CreateNewLoanProps {
@@ -30,20 +31,22 @@ interface LoanType {
 }
 
 interface LoadDetailsResponseProps {
-  initialInterest: string
-  interestFirst: boolean
-  interestFirstMonth: string
-  loanDuration: string
-  loanInterest: string
-  totalInitialInterest: number
-  totalInterest: string
-  totalInterestPaid: string
   totalLoanAmt: string
-  totalLoanPaidDuration: string
+  loanInterest: string
+  loanDuration: string
+  interestFirst: boolean
+  initialInterest: string
+  interestFirstMonth: string
   totalPrincipal: string
-  finalBalanceAmt: string
+  totalInterest: string
   durationType: Number
-  interestCalType: Number
+  rePaymentTypeName: string
+  repaymentType: number
+  loanBalance: string
+  loanDueCount: number
+  loanDueType: number
+  oldInterest: string
+  oldPrincipal: string
 }
 
 interface productStructure {
@@ -75,27 +78,15 @@ interface UserDetails {
   value: number
 }
 
-interface dueInfo {
-  interest: number
-  principal: number
-}
-
-interface LoanCalculationSummary {
-  newLoanAmt: number
-  oldLoanAmt: number
-  totalLoanAmt: number
-  interest: number
-  duration: number
-  productName: string
-  initialInterest: number
-  initialInterestType: string
-  rePaymentType: number
-  totalInitialInterest: number
-  interestPaidFirst: number
-  dueInfo: dueInfo
-  rePaymentDate: string
-  interestPaidFirstCount: number
-  amtToUser
+interface LoanCalculationSummaryV2 {
+  DueInterestPaidFirstAmt: number
+  TotalInitialInterest: number
+  amtToUser: number
+  dueRePaymentData: {
+    initialInterest: number
+    interest: number
+    principal: number
+  }
 }
 
 const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => {
@@ -123,12 +114,13 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [loadDetailsResponse, setLoanDetailsReponse] = useState<LoadDetailsResponseProps | null>(
     null
   )
+  const [showOldLoanData, setShowOldLoanData] = useState<boolean>(false)
   const [selectedLoanType, setSelectedLoanType] = useState<number | null>(0)
   const [showForm, setShowForm] = useState<boolean>(false)
   const [showLoanInfo, setShowLoanInfo] = useState<boolean>(false)
   const [loanTypeOptions, setLoanTypeOptions] = useState<LoanType[] | null>([])
   const [_summaryProduct, setSummaryProduct] = useState<productStructure>()
-  const [loanSummardData, setLoanSummaryData] = useState<LoanCalculationSummary>()
+  const [loanSummardData, setLoanSummaryData] = useState<LoanCalculationSummaryV2>()
   const [selectedRepaymentType, setSelectedRepaymentType] = useState<number | null>(null)
   const [userLoan, setUserLoan] = useState<any[]>([])
   const [selectedLoan, setSelectedLoan] = useState<any[] | null>([])
@@ -142,8 +134,9 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   const [loanSummary, setLoanSummary] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const [summaryData, setSummaryData] = useState<
-    { label: string; value: string | number | undefined }[]
+    { label: string; value: string | number | Date | undefined }[]
   >([])
+
   function getNextWeekRange(startDay: string, endDay: string) {
     const daysOfWeek: Record<string, number> = {
       Sunday: 0,
@@ -306,7 +299,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         import.meta.env.VITE_API_URL + '/newLoan/selectedLoanDetailsV1',
         {
           loanId: value,
-          loanTypeId: selectedLoanType
+          loanTypeId: selectedLoanType,
+          todayDate: date ?? undefined
         },
         {
           headers: {
@@ -325,8 +319,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
         console.log('data line ------- 194', data.data)
         localStorage.setItem('token', 'Bearer ' + data.token)
         setLoanDetailsReponse(data.data)
-        setOldBalanceAmt(Number(data.data.finalBalanceAmt))
-        const balance = data.data.finalBalanceAmt ?? 0
+        setOldBalanceAmt(Number(data.data.oldPrincipal))
+        const balance = data.data.loanBalance ?? 0
         console.log('balance line -------- 201', balance)
         setFinalLoanAmt(0 + Number(balance))
         getAllLoanData()
@@ -353,6 +347,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
   }
 
   const getLoanSummary = async () => {
+    const today = date ?? new Date()
     try {
       setLoanSummary(true)
       axios
@@ -361,10 +356,11 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           {
             newLoanAmt: newLoanAmt,
             oldLoaAmt: oldBalanceAmt,
+            oldInterestAmt: loadDetailsResponse?.oldInterest,
             productId: productId?.refProductId,
             interestFirst: interestFirst,
             interestFirstMonth: monthCount,
-            todayDate: date,
+            todayDate: today.toLocaleDateString('en-CA'),
             rePaymentStartDate: rePaymentDate?.toLocaleDateString('en-CA')
           },
           {
@@ -384,31 +380,38 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           if (data.success) {
             console.log(' -> Line Number ----------------------------------- 364')
             setSummaryProduct(data.product)
-            setLoanSummaryData(data.data)
-            const loanData: LoanCalculationSummary = data.data
+            setLoanSummaryData(data)
+            // const loanData: LoanCalculationSummaryV2 = data
+            // console.log('loanData line ------ 414', loanData)
             const productData: productStructure = data.product
             const summaryDatas = {
-              newLoanAmount: formatINRCurrency(loanData.newLoanAmt),
-              oldLoanAmount: formatINRCurrency(loanData.oldLoanAmt),
-              FinalLoanAmount: formatINRCurrency(loanData.totalLoanAmt),
-              productName: loanData.productName,
-              Interest: `${loanData.interest} %`,
+              newLoanAmount: formatINRCurrency(Math.round(Number(newLoanAmt))),
+              oldLoanInterest: formatINRCurrency(
+                Math.round(Number(loadDetailsResponse?.oldInterest))
+              ),
+              oldLoanPrincipal: formatINRCurrency(
+                Math.round(Number(loadDetailsResponse?.oldPrincipal))
+              ),
+              FinalLoanPrincipal: formatINRCurrency(Math.round(FinalLoanAmt)),
+              productName: productData.refProductName,
+              Interest: `${productData.refProductInterest} %`,
               Duration: `${productData.refProductDuration} ${productData.refLoanDueType === 1 ? 'Months' : productData.refLoanDueType === 2 ? 'Weeks' : 'Days'}`,
               rePaymentType: productData.refRepaymentTypeName,
-              rePaymentDate: loanData.rePaymentDate.split('-').slice(0, 3).reverse().join('-'),
-
+              // rePaymentDate: rePaymentDate,
               interestCalType:
                 productData.refInterestCalType === 1
                   ? 'Day Wise Calculation'
-                  : 'Overall Calculation',
-              InitialInterest: formatINRCurrency(loanData.totalInitialInterest),
-              InitialInterestPaidType: loanData.initialInterestType,
-              interestPaidFirstCount: loanData.interestPaidFirstCount,
-              interestPaidFirst: formatINRCurrency(loanData.interestPaidFirst),
+                  : productData.refInterestCalType === 2
+                    ? 'Overall Calculation'
+                    : 'Month To Day Calculation',
+              InitialInterest: formatINRCurrency(Math.round(data.TotalInitialInterest)),
+              InitialInterestPaidType: productData.refInterestCalName,
+              interestPaidFirstCount: monthCount,
+              interestPaidFirst: formatINRCurrency(Math.round(data.DueInterestPaidFirstAmt)),
               documentFee: formatINRCurrency(docFee),
               security: security,
               AmountToCustomer: formatINRCurrency(
-                Math.round(loanData.amtToUser - Number(docFee ?? 0))
+                Math.round(data.amtToUser - Number(oldBalanceAmt) - Number(docFee ?? 0))
               )
             }
             const summaryDataRowWise = Object.entries(summaryDatas).map(([key, value]) => ({
@@ -428,7 +431,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     console.log('rePaymentDate', rePaymentDate)
     axios
       .post(
-        import.meta.env.VITE_API_URL + '/newLoan/CreateNewLoan',
+        import.meta.env.VITE_API_URL + '/customerNewLoanCreation/createNewLoan',
         {
           refUserId: customerId,
           refProductId: productId?.refProductId,
@@ -446,14 +449,17 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           refLoanExt: selectedLoanType,
           refLoanStatus: 1,
           refInterestMonthCount: monthCount,
-          refInitialInterest: loanSummardData?.totalInitialInterest,
+          refInitialInterest: loanSummardData?.TotalInitialInterest,
           refRepaymentType: selectedRepaymentType,
-          refTotalInterestFirst: (loanSummardData?.interestPaidFirst ?? 0).toFixed(2),
-          refToUseAmt: loanSummardData?.amtToUser - Number(docFee ?? 0),
+          refTotalInterestFirst: (loanSummardData?.DueInterestPaidFirstAmt ?? 0).toFixed(2),
+          refToUseAmt:
+            loanSummardData?.amtToUser ??
+            FinalLoanAmt - Number(docFee ?? 0) - Number(oldBalanceAmt),
           oldBalanceAmt: oldBalanceAmt ?? 0,
+          oldInterestAmt: loadDetailsResponse?.oldInterest,
           refDocFee: docFee,
           refSecurity: security,
-          todayDate: date ?? undefined
+          todayDate: date?.toLocaleDateString('en-CA') ?? undefined
         },
         {
           headers: {
@@ -582,56 +588,6 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
     }).format(amount ?? 0)
   }
 
-  // const summary = () => {
-  //   console.log('productId line ------ 465', productId)
-  //   console.log('productId?.refProductId', productId?.refProductId)
-  //   setLoanSummary(true)
-  //   if (loanCalculationData) {
-  //     console.log(' -> Line Number ----------------------------------- 468')
-  //     loanCalculation(loanCalculationData)
-  //     const summaryDatas = {
-  //       newLoanAmount: formatINRCurrency(newLoanAmt),
-  //       oldLoanAmount: formatINRCurrency(oldBalanceAmt),
-  //       FinalLoanAmount: formatINRCurrency(FinalLoanAmt),
-  //       productName: productId?.refProductName.split('|')[0],
-  //       Interest: `${productId?.refProductInterest} %`,
-  //       Duration: `${productId?.refProductDuration} ${productId?.refLoanDueType === 1 ? 'Months' : productId?.refLoanDueType === 2 ? 'Weeks' : 'Days'}`,
-  //       rePaymentType: productId?.refRepaymentTypeName,
-  //       rePaymentDate: rePaymentDate?.toLocaleDateString('en-CA'),
-
-  //       interestCalType:
-  //         productId?.refInterestCalType === 1 ? 'Day Wise Calculation' : 'Overall Calculation',
-  //       InitialInterest: formatINRCurrency(initialInterestAmt),
-  //       interestPaidFirstCount: monthCount,
-  //       interestPaidFirst: formatINRCurrency(interestFirstAmt),
-  //       documentFee: formatINRCurrency(docFee),
-  //       security: security,
-  //       finalAmountToUser: formatINRCurrency(
-  //         (newLoanAmt ?? 0) - (initialInterestAmt ?? 0) - (interestFirstAmt ?? 0) - (docFee ?? 0)
-  //       )
-  //     }
-  //     const summaryDataRowWise = Object.entries(summaryDatas).map(([key, value]) => ({
-  //       label: formatLabel(key),
-  //       value: value ?? '-' // show dash if undefined/null
-  //     }))
-  //     setSummaryData(summaryDataRowWise)
-
-  //     console.log('summaryDatas line ------- 490', summaryDatas)
-  //   } else {
-  //     toast.error('Please select all the fields', {
-  //       position: 'top-right',
-  //       autoClose: 2999,
-  //       hideProgressBar: false,
-  //       closeOnClick: false,
-  //       pauseOnHover: true,
-  //       draggable: true,
-  //       progress: undefined,
-  //       theme: 'light',
-  //       transition: Slide
-  //     })
-  //   }
-  // }
-
   return (
     <div>
       <ToastContainer />
@@ -723,132 +679,27 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   />
                 </div>
               </div>
+              <Divider layout="horizontal" className="m-2" />
 
               {showLoanInfo && (
-                <div className="flex justify-center">
-                  <div className="mt-3 w-[95%]">
-                    <Accordion activeIndex={0}>
-                      <AccordionTab header="Loan Details">
-                        <div className="flex">
-                          <div className="flex-1">
-                            <p>
-                              Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Loan Duration :{' '}
-                              <b>
-                                {' '}
-                                {loadDetailsResponse?.loanDuration}{' '}
-                                {loadDetailsResponse?.durationType === 1
-                                  ? 'Months'
-                                  : loadDetailsResponse?.durationType === 2
-                                    ? 'Weeks'
-                                    : 'Days'}
-                              </b>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex mt-3">
-                          <div className="flex-1">
-                            <p>
-                              Initial Interest - Amt :{' '}
-                              <b>₹ {loadDetailsResponse?.initialInterest}</b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Interest Paid (First) :{' '}
-                              <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
-                            </p>
-                          </div>
-
-                          <div className="flex-1">
-                            <p>
-                              Interest Paid (First) :{' '}
-                              <b>
-                                {' '}
-                                {loadDetailsResponse?.interestFirstMonth}{' '}
-                                {loadDetailsResponse?.durationType === 1
-                                  ? 'Months'
-                                  : loadDetailsResponse?.durationType === 2
-                                    ? 'Weeks'
-                                    : 'Days'}
-                              </b>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex mt-3">
-                          <div className="flex-1">
-                            <p>
-                              Total Principal Amt : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Total Interest Amt : <b>₹ {loadDetailsResponse?.totalInterest}</b>
-                            </p>
-                          </div>
-                          <div className="flex-1"></div>
-                        </div>
-                        <Divider layout="horizontal" className="flex">
-                          <b>Calculation</b>
-                        </Divider>
-                        <div className="flex">
-                          <div className="flex-1">
-                            <p>
-                              Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Total Interest Paid :{' '}
-                              <b>₹ {loadDetailsResponse?.totalInterestPaid}</b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Initial Interest Paid :{' '}
-                              <b>₹ {loadDetailsResponse?.totalInitialInterest}</b>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex mt-3">
-                          <div className="flex-1">
-                            <p>
-                              Loan Duration :{' '}
-                              <b>
-                                {' '}
-                                {loadDetailsResponse?.loanDuration}{' '}
-                                {loadDetailsResponse?.durationType === 1
-                                  ? 'Months'
-                                  : loadDetailsResponse?.durationType === 2
-                                    ? 'Weeks'
-                                    : 'Days'}
-                              </b>
-                            </p>
-                          </div>
-                          <div className="flex-1">
-                            <p>
-                              Balance Amt : <b>₹ {loadDetailsResponse?.finalBalanceAmt}</b>
-                            </p>
-                          </div>
-                        </div>
-                      </AccordionTab>
-                    </Accordion>
+                <div className="flex flex-col justify-end">
+                  <div className="w-full flex justify-end">
+                    <Button
+                      className="flex gap-x-5"
+                      type="button"
+                      onClick={() => {
+                        setShowOldLoanData(true)
+                      }}
+                    >
+                      View Old Loan Details <IoOpenOutline size={'1.2rem'} />
+                    </Button>
                   </div>
+                  <Divider layout="horizontal" className="m-2" />
                 </div>
               )}
 
               {showForm && (
                 <div>
-                  <Divider layout="horizontal" className="flex" />
                   <div className="w-full flex justify-content-around my-1">
                     <div className="w-[95%]">
                       <label className="font-bold block mb-2">Select Product</label>
@@ -890,8 +741,8 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                   </div>
                   <div className="w-full  flex justify-content-around my-1">
                     <div className="w-[45%]  flex flex-row justify-content-between gap-x-2">
-                      <div className="w-full">
-                        <label className="font-bold block mb-2">Enter Loan Amount</label>
+                      <div className="flex-1">
+                        <label className="font-bold block mb-2">Loan Amount</label>
                         <InputNumber
                           className="w-full"
                           placeholder="Enter Loan Amount"
@@ -920,20 +771,37 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         />
                       </div>
                       {(selectedLoanType === 2 || selectedLoanType === 3) && (
-                        <div className="w-full">
-                          <label className="font-bold block mb-2">Balance Amount</label>
-                          <InputNumber
-                            className="w-full"
-                            disabled
-                            placeholder="Old Loan Amount"
-                            inputId="currency-india"
-                            value={oldBalanceAmt}
-                            required
-                            mode="currency"
-                            currency="INR"
-                            currencyDisplay="symbol"
-                            locale="en-IN"
-                          />
+                        <div className="w-full  flex flex-2 gap-x-2">
+                          <div className="flex-1">
+                            <label className="font-bold block mb-2">Old Interest</label>
+                            <InputNumber
+                              className="w-full"
+                              disabled
+                              placeholder="Old Loan Amount"
+                              inputId="currency-india"
+                              value={Number(loadDetailsResponse?.oldInterest)}
+                              required
+                              mode="currency"
+                              currency="INR"
+                              currencyDisplay="symbol"
+                              locale="en-IN"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="font-bold block mb-2">Old Principal</label>
+                            <InputNumber
+                              className="w-full"
+                              disabled
+                              placeholder="Old Loan Amount"
+                              inputId="currency-india"
+                              value={Number(loadDetailsResponse?.oldPrincipal)}
+                              required
+                              mode="currency"
+                              currency="INR"
+                              currencyDisplay="symbol"
+                              locale="en-IN"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -966,11 +834,13 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                         className="w-full"
                         required
                         value={rePaymentDate ?? undefined}
+                        onFocus={async () => {
+                          await getDateRange(productId?.refLoanDueType)
+                        }}
                         onChange={async (e: any) => {
                           console.log('e line ------- 881', e.value.toLocaleDateString('en-CA'))
                           setRePaymentDate(e.value)
-                          // setStep(5)
-                          // setInterestFirst(null)
+
                           const data: interestCal = {
                             ...loanCalculationData,
                             rePaymentDate: e.value
@@ -1122,10 +992,15 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             </div>
             {/* {step >= 7 && ( */}
             <div className="w-full flex justify-center">
-              <button className="bg-[green] text-white py-2 px-10 rounded-md shadow-md">
+              <button
+                disabled={!showForm}
+                className={`py-2 px-10 rounded-md shadow-md text-white 
+      ${showForm ? 'bg-[green]' : 'bg-[gray] cursor-not-allowed'}`}
+              >
                 View Loan Details
               </button>
             </div>
+
             {/* )} */}
           </form>
         </>
@@ -1151,20 +1026,20 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                 <Column field="value" body={(row) => <div className="">{row.value}</div>} />
               </DataTable>
             </div>
-            <div className="w-full flex justify-center">
+            {/* <div className="w-full flex justify-center">
               <div className="my-3 w-[80%]  shadow-2xl border-0 rounded-lg p-5">
                 <b>First Due Repayment Details</b>
                 <div className="flex w-full justify-content-between my-2">
                   <div>
                     <p>
                       Interest Amount :{' '}
-                      <b>{formatINRCurrency(loanSummardData?.dueInfo.interest)}</b>
+                      <b>{formatINRCurrency(loanSummardData?.dueRePaymentData.interest)}</b>
                     </p>
                   </div>
                   <div>
                     <p>
                       Principal Amount :{' '}
-                      <b>{formatINRCurrency(loanSummardData?.dueInfo.principal)}</b>
+                      <b>{formatINRCurrency(loanSummardData?.dueRePaymentData.principal)}</b>
                     </p>
                   </div>
                   <div>
@@ -1172,15 +1047,15 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
                       Total Due Amount:{' '}
                       <b>
                         {formatINRCurrency(
-                          (loanSummardData?.dueInfo?.interest ?? 0) +
-                            (loanSummardData?.dueInfo?.principal ?? 0)
+                          (loanSummardData?.dueRePaymentData.interest ?? 0) +
+                            (loanSummardData?.dueRePaymentData.principal ?? 0)
                         )}
                       </b>
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div>
               <div className="w-full flex justify-between">
@@ -1210,6 +1085,91 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
           </div>
         </>
       )}
+
+      <Dialog
+        header="Selected Old Loan Data"
+        visible={showOldLoanData}
+        style={{ width: '70vw' }}
+        onHide={() => {
+          if (!showOldLoanData) return
+          setShowOldLoanData(false)
+        }}
+      >
+        <>
+          <div className="flex">
+            <div className="flex-1">
+              <p>
+                Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
+              </p>
+            </div>
+            <div className="flex-1">
+              <p>
+                Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
+              </p>
+            </div>
+            <div className="flex-1">
+              <p>
+                Loan Duration :
+                <b>
+                  {loadDetailsResponse?.repaymentType === 3
+                    ? loadDetailsResponse?.loanDueCount
+                    : loadDetailsResponse?.loanDuration}
+                  {loadDetailsResponse?.loanDueType === 1
+                    ? ' Months'
+                    : loadDetailsResponse?.loanDueType === 2
+                      ? ' Weeks'
+                      : ' Days'}
+                </b>
+              </p>
+            </div>
+          </div>
+          <div className="flex mt-3">
+            <div className="flex-1">
+              <p>
+                Initial Interest - Amt : <b>₹ {loadDetailsResponse?.initialInterest}</b>
+              </p>
+            </div>
+            <div className="flex-1">
+              <p>
+                Interest Paid (First) :{' '}
+                <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
+              </p>
+            </div>
+
+            <div className="flex-1">
+              <p>
+                Interest Paid (First) :{' '}
+                <b>
+                  {' '}
+                  {loadDetailsResponse?.interestFirstMonth}{' '}
+                  {loadDetailsResponse?.loanDueType === 1
+                    ? 'Months'
+                    : loadDetailsResponse?.loanDueType === 2
+                      ? 'Weeks'
+                      : 'Days'}
+                </b>
+              </p>
+            </div>
+          </div>
+          <div className="flex mt-3">
+            <div className="flex-1">
+              <p>
+                Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
+              </p>
+            </div>
+            <div className="flex-1">
+              <p>
+                Total Interest Paid : <b>₹ {loadDetailsResponse?.totalInterest}</b>
+              </p>
+            </div>
+            <div className="flex-1">
+              <p>
+                Balance Amount : <b>₹ {loadDetailsResponse?.loanBalance}</b>
+              </p>
+            </div>
+          </div>
+        </>
+      </Dialog>
     </div>
   )
 }

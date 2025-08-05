@@ -20,29 +20,40 @@ const AdminRepayments = () => {
   const [userListType, setUserListType] = useState({ name: 'Over All', code: 0 })
   const [startDate, setStartDate] = useState<Nullable<Date>>(null)
   const [endDate, setEndDate] = useState<Nullable<Date>>(null)
+  const [selectedMonth, setSelectedMonth] = useState<Nullable<Date>>(new Date())
+
   const userType = [
     { name: 'Over All', code: 0 },
-    { name: 'Month', code: 1 }
+    // { name: 'Month', code: 1 },
+    { name: 'Month', code: 2 }
   ]
 
-  function formatToDDMMYYYY(dateString) {
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
-    const year = date.getFullYear()
+  // function formatToDDMMYYYY(dateString) {
+  //   const date = new Date(dateString)
+  //   const day = String(date.getDate()).padStart(2, '0')
+  //   const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
+  //   const year = date.getFullYear()
 
-    return `${day}-${month}-${year}`
-  }
+  //   return `${day}-${month}-${year}`
+  // }
 
   const loadData = () => {
+    let passDate = ''
+
+    if (selectedMonth instanceof Date && !isNaN(selectedMonth.getTime())) {
+      const year = selectedMonth.getFullYear()
+      const month = String(selectedMonth.getMonth() + 1).padStart(2, '0')
+      const day = '01' // Default to first day of month if you're using this as a month picker
+
+      passDate = `${day}-${month}-${year}` // Format: DD-MM-YYYY
+    }
     try {
       axios
         .post(
-          import.meta.env.VITE_API_URL + '/AdminRePayment/userList',
+          import.meta.env.VITE_API_URL + '/AdminRePayment/dueList',
           {
             ifMonth: userListType.code === 0 ? false : true,
-            startDate: startDate ? formatToDDMMYYYY(startDate) : '',
-            endDate: endDate ? formatToDDMMYYYY(endDate) : ''
+            month: passDate
           },
           {
             headers: {
@@ -62,10 +73,48 @@ const AdminRepayments = () => {
 
           console.log('data line ---- 70', data)
           const list = data.data
+          const nonCalDue = data.nonCalDue
 
           if (data.success) {
             setLoadingStatus(false)
-            setUserLists(list)
+            let dueList = list.map((data) => ({
+              refUserFname: data.refVendorName,
+              refVendorName: data.refVendorName,
+              refUserMobileNo: data.refVendorMobileNo,
+              refUserAddress: data.refAddress,
+              refPaymentDate: data.refPaymentDate,
+              refLoanAmount: data.refLoanAmount,
+              refProductDuration: data.refProductDuration,
+              refProductInterest: data.refProductInterest,
+              refProductName: data.refIfCalculation ? 'System Calculation' : 'Manual Calculation',
+              refIfCalculation: data.refIfCalculation,
+              refLoanId: data.refLoanId
+            }))
+
+            console.log('dueList line ----- 93', dueList)
+
+            const temp = nonCalDue.map((data) => ({
+              refUserFname: data.refVendorName,
+              refVendorName: data.refVendorName,
+              refUserMobileNo: data.refVendorMobileNo,
+              refUserAddress: data.refAddress,
+              refPaymentDate: data.refPaymentDate ?? new Date().toISOString().split('T')[0],
+              refLoanAmount: data.refLoanAmount,
+              refProductDuration: data.refProductDuration,
+              refProductInterest: data.refProductInterest,
+              refProductName: data.refIfCalculation ? 'System Calculation' : 'Manual Calculation',
+              refIfCalculation: data.refIfCalculation,
+              refLoanId: data.refLoanId
+            }))
+
+            console.log('temp line ------ 107', temp)
+
+            // Merge arrays
+            dueList = [...dueList, ...temp]
+
+            console.log('dueList line ------ 109', dueList)
+
+            setUserLists(dueList)
           }
         })
     } catch (e: any) {
@@ -75,7 +124,7 @@ const AdminRepayments = () => {
 
   useEffect(() => {
     loadData()
-  }, [startDate, endDate])
+  }, [startDate, endDate, selectedMonth])
 
   const ProductBody = (rowData: any) => {
     return (
@@ -95,12 +144,14 @@ const AdminRepayments = () => {
       <>
         <div
           onClick={() => {
+            console.log('rowData', rowData)
             setUpdateData(true)
             setUpdateUserId({
               id: rowData.refUserId,
               custId: rowData.refCustId,
               loanId: rowData.refLoanId,
-              rePayId: rowData.refRpayId
+              rePayId: rowData.refRpayId,
+              loanCalculation: rowData.refIfCalculation
             })
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
@@ -116,7 +167,8 @@ const AdminRepayments = () => {
     id: '',
     custId: '',
     rePayId: '',
-    loanId: ''
+    loanId: '',
+    loanCalculation: false
   })
 
   const closeSidebarUpdate = () => {
@@ -204,6 +256,20 @@ const AdminRepayments = () => {
                   />
                 </>
               )}
+              {userListType.code === 2 && (
+                <>
+                  <Calendar
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      setSelectedMonth(e.value)
+                    }}
+                    view="month" // 👈 Enables month view instead of date
+                    dateFormat="mm/yy" // 👈 Controls how the value is displayed
+                    monthNavigator // (optional) enables month dropdown
+                    placeholder="Select Month"
+                  />
+                </>
+              )}
             </div>
             <div className="w-[50%] flex justify-end">
               <IconField style={{ width: '50%' }} iconPosition="left">
@@ -222,8 +288,11 @@ const AdminRepayments = () => {
               filters={filters}
               paginator
               rows={10}
+              rowsPerPageOptions={[10, 25, 50]}
               size="small"
+              className="my-3"
               value={userLists}
+              scrollHeight="400px"
               showGridlines
               scrollable
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
@@ -270,6 +339,7 @@ const AdminRepayments = () => {
               closeSidebarUpdate={closeSidebarUpdate}
               loanId={updateUserId.loanId}
               rePayId={updateUserId.rePayId}
+              loanCalculation={updateUserId.loanCalculation}
             />
           </Sidebar>
 

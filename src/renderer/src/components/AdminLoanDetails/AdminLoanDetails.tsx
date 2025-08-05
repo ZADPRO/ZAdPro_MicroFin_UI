@@ -41,7 +41,7 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
   const getLoanDatas = async () => {
     axios
       .post(
-        import.meta.env.VITE_API_URL + '/adminLoan/loanAudit',
+        import.meta.env.VITE_API_URL + '/adminLoan/loanDetails',
         {
           loanId: loanId,
           userId: userId
@@ -63,6 +63,7 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
+          console.log('data.data[0] line ------- 67', data.data[0])
           setLoanDetails(data.data[0])
         }
       })

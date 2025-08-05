@@ -4,11 +4,11 @@ import { DataTable } from 'primereact/datatable'
 import { Dropdown } from 'primereact/dropdown'
 import { Sidebar } from 'primereact/sidebar'
 import React, { useEffect, useState, useMemo } from 'react'
-import AdminLoanCreation from './AdminLoanCreation'
 import AdminLoanDetails from '../AdminLoanDetails/AdminLoanDetails'
 import axios from 'axios'
 import decrypt from '../Helper/Helper'
 import { FilterMatchMode } from 'primereact/api'
+import AdminNewLoanCreation from '../AdminLoanCreation/AdminNewLoanCreation'
 
 interface LoanData {
   refLoanId: number
@@ -181,10 +181,14 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
             onChange={(e) => setFilter(e.value)}
             required
           />{' '}
-          <Button label="Export CSV" className="" onClick={exportToCSV} />
+          <Button label="Export CSV" className="py-1 px-5 flex gap-x-2" onClick={exportToCSV} />
         </div>
         <div>
-          <Button label="Add New Loan" onClick={() => setNewData(true)} />
+          <Button
+            label="Add New Loan"
+            className="py-1 px-5 flex gap-x-2"
+            onClick={() => setNewData(true)}
+          />
         </div>
       </div>
 
@@ -192,14 +196,15 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
         value={filteredLoanList}
         filters={filters}
         onFilter={(e) => setFilters(e.filters)}
-        className="mt-4"
+        className="mt-3"
+        scrollHeight="380px"
         showGridlines
         size="small"
         stripedRows
         scrollable
         paginator
-        rows={5}
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rows={10}
+        rowsPerPageOptions={[10, 25, 50]}
       >
         <Column header="S.No" body={(_, options) => options.rowIndex + 1} />
         <Column
@@ -260,7 +265,8 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
         position="right"
         onHide={closeSidebarNew}
       >
-        <AdminLoanCreation closeSidebarNew={closeSidebarNew} />
+        {/* <AdminLoanCreation closeSidebarNew={closeSidebarNew} /> */}
+        <AdminNewLoanCreation closeSidebarNew={closeSidebarNew} />
       </Sidebar>
 
       {/* view Loan Details Module */}

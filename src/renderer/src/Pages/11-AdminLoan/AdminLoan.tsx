@@ -43,8 +43,39 @@ const AdminLoan: React.FC = () => {
     }
   }
 
+  const reCalChart = async () => {
+    try {
+      await axios
+        .get(
+          import.meta.env.VITE_API_URL + '/AdminRePayment/interestBaseLoanNewEntry',
+
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response: any) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+
+          localStorage.setItem('token', 'Bearer ' + data.token)
+          if (data.success) {
+            console.log('RecAl Completed Successfully')
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
   useEffect(() => {
     loadData()
+    reCalChart()
   }, [])
 
   const reLoadPage = () => {
@@ -73,7 +104,7 @@ const AdminLoan: React.FC = () => {
         <div className="contentPage">
           <TabView>
             <TabPanel header="Repayment">
-              <AdminRepayments  />
+              <AdminRepayments />
             </TabPanel>
             <TabPanel header="Loan">
               <AdminNewLoan reloadFlag={reloadFlag} />

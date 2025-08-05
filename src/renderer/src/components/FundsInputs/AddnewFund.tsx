@@ -2,7 +2,6 @@ import axios from 'axios'
 import { useEffect } from 'react'
 import { Button } from 'primereact/button'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { FloatLabel } from 'primereact/floatlabel'
 import { useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { Slide, toast, ToastContainer } from 'react-toastify'
@@ -35,10 +34,22 @@ const AddnewFund = ({ closeSidebarNew }) => {
   const [settingData, setSettingData] = useState<SettingData | null>()
   const [comment, setComment] = useState<string | null>(null)
   const [moneyType, setMoneyType] = useState<number | null>(null)
+  const [fundType, setFundType] = useState<number | null>()
   // Need to maintain that the input amount was from in hand (liquid cash) or from bank
   const moneyOptions: MoneyType[] = [
     { name: 'Bank', id: 1 },
     { name: 'Cash', id: 2 }
+  ]
+
+  const fundTypeOption: MoneyType[] = [
+    {
+      name: 'Deposite',
+      id: 5
+    },
+    {
+      name: 'Income',
+      id: 9
+    }
   ]
   // Handle the from and to account with validation
   const [handleSelfTransferFrom, setHandleSelfTransferFrom] = useState<number | null>(null)
@@ -93,7 +104,8 @@ const AddnewFund = ({ closeSidebarNew }) => {
             refTxnId: null,
             refFundType: inputs.refFundType,
             Description: description,
-            date: date
+            date: date,
+            fundType: fundType
           },
           {
             headers: {
@@ -336,7 +348,10 @@ const AddnewFund = ({ closeSidebarNew }) => {
               Addnewback()
             }}
           >
-            <div style={{ margin: '5px 0px', overflow: 'auto', padding: '10px' }}>
+            <div
+              style={{ margin: '5px 0px', overflow: 'auto', padding: '10px' }}
+              className="flex flex-col gap-y-2"
+            >
               <div className="flex justify-between">
                 <div>
                   {settingData?.paymentMethod === 1 && (
@@ -350,23 +365,57 @@ const AddnewFund = ({ closeSidebarNew }) => {
                   )}
                 </div>
                 <div>
-                  <Calendar
+                  {/* <Calendar
                     value={date}
                     onChange={(e) => setDate(e.value ?? new Date())}
                     dateFormat="dd/mm/yy"
                     maxDate={new Date()}
                     // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                  /> */}
+                </div>
+              </div>
+              <div className="my-1 flex w-full gap-x-5">
+                <div className="flex-1">
+                  <label htmlFor="refBankId">Select Date *</label>
+
+                  <Calendar
+                    value={date}
+                    onChange={(e) => setDate(e.value ?? new Date())}
+                    dateFormat="dd/mm/yy"
+                    maxDate={new Date()}
+                    className="w-full"
+                    // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="refBankId">Select Fund Type * </label>
+
+                  <Dropdown
+                    name="moneyType"
+                    style={{ width: '100%', minWidth: '100%' }}
+                    value={fundType}
+                    options={fundTypeOption}
+                    placeholder="select fund type"
+                    optionLabel="name"
+                    optionValue="id"
+                    onChange={(e: DropdownChangeEvent) => {
+                      setFundType(e.value)
+                    }}
+                    required
                   />
                 </div>
               </div>
               {settingData?.paymentMethod === 1 && (
                 <>
-                  <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '35px' }}>
-                    <FloatLabel style={{ width: '100%' }}>
+                  <div className="flex gap-x-5">
+                    <div className="flex-1">
+                      <label htmlFor="refBankId">Choose Bank Type * </label>
+
                       <Dropdown
                         name="moneyType"
                         style={{ width: '100%', minWidth: '100%' }}
                         value={moneyType}
+                        placeholder="choose bank type"
                         options={moneyOptions}
                         optionLabel="name"
                         optionValue="id"
@@ -375,33 +424,35 @@ const AddnewFund = ({ closeSidebarNew }) => {
                         }}
                         required
                       />
-                      <label htmlFor="refBankId">Choose Bank Type</label>
-                    </FloatLabel>
-                    <FloatLabel style={{ width: '100%' }}>
+                    </div>
+
+                    <div className="flex-1">
+                      {' '}
+                      <label htmlFor="refBankId">Choose Payment Flow *</label>
                       <Dropdown
                         name="refBankId"
                         style={{ width: '100%', minWidth: '100%' }}
                         value={inputs.refBankId}
+                        placeholder="choose payment flow"
                         options={bankOptions}
                         optionLabel="label"
                         optionValue="refBankId"
                         onChange={(e: any) => handleInput(e)}
                         required
                       />
-                      <label htmlFor="refBankId">Choose Payment Flow</label>
-                    </FloatLabel>
+                    </div>
                   </div>
                 </>
               )}
-            </div>
-            <div style={{ margin: '5px 0px', height: '78vh', overflow: 'auto', padding: '10px' }}>
-              <div style={{ width: '100%', display: 'flex', gap: '20px', marginTop: '15px' }}>
-                <FloatLabel style={{ width: '100%', marginTop: '' }}>
+              <div className="flex gap-x-5">
+                <div className="flex-1">
+                  <label htmlFor="refbfTransactionAmount">Transaction Amount *</label>
                   <InputNumber
                     id="refbfTransactionAmount"
                     name="refbfTransactionAmount"
                     mode="currency"
                     currency="INR"
+                    placeholder="enter amount"
                     currencyDisplay="symbol"
                     className="w-full"
                     locale="en-IN"
@@ -409,23 +460,26 @@ const AddnewFund = ({ closeSidebarNew }) => {
                     onValueChange={(e: any) => handleInput(e)}
                     required
                   />
-                  <label htmlFor="refbfTransactionAmount">Transaction Amount</label>
-                </FloatLabel>
-                <FloatLabel style={{ width: '100%', marginTop: '' }}>
+                </div>
+                <div className="flex-1">
+                  {' '}
+                  <label htmlFor="refbfTransactionAmount">Description</label>
                   <InputText
                     id="Description"
                     name="Description"
                     className="w-full"
+                    placeholder="Tell about this transaction"
                     value={inputs.Description}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setDescription(e.target.value)
                     }}
                     required
                   />
-                  <label htmlFor="refbfTransactionAmount">Description</label>
-                </FloatLabel>
+                </div>
               </div>
+            </div>
 
+            <div>
               <input
                 type="hidden"
                 name="refbfTransactionDate"
@@ -483,8 +537,10 @@ const AddnewFund = ({ closeSidebarNew }) => {
               // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
             />
           </div>
-          <div className="card flex flex-column md:flex-row gap-3 mt-6 mx-[5px]">
-            <FloatLabel className="w-full flex-1">
+          <div className="card flex flex-column md:flex-row gap-3 mt-3 mx-[5px]">
+            <div className="w-full flex-1">
+              <label>Self Transfer From *</label>
+
               <Dropdown
                 value={handleSelfTransferFrom}
                 onChange={(e: DropdownChangeEvent) => setHandleSelfTransferFrom(e.value)}
@@ -494,10 +550,11 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 className="w-full"
                 placeholder="Select from"
               />
-              <label>Self Transfer From</label>
-            </FloatLabel>
+            </div>
 
-            <FloatLabel className="w-full flex-1">
+            <div className="w-full flex-1">
+              <label htmlFor="transferTo">Self Transfer To *</label>
+
               <Dropdown
                 id="transferTo"
                 value={handleSelfTransferTo}
@@ -509,11 +566,12 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 placeholder="Select to"
                 disabled={!handleSelfTransferFrom}
               />
-              <label htmlFor="transferTo">Self Transfer To</label>
-            </FloatLabel>
+            </div>
           </div>
-          <div className="card flex flex-column md:flex-row gap-3 mt-5 mx-[5px]">
-            <FloatLabel className="w-full flex-1">
+          <div className="card flex flex-column md:flex-row gap-3 mt-3 mx-[5px]">
+            <div className="w-full flex-1">
+              <label htmlFor="username">Transfer Amount *</label>
+
               <InputNumber
                 id="username"
                 value={transferAmount}
@@ -524,10 +582,10 @@ const AddnewFund = ({ closeSidebarNew }) => {
                 className="w-full"
                 onChange={handleAmountChange}
               />
+            </div>
+            <div className="w-full flex-1">
+              <label htmlFor="comment">Enter Comment</label>
 
-              <label htmlFor="username">Transfer Amount</label>
-            </FloatLabel>
-            <FloatLabel className="w-full flex-1">
               <InputText
                 id="comment"
                 value={comment}
@@ -536,9 +594,7 @@ const AddnewFund = ({ closeSidebarNew }) => {
                   setComment(e.target.value)
                 }}
               />
-
-              <label htmlFor="comment">Enter Comment</label>
-            </FloatLabel>
+            </div>
           </div>
 
           {submitLoading ? (

@@ -23,8 +23,8 @@ export interface productData {
   productId?: number
   ifInitialInterest?: boolean | null
   initialInterestCal?: number | null
+  dueCollectionType?: number | null
 }
-
 
 interface LoanType {
   name: string
@@ -41,6 +41,7 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
   })
   const [rePaymentTypeOptions, setRePaymentTypeOptions] = useState<LoanType[] | null>([])
   const [initialInterestCalOption, setInitialInterestCalOption] = useState<LoanType[] | []>([])
+  const [interestCollectionType, setInterestCollectionType] = useState<LoanType[] | []>([])
   const [update, setUpdate] = useState<boolean>(false)
   const [enableUpdate, setEnableUpdate] = useState<boolean>(false)
   const durationType = [
@@ -51,7 +52,8 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
 
   const interestCalculationType = [
     { name: 'DayWise Calculation', code: 1 },
-    { name: 'Overall Calculation', code: 2 }
+    { name: 'Overall Calculation', code: 2 },
+    { name: 'Month TO Day Calculation', code: 3 }
   ]
 
   const status = [
@@ -113,6 +115,13 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
               }
             })
             setInitialInterestCalOption(initialInterestData)
+            const interestCollectioList = data.interestCollectionTypeOption.map((data) => {
+              return {
+                name: data.refDueTypes,
+                value: data.refDueTypeId
+              }
+            })
+            setInterestCollectionType(interestCollectioList)
             setProductData({ ...productData, status: 'active' })
             if (updateProductData) {
               console.log('updateProductData line ------- 117', updateProductData)
@@ -359,6 +368,24 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
             </div>
             <Divider layout="vertical" className="m-0" />
             <div className="flex-1">
+              <label> Loan Due Re-Payment Collection Type</label>
+              <Dropdown
+                value={productData?.dueCollectionType}
+                required
+                disabled={enableUpdate}
+                name="dueCollectionType"
+                className="w-full"
+                onChange={(e: DropdownChangeEvent) => {
+                  valueChange(e.target)
+                  console.log('e.target', e.target.value)
+                }}
+                options={interestCollectionType ?? []}
+                optionLabel="name"
+              />
+            </div>
+          </div>
+          <div className="flex w-full gap-x-5 align-items-center">
+            <div className="flex-1">
               <label htmlFor="description">Description</label>
 
               <InputTextarea
@@ -372,6 +399,8 @@ const ProductInputNew = ({ closeSidebarNew, updateProductData }: ProductInputNew
                 cols={30}
               />
             </div>
+            <Divider layout="vertical" className="m-0" />
+            <div className="flex-1"></div>
           </div>
           {update && enableUpdate && (
             <>

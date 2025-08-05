@@ -522,7 +522,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                         setDate(e.value)
                       }}
                       dateFormat="dd/mm/yy"
-                      maxDate={new Date()}
+                      // maxDate={new Date()}
                       // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
                     />
                   </div>

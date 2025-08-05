@@ -20,7 +20,8 @@ import { OverlayPanel } from 'primereact/overlaypanel'
 // import type { OverlayPanel as OverlayPanelType } from 'primereact/overlaypanel'
 import { Divider } from 'primereact/divider'
 import { formatINRCurrency } from '@renderer/helper/amountFormat'
-
+import { Button } from 'primereact/button'
+import { TbDeviceMobileMessage } from 'react-icons/tb'
 const Repayments = () => {
   const [userLists, setUserLists] = useState([])
 
@@ -30,31 +31,32 @@ const Repayments = () => {
   const [userListType, setUserListType] = useState({ name: 'Over All', code: 0 })
   const [startDate, setStartDate] = useState<Nullable<Date>>(null)
   const [endDate, setEndDate] = useState<Nullable<Date>>(null)
+  const [selectedMonth, setSelectedMonth] = useState<Nullable<Date>>(new Date())
   const userType = [
     { name: 'Over All', code: 0 },
-    { name: 'Date Range', code: 1 },
+    // { name: 'Date Range', code: 1 },
     { name: 'Month', code: 2 }
   ]
 
-  // function formatToDDMMYYYY(dateString) {
-  //   const date = new Date(dateString)
-  //   const day = String(date.getDate()).padStart(2, '0')
-  //   const month = String(date.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
-  //   const year = date.getFullYear()
-
-  //   return `${day}-${month}-${year}`
-  // }
-
   const loadData = () => {
+    let passDate = ''
+
+    if (selectedMonth instanceof Date && !isNaN(selectedMonth.getTime())) {
+      const year = selectedMonth.getFullYear()
+      const month = String(selectedMonth.getMonth() + 1).padStart(2, '0')
+      const day = '01' // Default to first day of month if you're using this as a month picker
+
+      passDate = `${day}-${month}-${year}` // Format: DD-MM-YYYY
+    }
+
     try {
       axios
-        .get(
+        .post(
           import.meta.env.VITE_API_URL + '/rePayment/dueList',
-          // {
-          //   ifMonth: userListType.code === 0 ? false : true,
-          //   startDate: startDate ? formatToDDMMYYYY(startDate) : '',
-          //   endDate: endDate ? formatToDDMMYYYY(endDate) : ''
-          // },
+          {
+            ifMonth: userListType.code === 0 ? false : true,
+            month: passDate
+          },
           {
             headers: {
               Authorization: localStorage.getItem('token'),
@@ -78,6 +80,7 @@ const Repayments = () => {
           if (data.success) {
             setLoadingStatus(false)
             setUsername(data.name[0].refUserFname + ' ' + data.name[0].refUserLname)
+
             setUserLists(list)
           }
         })
@@ -86,22 +89,43 @@ const Repayments = () => {
     }
   }
 
+  const reCalChart = async () => {
+    try {
+      await axios
+        .get(
+          import.meta.env.VITE_API_URL + '/rePayment/interestBaseLoanNewEntry',
+
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response: any) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+
+          localStorage.setItem('token', 'Bearer ' + data.token)
+          if (data.success) {
+            console.log('RecAl Completed Successfully')
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
   useEffect(() => {
     loadData()
-  }, [startDate, endDate])
-
-  // const AddressBody = (rowData: any) => {
-  //   return (
-  //     <>
-  //       {/* {rowData.refUserAddress}, {rowData.refUserDistrict}, {rowData.refUserState} -{' '}
-  //       {rowData.refUserPincode} */}
-  //       {rowData.refAreaName ? ` ${rowData.refAreaName},` : ''}
-  //       {rowData.refUserCity ? ` ${rowData.refUserCity},` : ''}
-  //       {rowData.refUserTaluk ? ` ${rowData.refUserTaluk},` : ''}
-  //       {rowData.refUserDistrict ? ` ${rowData.refUserDistrict}` : ''}
-  //     </>
-  //   )
-  // }
+    const getData = async () => {
+      await reCalChart()
+    }
+    getData()
+  }, [startDate, endDate, selectedMonth])
 
   const ProductBody = (rowData: any) => {
     const op = useRef<OverlayPanel | null>(null)
@@ -185,10 +209,93 @@ const Repayments = () => {
     setGlobalFilterValue(value)
   }
 
+  const handleCopyMessage = async (userLoanId: number) => {
+    let passDate = ''
+
+    if (selectedMonth instanceof Date && !isNaN(selectedMonth.getTime())) {
+      const year = selectedMonth.getFullYear()
+      const month = String(selectedMonth.getMonth() + 1).padStart(2, '0')
+      const day = '28' // Default to first day of month if you're using this as a month picker
+
+      passDate = `${day}/${month}/${year}, 10:00:00 am` // Format: DD-MM-YYYY
+    }
+    try {
+      await axios
+        .post(
+          import.meta.env.VITE_API_URL + '/rePayment/dueAmountDetails',
+          {
+            loanId: userLoanId,
+            date: passDate
+          },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        .then((response) => {
+          const data = decrypt(
+            response.data[1],
+            response.data[0],
+            import.meta.env.VITE_ENCRYPTION_KEY
+          )
+          console.log('data line ----- 205', data)
+          localStorage.setItem('token', 'Bearer ' + data.token)
+
+          if (data.success) {
+            // setDueData(data.data)
+            // setTotalDueAmt(data.data[0].arearsAmt)
+          }
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
+    const message = `📢 Loan Payment Reminder – ZaMicro-Fi
+
+Dear [Customer Name],
+
+This is a gentle reminder regarding your loan details:
+
+🔹 Loan Amount: ₹[Loan Amount]
+🔹 Interest Rate: [Interest %] per annum
+🔹 Interest Amount: ₹[Interest Amount]
+🔹 Total Due Amount: ₹[Total Amount]
+🔹 Due Date: [Date / Week / Month]
+
+Kindly ensure payment is made by the due date to avoid any penalties.
+
+💳 To make a payment or for assistance, please contact us at [Contact Number] or visit [Website/Link].
+
+Thank you for choosing ZaMicro-Fi.
+Your financial wellbeing is our priority. 💼`
+
+    navigator.clipboard
+      .writeText(message)
+      .then(() => {
+        alert('Reminder message copied to clipboard!')
+      })
+      .catch((err) => {
+        alert('Failed to copy message: ' + err)
+      })
+  }
+
   //Filter Data - End
   const reLoadPage = () => {
     loadData()
   }
+
+  // const copyButton = () => {
+  //   return (
+  //     <>
+  //       <div>
+  //         <Button>
+  //           <TbDeviceMobileMessage />
+  //         </Button>
+  //       </div>
+  //     </>
+  //   )
+  // }
 
   return (
     <>
@@ -272,6 +379,20 @@ const Repayments = () => {
                   />{' '} */}
                 </>
               )}
+              {userListType.code === 2 && (
+                <>
+                  <Calendar
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      setSelectedMonth(e.value)
+                    }}
+                    view="month" // 👈 Enables month view instead of date
+                    dateFormat="mm/yy" // 👈 Controls how the value is displayed
+                    monthNavigator // (optional) enables month dropdown
+                    placeholder="Select Month"
+                  />
+                </>
+              )}
             </div>
             <div className="w-[50%] flex justify-end">
               <IconField style={{ width: '50%' }} iconPosition="left">
@@ -328,6 +449,25 @@ const Repayments = () => {
                   return <b>{formatINRCurrency(rowData.refLoanAmount)}</b>
                 }}
                 header="Principal Amount"
+              ></Column>
+              <Column
+                header="Message"
+                body={(rowData) => {
+                  return (
+                    <>
+                      <div className="w-full">
+                        <Button
+                          className="w-full flex justify-center bg-transparent border-none focus:outline-none focus:ring-0 focus:border-transparent"
+                          onClick={async () => {
+                            await handleCopyMessage(rowData.refLoanId)
+                          }}
+                        >
+                          <TbDeviceMobileMessage size={'1.5rem'} color="blue" />
+                        </Button>
+                      </div>
+                    </>
+                  )
+                }}
               ></Column>
             </DataTable>
           </div>

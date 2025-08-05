@@ -76,7 +76,8 @@ const Products = () => {
               description: rowData.refProductDescurption,
               productId: Number(rowData.refProductId),
               ifInitialInterest: rowData.refInitialInterest,
-              initialInterestCal: Number(rowData.refIntislInterestCalId)
+              initialInterestCal: Number(rowData.refIntislInterestCalId),
+              dueCollectionType: Number(rowData.refDueRePaymentType)
             })
           }}
           style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
@@ -96,7 +97,9 @@ const Products = () => {
             ? 'Day wise Calculation'
             : rowData.refInterestCalType === 2
               ? 'Overall Calculation'
-              : ''}{' '}
+              : rowData.refInterestCalType === 2
+                ? 'Month To Day Calculation'
+                : ''}
           ]
         </div>
       </>

@@ -17,12 +17,16 @@ interface AuditData {
   Month: string
   Interest: number
   Principal: number
-  PrincipalStatus: string
-  InterestStatus: string
+  arearsAmt: string
+  verifiedPaidAmount: number
+  UnVerifiedPaidAmount: number
   followup: followupData[]
+  paidInterest: number
+  paidPrincipal: number
+  dueStatus: boolean | null
 }
 
-const AdminLoanAudit = ({ loanId }: { loanId: number }) => {
+const LoanAudit = ({ loanId }: { loanId: number }) => {
   const [auditData, setAuditData] = useState<AuditData[]>([])
 
   const renderFollowup = (rowData: AuditData) => {
@@ -60,12 +64,31 @@ const AdminLoanAudit = ({ loanId }: { loanId: number }) => {
   }
 
   const auditColumns = [
-    { field: 'Month', header: 'Month' },
+    { field: 'Month', header: 'Due Date' },
     { field: 'Interest', header: 'Interest' },
-    { field: 'InterestStatus', header: 'Interest Status' },
     { field: 'Principal', header: 'Principal Amount' },
-    { field: 'PrincipalStatus', header: 'Principal Status' },
-    { field: 'followup', header: 'Follow Up' }
+    {
+      field: 'verifiedPaidAmount',
+      body: (rowData) => Number(rowData.paidInterest) + Number(rowData.paidPrincipal),
+      header: 'Paid Amount'
+    },
+    { field: 'arearsAmt', header: 'Arrears Amount' },
+    {
+      field: 'dueStatus',
+      body: (rowData) => {
+        const status = rowData.dueStatus === true ? 'Due Paid' : 'Unpaid'
+        const color = rowData.dueStatus === true ? 'green' : 'red'
+
+        return <span style={{ color }}>{status}</span>
+      },
+      header: 'Status'
+    },
+
+    {
+      field: 'followup',
+      body: renderFollowup,
+      header: 'Follow Up'
+    }
   ]
 
   const getAuditData = () => {
@@ -104,8 +127,8 @@ const AdminLoanAudit = ({ loanId }: { loanId: number }) => {
     <div className="card w-full bg-black">
       <DataTable
         value={auditData}
-        size="small"
         scrollable
+        size="small"
         scrollHeight="55vh"
         tableStyle={{ minWidth: '50rem' }}
       >
@@ -114,9 +137,7 @@ const AdminLoanAudit = ({ loanId }: { loanId: number }) => {
             key={col.field}
             field={col.field}
             header={col.header}
-            body={
-              col.field === 'followup' ? renderFollowup : (rowData) => rowData[col.field] ?? 0 // return 0 if null or undefined
-            }
+            body={col.body ?? ((rowData) => rowData[col.field] ?? 0)}
           />
         ))}
       </DataTable>
@@ -124,4 +145,4 @@ const AdminLoanAudit = ({ loanId }: { loanId: number }) => {
   )
 }
 
-export default AdminLoanAudit
+export default LoanAudit

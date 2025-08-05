@@ -7,16 +7,15 @@ label td p label {
 /* Tailwind or custom CSS */
 .no-header thead {
   display: none;
-  
 }
 
-.no-header
-{
+.no-header {
   border: 1px solid rgb(204, 204, 204);
-
 }
 
-
+.p-calendar-w-btn-right .p-datepicker-trigger {
+  padding: 0px !important;
+}
 
 body {
   padding: 0;
