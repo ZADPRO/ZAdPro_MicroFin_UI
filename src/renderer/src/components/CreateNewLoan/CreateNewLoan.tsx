@@ -387,10 +387,10 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             const summaryDatas = {
               newLoanAmount: formatINRCurrency(Math.round(Number(newLoanAmt))),
               oldLoanInterest: formatINRCurrency(
-                Math.round(Number(loadDetailsResponse?.oldInterest))
+                Math.round(Number(loadDetailsResponse?.oldInterest ?? 0))
               ),
               oldLoanPrincipal: formatINRCurrency(
-                Math.round(Number(loadDetailsResponse?.oldPrincipal))
+                Math.round(Number(loadDetailsResponse?.oldPrincipal ?? 0))
               ),
               FinalLoanPrincipal: formatINRCurrency(Math.round(FinalLoanAmt)),
               productName: productData.refProductName,
@@ -456,7 +456,7 @@ const CreateNewLoan: React.FC<CreateNewLoanProps> = ({ id, goToHistoryTab }) => 
             loanSummardData?.amtToUser ??
             FinalLoanAmt - Number(docFee ?? 0) - Number(oldBalanceAmt),
           oldBalanceAmt: oldBalanceAmt ?? 0,
-          oldInterestAmt: loadDetailsResponse?.oldInterest,
+          oldInterestAmt: loadDetailsResponse?.oldInterest ?? 0,
           refDocFee: docFee,
           refSecurity: security,
           todayDate: date?.toLocaleDateString('en-CA') ?? undefined

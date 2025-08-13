@@ -38,6 +38,7 @@ const AdminSupplierLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
   // const [selectedVendorId, setSelectedVendorId] = useState<number | null>()
   const [vendorList, setVendorList] = useState<Vendor[]>([])
+  const [loadingStatus, setLoadingStatus] = useState(true)
 
   const [globalFilterValue, setGlobalFilterValue] = useState('')
 
@@ -72,6 +73,7 @@ const AdminSupplierLoan: React.FC<propsInterface> = (reloadFlag) => {
 
         if (data.success) {
           console.log(data)
+          setLoadingStatus(false)
           setVendorList(data.data)
         }
       })
@@ -133,66 +135,85 @@ const AdminSupplierLoan: React.FC<propsInterface> = (reloadFlag) => {
 
   return (
     <div>
-      <div className="flex justify-content-between">
-        <Button
-          label="Add New Vendor"
-          severity="warning"
-          style={{ backgroundColor: '#f8d20f' }}
-          onClick={() => {
-            setSelectedSupplier(null)
-            setNewData(true)
-          }}
-        />
-        <IconField style={{ width: '30%' }} iconPosition="left">
-          <InputIcon className="pi pi-search"></InputIcon>
-          <InputText
-            placeholder="Search Vendor"
-            value={globalFilterValue}
-            onChange={onGlobalFilterChange}
-            m-1
-            px-5
-            text-white
-            rounded-lg
-          />
-        </IconField>
-      </div>
+      {loadingStatus ? (
+        <>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: '#f8d20f',
+              height: '92vh',
+              width: '100%'
+            }}
+          >
+            <i className="pi pi-spin pi-spinner" style={{ fontSize: '5rem' }}></i>
+          </div>
+        </>
+      ) : (
+        <div>
+          <div className="flex justify-content-between">
+            <Button
+              label="Add New Vendor"
+              severity="warning"
+              style={{ backgroundColor: '#f8d20f' }}
+              onClick={() => {
+                setSelectedSupplier(null)
+                setNewData(true)
+              }}
+            />
+            <IconField style={{ width: '30%' }} iconPosition="left">
+              <InputIcon className="pi pi-search"></InputIcon>
+              <InputText
+                placeholder="Search Vendor"
+                value={globalFilterValue}
+                onChange={onGlobalFilterChange}
+                m-1
+                px-5
+                text-white
+                rounded-lg
+              />
+            </IconField>
+          </div>
 
-      <DataTable
-        value={vendorList}
-        filters={filters}
-        className="mt-4"
-        showGridlines
-        size="small"
-        stripedRows
-        scrollable
-        paginator
-        rows={5}
-        rowsPerPageOptions={[5, 10, 25, 50]}
-      >
-        <Column header="S.No" body={(_rowData, options) => options.rowIndex + 1} />
-        <Column field="refVendorName" header="Name" body={nameBodyTemplate} />
-        <Column field="refVendorMobileNo" header="Mobile No" />
-        <Column
-          body={(rowData) =>
-            rowData.refVenderType === 1
-              ? 'Outside Vendor'
-              : rowData.refVenderType === 2
-                ? 'Bank'
-                : 'Depositor'
-          }
-          header="Vendor Type"
-        />
-        <Column field="refDescription" header="Description" />
-      </DataTable>
+          <DataTable
+            value={vendorList}
+            filters={filters}
+            className="mt-4"
+            showGridlines
+            size="small"
+            stripedRows
+            scrollable
+            paginator
+            rows={5}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          >
+            <Column header="S.No" body={(_rowData, options) => options.rowIndex + 1} />
+            <Column field="refVendorName" header="Name" body={nameBodyTemplate} />
+            <Column field="refVendorMobileNo" header="Mobile No" />
+            <Column
+              body={(rowData) =>
+                rowData.refVenderType === 1
+                  ? 'Outside Vendor'
+                  : rowData.refVenderType === 2
+                    ? 'Bank'
+                    : 'Depositor'
+              }
+              header="Vendor Type"
+            />
+            <Column field="refDescription" header="Description" />
+          </DataTable>
 
-      <Sidebar
-        visible={newData}
-        style={{ width: '70vw' }}
-        position="right"
-        onHide={closeSidebarNew}
-      >
-        <AddNewSupplier closeSidebarNew={closeSidebarNew} supplierData={selectedSupplier} />
-      </Sidebar>
+          <Sidebar
+            visible={newData}
+            style={{ width: '70vw' }}
+            position="right"
+            onHide={closeSidebarNew}
+          >
+            <AddNewSupplier closeSidebarNew={closeSidebarNew} supplierData={selectedSupplier} />
+          </Sidebar>
+        </div>
+      )}
     </div>
   )
 }

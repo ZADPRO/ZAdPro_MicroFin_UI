@@ -169,7 +169,6 @@ const AdminLoanRepaymentSideTab = ({
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
-          setLoading(false)
           setLoanDetails(data.data[0])
 
           console.log('line ---- 7777')
@@ -194,6 +193,7 @@ const AdminLoanRepaymentSideTab = ({
           console.log('options', options)
           setBankOption(options)
           setCashOption(options)
+          setLoading(false)
         }
       })
   }
@@ -579,172 +579,6 @@ const AdminLoanRepaymentSideTab = ({
             }}
             style={{ marginTop: '1rem' }}
           >
-            {/* <TabPanel header="Re-Payment">
-              <div className="my-0 w-full">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault(), updateRepayment()
-                  }}
-                  className="w-full"
-                >
-                  <div className="my-2 flex justify-between">
-                    <div>
-                      <b className="text-[1.2rem]">Re-Payment Form</b>
-                    </div>
-                    <div>
-                      <label>
-                        <b>Select Data :</b>{' '}
-                      </label>
-                      <Calendar
-                        placeholder="DD/MM/YYYY"
-                        value={date}
-                        required
-                        onChange={(e) => {
-                          setDate(e.value ?? new Date())
-                        }}
-                        dateFormat="dd/mm/yy"
-                        // minDate={new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
-                        maxDate={new Date()}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="w-[100%] flex flex-col align-items-center gap-3">
-                    <div className="flex flex-row w-[80%] justify-between">
-                      <div className="w-[30%]">
-                        <label htmlFor="Interest" className="font-bold block mb-2">
-                          Interest Amount
-                        </label>
-                        <InputNumber
-                          disabled
-                          className="w-full"
-                          inputId="percent"
-                          value={
-                            rePaymentForm.interestStatus ? 0 : Number(rePaymentForm.interestAmt)
-                          }
-                          onValueChange={(e) =>
-                            setRePaymentForm({
-                              ...rePaymentForm,
-                              interestAmt: e.value ?? 0
-                            })
-                          }
-                          prefix="&#8377; "
-                        />
-                      </div>
-                      <div className="w-[30%]">
-                        <label htmlFor="Principal" className="font-bold block mb-2">
-                          Principal Amount
-                        </label>
-                        <InputNumber
-                          required
-                          className="w-full"
-                          inputId="percent"
-                          value={rePaymentForm.BalanceStatus ? 0 : rePaymentForm.BalanceAmount}
-                          min={rePaymentForm.BalanceAmount}
-                          max={loanDetails?.refBalanceAmt}
-                          onChange={(e) => {
-                            let val = e.value ?? 0
-
-                            const min = priamt
-                            const max = loanDetails?.refBalanceAmt ?? Number.MAX_SAFE_INTEGER
-
-                            if (val < min) val = min
-                            if (val > max) val = max
-
-                            setRePaymentForm({
-                              ...rePaymentForm,
-                              BalanceAmount: val
-                            })
-                          }}
-                          prefix="₹ "
-                        />
-                      </div>
-                      <div className="w-[30%]">
-                        <label htmlFor="Principal" className="font-bold block mb-2">
-                          Total Amount
-                        </label>
-                        <InputNumber
-                          required
-                          className="w-full"
-                          inputId="percent"
-                          value={
-                            rePaymentForm.BalanceAmount +
-                            (rePaymentForm.interestStatus ? 0 : rePaymentForm.interestAmt)
-                          }
-                          disabled
-                          prefix="&#8377; "
-                        />
-                      </div>
-                    </div>
-                   
-                    <div className="flex flex-col w-[60%]">
-                      <label htmlFor="Principal" className="font-bold block mb-2">
-                        Payment Type
-                      </label>
-
-                      <div className="flex flex-start gap-3">
-                        <div className="flex align-items-center">
-                          <RadioButton
-                            required
-                            inputId="ingredient1"
-                            name="pizza"
-                            value="online"
-                            onChange={(e: RadioButtonChangeEvent) => setPaymentType(e.value)}
-                            checked={paymentType === 'online'}
-                          />
-                          <label htmlFor="ingredient1" className="ml-2">
-                            Online
-                          </label>
-                        </div>
-                        <div className="flex align-items-center">
-                          <RadioButton
-                            required
-                            inputId="ingredient2"
-                            name="pizza"
-                            value="cash"
-                            onChange={(e: RadioButtonChangeEvent) => setPaymentType(e.value)}
-                            checked={paymentType === 'cash'}
-                          />
-                          <label htmlFor="ingredient2" className="ml-2">
-                            Cash
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    {(paymentType === 'online' || paymentType === 'cash') && (
-                      <div className="w-[60%]">
-                        <label htmlFor="Interest" className="font-bold block mb-2">
-                          Select Bank
-                        </label>
-
-                        <Dropdown
-                          filter
-                          required
-                          value={selectBank}
-                          onChange={(e: DropdownChangeEvent) => {
-                            console.log('Selected Bank:', e.value)
-                            setSelectBank(e.value)
-                          }}
-                          options={filteredBankOptions}
-                          optionLabel="label"
-                          placeholder="Select a Bank"
-                          className="w-full"
-                          checkmark={true}
-                          highlightOnSelect={false}
-                        />
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className=" bg-[green] hover:bg-[#008000f3] text-white p-2 px-5 rounded-lg"
-                    >
-                      Payment Collected
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </TabPanel> */}
             <TabPanel header="Re-Payment">
               <div className="my-0 w-full">
                 {loanCalculation && (

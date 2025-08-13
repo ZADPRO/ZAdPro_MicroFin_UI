@@ -22,6 +22,22 @@ import { Divider } from 'primereact/divider'
 import { formatINRCurrency } from '@renderer/helper/amountFormat'
 import { Button } from 'primereact/button'
 import { TbDeviceMobileMessage } from 'react-icons/tb'
+
+interface dueDetails {
+  refArears: string
+  refDuePaymentFor: string | null
+  refInitialInterest: string | null
+  refInterest: string
+  refPaidInterest: string | null
+  refPaidPrincipal: string | null
+  refPaymentDate: string
+  refPrincipal: string
+  arearsAmt: string
+  name: string
+  refProductInterest: string
+  refLoanAmount: string
+}
+
 const Repayments = () => {
   const [userLists, setUserLists] = useState([])
 
@@ -32,6 +48,9 @@ const Repayments = () => {
   const [startDate, setStartDate] = useState<Nullable<Date>>(null)
   const [endDate, setEndDate] = useState<Nullable<Date>>(null)
   const [selectedMonth, setSelectedMonth] = useState<Nullable<Date>>(new Date())
+  // const [dueData, setDueData] = useState<dueDetails[] | []>([])
+  // const [totalDueAmt, setTotalDueAmt] = useState<string>()
+
   const userType = [
     { name: 'Over All', code: 0 },
     // { name: 'Date Range', code: 1 },
@@ -242,42 +261,66 @@ const Repayments = () => {
           )
           console.log('data line ----- 205', data)
           localStorage.setItem('token', 'Bearer ' + data.token)
+          let loanData
+          let totalAmt
+          let name = ''
+          let interest
+          let loanTakenAmt
 
           if (data.success) {
             // setDueData(data.data)
             // setTotalDueAmt(data.data[0].arearsAmt)
+            loanData = data.data
+            totalAmt = data.data[0].arearsAmt
+            name = data.data[0].name
+            interest = data.data[0].refProductInterest
+            loanTakenAmt = data.data[0].refLoanAmount
+
+            // Create table headers
+            let message = `📢 Loan Payment Reminder – ZaMicro-Fi
+
+Dear ${name},
+
+This is a gentle reminder regarding your loan details:
+
+🔹 Loan Amount: ₹${loanTakenAmt}
+🔹 Interest Rate: ${interest}% per annum
+🔹 Total Due Amount: ₹${totalAmt}
+
+🔽 Payment Details:
+`
+
+            loanData.forEach((item: dueDetails, index: number) => {
+              message += `
+🔸 Payment ${index + 1}
+- Due Date         : ${item.refPaymentDate}
+- Interest         : ₹${Number(item.refInterest) + Number(item.refInitialInterest)}
+- Principal        : ₹${item.refPrincipal}
+- Paid Interest    : ₹${item.refPaidInterest || '0'}
+- Paid Principal   : ₹${item.refPaidPrincipal || '0'}
+- Arrears Amount   : ₹${item.refArears}
+`
+            })
+
+            message += `
+Kindly ensure payment is made by the due date to avoid any penalties.
+
+Thank you for choosing ZaMicro-Fi.
+Your financial wellbeing is our priority. 💼`
+
+            navigator.clipboard
+              .writeText(message)
+              .then(() => {
+                alert('Reminder message with table copied to clipboard!')
+              })
+              .catch((err) => {
+                alert('Failed to copy message: ' + err)
+              })
           }
         })
     } catch (error) {
       console.log('error', error)
     }
-    const message = `📢 Loan Payment Reminder – ZaMicro-Fi
-
-Dear [Customer Name],
-
-This is a gentle reminder regarding your loan details:
-
-🔹 Loan Amount: ₹[Loan Amount]
-🔹 Interest Rate: [Interest %] per annum
-🔹 Interest Amount: ₹[Interest Amount]
-🔹 Total Due Amount: ₹[Total Amount]
-🔹 Due Date: [Date / Week / Month]
-
-Kindly ensure payment is made by the due date to avoid any penalties.
-
-💳 To make a payment or for assistance, please contact us at [Contact Number] or visit [Website/Link].
-
-Thank you for choosing ZaMicro-Fi.
-Your financial wellbeing is our priority. 💼`
-
-    navigator.clipboard
-      .writeText(message)
-      .then(() => {
-        alert('Reminder message copied to clipboard!')
-      })
-      .catch((err) => {
-        alert('Failed to copy message: ' + err)
-      })
   }
 
   //Filter Data - End

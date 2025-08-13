@@ -94,7 +94,8 @@ export const AddExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }) =
       }
     })
     console.log('bankBalance', bankBalance)
-    if (Number(bankBalance) < Number(amount)) {
+    // if (Number(bankBalance) < Number(amount)) {
+    if (false) {
       toast.error('Selected Money resource Have the Minimum Amount than the Expense Amount', {
         position: 'top-right',
         autoClose: 3599,

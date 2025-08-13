@@ -37,7 +37,7 @@ interface LoanData {
   oldLoanId: number | null
   newLoanAmt: string | null
   oldLoanAmt: string | null
-  oldInterest: string | null
+  oldInterestAmt: string | null
   totalLoanAmt: string | null
   paymentFlowId?: number | null
   rePaymentType?: number | null
@@ -109,7 +109,7 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
     oldLoanId: null,
     newLoanAmt: null,
     oldLoanAmt: null,
-    oldInterest: null,
+    oldInterestAmt: null,
     totalLoanAmt: null,
     rePaymentType: null,
     interestRate: null,
@@ -132,6 +132,8 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
     ifInitialInterest: true
   })
   const [oldLoanList, setOldLoanList] = useState<options[] | []>([])
+  const [loadingStatus, setLoadingStatus] = useState(true)
+
   const [vendorList, setVendorList] = useState<options[] | []>([])
   const [showOldLoan, setShowOldLoan] = useState<boolean>(false)
   const [showLoanCalculationSetting, setShowLoanCalculationSetting] = useState<boolean>(false)
@@ -182,7 +184,7 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
         ...loanData,
         [data.name]: data.value,
         oldLoanAmt: String(bal.oldLoanAmt),
-        oldInterest: String(bal.oldInterest),
+        oldInterestAmt: String(bal.oldInterest),
         totalLoanAmt: Number(loanData.newLoanAmt) + Number(bal)
       }
       console.log('updateData line ------- 170', updateData)
@@ -353,6 +355,7 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
             })
             setPaymentFlowList(data8)
             console.log('data8', data6)
+            setLoadingStatus(false)
           }
         })
     } catch (error) {
@@ -449,6 +452,8 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
           {
             todayDate: formatToCustomDateTime(loanData.todayDate),
             loanAmt: Number(loanData.totalLoanAmt),
+            oldPrincipal: Number(loanData.oldLoanAmt),
+            oldInterest: Number(loanData.oldInterestAmt),
             interest: Number(loanData.interestRate),
             duration: Number(loanData.loanDuration),
             rePaymentType: Number(loanData.rePaymentType),
@@ -507,7 +512,7 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
         return matchedVendor ? matchedVendor.label.split('|')[0] : ''
       })(),
       NewLoanAmount: formatINRCurrency(Number(loanData.newLoanAmt)),
-      OldInterest: formatINRCurrency(Number(loanData.oldInterest)),
+      OldInterest: formatINRCurrency(Number(loanData.oldInterestAmt)),
       OldPrincipal: formatINRCurrency(Number(loanData.oldLoanAmt)),
       TotalLoanAmount: formatINRCurrency(Number(loanData.totalLoanAmt)),
       Interest: `${loanData.interestRate} %`,
@@ -546,6 +551,18 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
             ? responseData.interestAmtPaidFirst
             : loanData.interestAmtPaidFirst
         )
+      ),
+      TotalAdvanceDueAmount: formatINRCurrency(
+        Number(
+          loanCalSetting?.ifCalculationNeeded
+            ? responseData.interestAmtPaidFirst
+            : loanData.interestAmtPaidFirst
+        ) +
+          Number(
+            loanCalSetting?.ifCalculationNeeded
+              ? responseData.totalInitialInterestAmt
+              : loanData.loanInitialInterestAmt
+          )
       ),
       DocumentationFee: formatINRCurrency(Number(loanData.docFee))
     }
@@ -654,6 +671,18 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
 
   return (
     <div>
+      {loadingStatus ? (<div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: '#f8d20f',
+            height: '92vh',
+            width: '100%'
+          }}
+        >
+          <i className="pi pi-spin pi-spinner" style={{ fontSize: '5rem' }}></i>
+        </div>) : ( <div>
       {!viewSummary && (
         <div className="flex flex-col gap-y-1">
           <form
@@ -888,13 +917,13 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
                       <InputText
                         disabled={loadDetailsResponse?.refIfCalculation}
                         required
-                        name="oldInterest"
-                        value={formatINRCurrencyText(Number(loanData.oldInterest))}
+                        name="oldInterestAmt"
+                        value={formatINRCurrencyText(Number(loanData.oldInterestAmt))}
                         onChange={(e) => {
                           const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({ name: 'oldInterest', value: numberValue })
+                          handelValueChange({ name: 'oldInterestAmt', value: numberValue })
                         }}
-                        placeholder="Enter Loan Amount"
+                        placeholder="Enter Old Interest Amount"
                         keyfilter="money"
                       />{' '}
                     </div>
@@ -1260,7 +1289,7 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
 
             <div className="flex justify-center my-3">
               <Button className="py-1 px-5 flex gap-x-2" type="submit">
-                View Loan Summary Dtails
+                View Loan Summary Details
               </Button>
             </div>
           </form>
@@ -1765,7 +1794,9 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
           </div>
         </div>
       </Dialog>
+    </div>)}
     </div>
+   
   )
 }
 

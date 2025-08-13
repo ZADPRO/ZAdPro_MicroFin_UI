@@ -3,14 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { MultiSelect, MultiSelectChangeEvent } from 'primereact/multiselect'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { LiaFileDownloadSolid } from 'react-icons/lia'
+import { LiaFileDownloadSolid, LiaFilePdfSolid } from 'react-icons/lia'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-// import * as XLSX from 'xlsx'
-// import { saveAs } from 'file-saver'
-// import * as XLSX from 'xlsx'
-// import jsPDF from 'jspdf'
-// import autoTable from 'jspdf-autotable' // ✅ named import
+
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 interface option {
   label: string
   value: number
@@ -58,80 +56,7 @@ export default function OverallReport() {
   const [overAllData, setOverAllData] = useState<LoanDetails[]>([])
   const [selectedLoanOption, setSelectedLoanOption] = useState<number>(1)
   const [showOptions, setShowOptions] = useState(false)
-  // const headers = [
-  //   'S.No',
-  //   'Loan Id',
-  //   'Date',
-  //   'Name',
-  //   'Mobile',
-  //   'Area',
-  //   'Repayment',
-  //   'Loan Amount',
-  //   'Initial Interest',
-  //   'Interest First',
-  //   'Loan Interest',
-  //   'Loan Duration',
-  //   'Total Principal Paid',
-  //   'Total Interest Paid',
-  //   'Balance Amount',
-  //   'Interest Paid',
-  //   'Principal Paid',
-  //   'Total Month Paid',
-  //   'Un-Paid Month',
-  //   'Loan Status',
-  //   'Document Fee',
-  //   'Security'
-  // ]
-  // const generateRows = () =>
-  //   overAllData.map((row, index) => [
-  //     index + 1,
-  //     row.refCustLoanId,
-  //     row.refLoanStartDate,
-  //     `${row.refUserFname} ${row.refUserLname}`,
-  //     row.refUserMobileNo,
-  //     `${row.refAreaName} - [${row.refAreaPrefix}]`,
-  //     row.refRepaymentTypeName,
-  //     `INR ${row.refLoanAmount}`,
-  //     `INR ${row.refInitialInterest}`,
-  //     `${row.refInterestMonthCount} Month`,
-  //     `${row.refProductInterest} %`,
-  //     `${row.refProductDuration} Month`,
-  //     `INR ${row.TotalPrincipalPaid}`,
-  //     `INR ${row.TotalInterestPaid}`,
-  //     `INR ${row.BalancePrincipalAmount}`,
-  //     `${row.InterestPaidCount} Month`,
-  //     `${row.PrincipalPaidCount} Month`,
-  //     `${row.TotalMonthPaidCount} Month`,
-  //     `${row.UnPaidMonthCount} Month`,
-  //     `${row.refLoanStatus}`,
-  //     `INR ${row.refDocFee === null ? 0 : row.refDocFee}`,
-  //     `${row.refSecurity === null ? 'No Document' : row.refSecurity}`
-  //   ])
-  // const generateRows = () =>
-  //   overAllData.map((row, index) => [
-  //     index + 1,
-  //     row.refCustLoanId,
-  //     row.refLoanStartDate,
-  //     `${row.refUserFname} ${row.refUserLname}`,
-  //     row.refUserMobileNo,
-  //     `${row.refAreaPrefix}`,
-  //     row.refRepaymentTypeName,
-  //     `${row.refLoanAmount}`,
-  //     `${row.refInitialInterest}`,
-  //     `${row.refInterestMonthCount}`,
-  //     `${row.refProductInterest} %`,
-  //     `${row.refProductDuration}`,
-  //     `${row.TotalPrincipalPaid}`,
-  //     `${row.TotalInterestPaid}`,
-  //     `${row.BalancePrincipalAmount}`,
-  //     `${row.InterestPaidCount}`,
-  //     `${row.PrincipalPaidCount}`,
-  //     `${row.TotalMonthPaidCount}`,
-  //     `${row.UnPaidMonthCount}`,
-  //     `${row.refLoanStatus}`,
-  //     `${row.refDocFee === null ? 0 : row.refDocFee}`,
-  //     `${row.refSecurity === null ? 'No Document' : row.refSecurity}`
-  //   ])
+
   const LoanOption: option[] = [
     { label: 'Customer Loan', value: 1 },
     { label: 'Admin Loan', value: 2 }
@@ -295,47 +220,151 @@ export default function OverallReport() {
     document.body.removeChild(link)
   }
 
-  // const exportAsCSV = () => {
-  //   const csvContent = [
-  //     headers.join(','),
-  //     ...generateRows().map((row) => row.map((val) => `"${val}"`).join(','))
-  //   ].join('\n')
+  const exportOverAllPDF = (overAllData: LoanDetails[]) => {
+    const doc = new jsPDF('landscape')
 
-  //   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  //   const url = URL.createObjectURL(blob)
-  //   const link = document.createElement('a')
-  //   link.href = url
-  //   link.download = `OverAllReport_${new Date().toISOString()}.csv`
-  //   document.body.appendChild(link)
-  //   link.click()
-  //   document.body.removeChild(link)
-  // }
+    // ✅ Group by area
+    const grouped = overAllData.reduce(
+      (acc, item) => {
+        const areaKey = `${item.refAreaName} - [${item.refAreaPrefix}]`
+        if (!acc[areaKey]) acc[areaKey] = []
+        acc[areaKey].push(item)
+        return acc
+      },
+      {} as Record<string, LoanDetails[]>
+    )
 
-  // const exportAsExcel = () => {
-  //   const ws = XLSX.utils.aoa_to_sheet([headers, ...generateRows()])
-  //   const wb = XLSX.utils.book_new()
-  //   XLSX.utils.book_append_sheet(wb, ws, 'Report')
-  //   XLSX.writeFile(wb, `OverAllReport_${new Date().toISOString()}.xlsx`)
-  // }
+    const now = new Date()
+    const reportDate = now.toLocaleDateString('en-GB')
 
-  // const exportAsPDF = () => {
-  //   const doc = new jsPDF({
-  //     orientation: 'landscape',
-  //     unit: 'mm',
-  //     format: 'a4'
-  //   })
+    // ✅ Title
+    doc.setFontSize(10)
+    doc.text('Sri Murugan Thunai', 140, 10, { align: 'center' })
+    doc.setFontSize(14)
+    doc.text('OM MURUGA FINANCE', 140, 16, { align: 'center' })
+    doc.setFontSize(10)
+    doc.text(`Over All Loan Report`, 140, 22, { align: 'center' })
+    doc.text(`Date : ${reportDate}`, 10, 10)
+    doc.text('Page : 1', 270, 10)
 
-  //   doc.text('Over All Report', 14, 10)
+    let y = 30
+    Object.entries(grouped).forEach(([area, records]) => {
+      doc.setFontSize(11)
+      doc.text(area, 14, y)
+      y += 4
 
-  //   autoTable(doc, {
-  //     startY: 20,
-  //     head: [headers],
-  //     body: generateRows(),
-  //     styles: { fontSize: 6 }
-  //   })
+      // ✅ Table
+      autoTable(doc, {
+        head: [
+          [
+            'S.No',
+            'Loan Id',
+            'Date',
+            'Name',
+            'Mobile',
+            'Repayment',
+            'Loan Amount',
+            'Initial Interest',
+            'Interest First',
+            'Loan Interest',
+            'Loan Duration',
+            'Total Principal Paid',
+            'Total Interest Paid',
+            'Balance Amount',
+            'Interest Paid',
+            'Principal Paid',
+            'Total Month Paid',
+            'Un-Paid Month',
+            'Loan Status',
+            'Document Fee',
+            'Security'
+          ]
+        ],
+        body: records.map((row, i) => [
+          i + 1,
+          row.refCustLoanId.toString(),
+          row.refLoanStartDate,
+          `${row.refUserFname} ${row.refUserLname}`,
+          row.refUserMobileNo,
+          row.refRepaymentTypeName,
+          Number(row.refLoanAmount).toLocaleString('en-IN'),
+          Number(row.refInitialInterest).toLocaleString('en-IN'),
+          `${row.refInterestMonthCount} Month`,
+          `${row.refProductInterest} %`,
+          `${row.refProductDuration} Month`,
+          Number(row.TotalPrincipalPaid).toLocaleString('en-IN'),
+          Number(row.TotalInterestPaid).toLocaleString('en-IN'),
+          Number(row.BalancePrincipalAmount).toLocaleString('en-IN'),
+          `${row.InterestPaidCount} Month`,
+          `${row.PrincipalPaidCount} Month`,
+          `${row.TotalMonthPaidCount} Month`,
+          `${row.UnPaidMonthCount} Month`,
+          row.refLoanStatus,
+          Number(row.refDocFee ?? 0).toLocaleString('en-IN'),
+          row.refSecurity ?? 'No Document'
+        ]),
+        startY: y,
+        styles: { fontSize: 8, halign: 'center' },
+        headStyles: {
+          fillColor: [248, 248, 248],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        margin: { left: 14, right: 14 },
+        theme: 'grid',
+        didDrawPage: (d) => {
+          if (d.cursor) y = d.cursor.y
+        }
+      })
 
-  //   doc.save(`OverAllReport_${new Date().toISOString()}.pdf`)
-  // }
+      // ✅ Totals per area
+      const sumField = (field: keyof LoanDetails) =>
+        records.reduce((sum, r) => sum + (Number(r[field]) || 0), 0)
+
+      autoTable(doc, {
+        body: [
+          [
+            'Total',
+            '',
+            '',
+            '',
+            '',
+            '',
+            sumField('refLoanAmount').toLocaleString('en-IN'),
+            sumField('refInitialInterest').toLocaleString('en-IN'),
+            '',
+            '',
+            '',
+            sumField('TotalPrincipalPaid').toLocaleString('en-IN'),
+            sumField('TotalInterestPaid').toLocaleString('en-IN'),
+            sumField('BalancePrincipalAmount').toLocaleString('en-IN'),
+            '',
+            '',
+            '',
+            '',
+            '',
+            sumField('refDocFee').toLocaleString('en-IN'),
+            ''
+          ]
+        ],
+        startY: y,
+        styles: {
+          fontSize: 8,
+          fontStyle: 'bold',
+          halign: 'center',
+          cellPadding: 2,
+          fillColor: [248, 248, 248]
+        },
+        margin: { left: 14, right: 14 },
+        theme: 'plain',
+        tableLineWidth: 0
+      })
+
+      y += 10
+    })
+
+    doc.save('Over_All_Report.pdf')
+  }
 
   return (
     <div>
@@ -462,48 +491,26 @@ export default function OverallReport() {
 
         <div className="w-[10%] flex align-items-end justify-center">
           {!repaymentError && !statusError && (
-            <div className="relative inline-block">
-              <button
-                className=" bg-[green] p-2 hover:bg-[white] border-2 hover:text-[green] text-[white] rounded-md"
-                onClick={() => {
-                  setShowOptions(!showOptions)
-                  exportCustomCSV()
-                }}
-              >
-                <LiaFileDownloadSolid className="text-[2rem]" />
-              </button>
-
-              {/* {showOptions && (
-                <div className=" w-[15vw] absolute right-0 z-10 bg-white border rounded shadow-md mt-1">
-                  <button
-                    className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
-                    onClick={() => {
-                      exportAsCSV()
-                      setShowOptions(false)
-                    }}
-                  >
-                    Download as CSV
-                  </button>
-                  <button
-                    className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
-                    onClick={() => {
-                      exportAsExcel()
-                      setShowOptions(false)
-                    }}
-                  >
-                    Download as Excel
-                  </button>
-                  <button
-                    className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
-                    onClick={() => {
-                      exportAsPDF()
-                      setShowOptions(false)
-                    }}
-                  >
-                    Download as PDF
-                  </button>
-                </div>
-              )} */}
+            <div>
+              <div className="relative inline-block">
+                <button
+                  className=" bg-[green] p-2 hover:bg-[white] border-2 hover:text-[green] text-[white] rounded-md"
+                  onClick={() => {
+                    setShowOptions(!showOptions)
+                    exportCustomCSV()
+                  }}
+                >
+                  <LiaFileDownloadSolid className="text-[2rem]" />
+                </button>
+              </div>
+              <div className="relative inline-block">
+                <button
+                  className="bg-[red] p-2 hover:bg-[white] border-2 hover:text-[red] text-[white] rounded-md"
+                  onClick={() => exportOverAllPDF(overAllData)}
+                >
+                  <LiaFilePdfSolid className="text-[2rem]" />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -519,7 +526,7 @@ export default function OverallReport() {
           scrollable
           size="small"
           paginator
-          rows={5}
+          rows={8}
           rowsPerPageOptions={[5, 10, 25, 50]}
         >
           <Column header="S.No" body={(_, options) => options.rowIndex + 1} />

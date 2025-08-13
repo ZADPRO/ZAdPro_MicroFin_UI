@@ -10,6 +10,7 @@ import { getSettingData, SettingData } from '@renderer/helper/SettingsData'
 import { Divider } from 'primereact/divider'
 import { Calendar } from 'primereact/calendar'
 import { formatToCustomDateTime } from '../../helper/date'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 // import { SelectButton } from 'primereact/selectbutton'
 
 interface CloseLoanProps {
@@ -34,6 +35,12 @@ interface BankDetailsReponseProps {
   refIFSCsCode: string
 }
 
+interface balanceAmt {
+  finalInterest: number
+  totalInterestWantToCollected: number
+  totalPrincipalWantToPay: number
+}
+
 const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => {
   const handleBack = () => {
     goToHistoryTab()
@@ -47,11 +54,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
   // const [errorMessage, setErrorMessage] = useState<string>()
   // const [errorShow, setErrorShow] = useState(false)
   const [loanAmt, setLoanAmt] = useState<number | null>()
+  const [interestAmt, setInterestAmt] = useState<number | null>()
   const [bankDetailsResponse, setBankDetailsReponse] = useState<BankDetailsReponseProps[] | []>([])
   const [bankID, setBankid] = useState<number | null>()
   const [settingData, setSettingData] = useState<SettingData | null>()
   const [date, setDate] = useState<Date>(new Date())
 
+  const [balanceInfo, setBalanceInfo] = useState<balanceAmt>()
   const getUserLoanData = async () => {
     try {
       const response = await axios.post(
@@ -114,6 +123,7 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
             value: d.refBankId,
             refAccountType: d.refAccountType
           }))
+          setBalanceInfo(data.balanceInfo)
           console.log('options', options)
           setBankDetailsReponse(options)
           setShowCard(true)
@@ -139,8 +149,9 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
         {
           LoanId: selectedLoan,
           principalAmt: Number(loanAmt),
+          interestAmt: Number(interestAmt),
           bankId: bankID,
-          date: formatToCustomDateTime(date)
+          date: date.toLocaleDateString('en-CA')
         },
         {
           headers: {
@@ -205,12 +216,12 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                   </div>
                   <div className="flex-1">
                     <p>
-                      Loan Amount : <b>₹ {loanDetails?.refLoanAmount}</b>
+                      Loan Amount : <b> {formatINRCurrency(loanDetails?.refLoanAmount)}</b>
                     </p>
                   </div>
                   <div className="flex-1">
                     <p>
-                      Balance Amount : <b>₹ {loanDetails?.refBalanceAmt}</b>
+                      Balance Amount : <b> {formatINRCurrency(loanDetails?.refBalanceAmt)}</b>
                     </p>
                   </div>
                 </div>
@@ -266,11 +277,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                   </div>
                   <div className="flex-1">
                     <p>
-                      Initial Interest : ₹{' '}
+                      Initial Interest :{' '}
                       <b>
-                        {loanDetails?.refInitialInterest === null
-                          ? 0
-                          : loanDetails?.refInitialInterest}{' '}
+                        {formatINRCurrency(
+                          loanDetails?.refInitialInterest === null
+                            ? 0
+                            : loanDetails?.refInitialInterest
+                        )}
                       </b>
                     </p>
                   </div>
@@ -312,12 +325,13 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                 <div className="flex m-2">
                   <div className="flex-1">
                     <p>
-                      Total Interest Paid : ₹ <b> {loanDetails?.totalInterest}</b>
+                      Total Interest Paid : <b> {formatINRCurrency(loanDetails?.totalInterest)}</b>
                     </p>
                   </div>
                   <div className="flex-1">
                     <p>
-                      Total Principal Paid : ₹ <b> {loanDetails?.totalPrincipal}</b>
+                      Total Principal Paid :{' '}
+                      <b> {formatINRCurrency(loanDetails?.totalPrincipal)}</b>
                     </p>
                   </div>
                   <div className="flex-1">
@@ -330,8 +344,8 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
             </Accordion>
           </div>
           <Divider />
-          <div className="flex justify-between align-items-center">
-            <div className="w-[30%]">
+          <div className="flex justify-center align-items-center">
+            <div className="flex-1">
               <label className="font-bold block mb-2">Select Paid Date</label>
               <Calendar
                 placeholder="DD/MM/YYYY"
@@ -346,16 +360,46 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                 maxDate={new Date()}
               />
             </div>
+            <div className="flex flex-1 align-items-center justify-center">
+              <div className="flex align-items-center flex-1">
+                <p>
+                  Total Interest :{' '}
+                  <b>{formatINRCurrency(balanceInfo?.totalInterestWantToCollected)}</b>
+                </p>
+              </div>
+              <div className="flex align-items-center flex-1">
+                <p>
+                  Total Principal : <b>{formatINRCurrency(balanceInfo?.totalPrincipalWantToPay)}</b>
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex mt-3 gap-3">
             <div className="flex-1">
-              <label className="font-bold block mb-2">Enter Re-Paid Amount</label>
+              <label className="font-bold block mb-2">Enter Interest Amount</label>
+              <InputNumber
+                placeholder="Enter Balance Amount"
+                mode="currency"
+                value={interestAmt}
+                currency="INR"
+                max={balanceInfo?.totalInterestWantToCollected}
+                required
+                className="w-full"
+                currencyDisplay="symbol"
+                locale="en-IN"
+                onChange={(e: any) => {
+                  setInterestAmt(e.value)
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="font-bold block mb-2">Enter Principal Amount</label>
               <InputNumber
                 placeholder="Enter Balance Amount"
                 mode="currency"
                 value={loanAmt}
-                max={loanDetails?.refBalanceAmt}
+                max={balanceInfo?.totalPrincipalWantToPay}
                 currency="INR"
                 required
                 className="w-full"
@@ -363,13 +407,8 @@ const CloseLoan: React.FC<CloseLoanProps> = ({ id, goToHistoryTab, LoanId }) => 
                 locale="en-IN"
                 onChange={(e: any) => {
                   const enteredValue = e.value
-                  const maxValue = loanDetails?.refBalanceAmt
 
-                  if (enteredValue <= maxValue) {
-                    setLoanAmt(enteredValue)
-                  } else {
-                    setLoanAmt(maxValue) // force the value to max
-                  }
+                  setLoanAmt(enteredValue)
                 }}
               />
             </div>

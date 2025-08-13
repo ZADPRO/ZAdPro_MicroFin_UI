@@ -28,6 +28,7 @@ interface AuditData {
 
 const LoanAudit = ({ loanId }: { loanId: number }) => {
   const [auditData, setAuditData] = useState<AuditData[]>([])
+  const [loadingStatus, setLoadingStatus] = useState(true)
 
   const renderFollowup = (rowData: AuditData) => {
     if (
@@ -115,6 +116,7 @@ const LoanAudit = ({ loanId }: { loanId: number }) => {
         localStorage.setItem('token', 'Bearer ' + data.token)
         if (data.success) {
           setAuditData(data.data)
+          setLoadingStatus(false)
         }
       })
   }
@@ -124,23 +126,40 @@ const LoanAudit = ({ loanId }: { loanId: number }) => {
   }, [])
 
   return (
-    <div className="card w-full bg-black">
-      <DataTable
-        value={auditData}
-        scrollable
-        size="small"
-        scrollHeight="55vh"
-        tableStyle={{ minWidth: '50rem' }}
-      >
-        {auditColumns.map((col) => (
-          <Column
-            key={col.field}
-            field={col.field}
-            header={col.header}
-            body={col.body ?? ((rowData) => rowData[col.field] ?? 0)}
-          />
-        ))}
-      </DataTable>
+    <div>
+      {loadingStatus ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: '#f8d20f',
+            height: '92vh',
+            width: '100%'
+          }}
+        >
+          <i className="pi pi-spin pi-spinner" style={{ fontSize: '5rem' }}></i>
+        </div>
+      ) : (
+        <div className="card w-full bg-black">
+          <DataTable
+            value={auditData}
+            scrollable
+            size="small"
+            scrollHeight="55vh"
+            tableStyle={{ minWidth: '50rem' }}
+          >
+            {auditColumns.map((col) => (
+              <Column
+                key={col.field}
+                field={col.field}
+                header={col.header}
+                body={col.body ?? ((rowData) => rowData[col.field] ?? 0)}
+              />
+            ))}
+          </DataTable>
+        </div>
+      )}
     </div>
   )
 }

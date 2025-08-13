@@ -94,6 +94,7 @@ export const UpdateExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, 
       console.log(' -> Line Number ----------------------------------- 100')
       if (Number(expenseData?.refAmount) < Number(amount)) {
         const balance = Number(amount) - Number(expenseData?.refAmount)
+        console.log('balance', balance)
 
         let bankBalance
         bankOption.map((data) => {
@@ -101,7 +102,9 @@ export const UpdateExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, 
             bankBalance = data.amount
           }
         })
-        if (Number(bankBalance) < Number(balance)) {
+        console.log('bankBalance', bankBalance)
+        if (false) {
+          // if (Number(bankBalance) < Number(balance)) {
           toast.error('Selected Money resource Have the Minimum Amount than the Expense Amount', {
             position: 'top-right',
             autoClose: 3599,
@@ -128,8 +131,10 @@ export const UpdateExpense: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, 
           bankBalance = data.amount
         }
       })
+      console.log('bankBalance', bankBalance)
 
-      if (Number(bankBalance) < Number(amount)) {
+      // if (Number(bankBalance) < Number(amount)) {
+      if (false) {
         toast.error('Selected Money resource Have the Minimum Amount than the Expense Amount', {
           position: 'top-right',
           autoClose: 3599,

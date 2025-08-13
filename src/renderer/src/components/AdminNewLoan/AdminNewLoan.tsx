@@ -39,6 +39,7 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [filter, setFilter] = useState(0)
   const [userId, setUserId] = useState<number>()
   const [loanId, setLoanId] = useState<number>()
+  const [loadingStatus, setLoadingStatus] = useState(true)
 
   const filterOption = [
     { label: 'All Loan', value: 0 },
@@ -159,6 +160,7 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
         localStorage.setItem('token', 'Bearer ' + data.token)
 
         if (data.success) {
+          setLoadingStatus(false)
           console.log('Data line ---------------- 65', data)
           setLoanList(data.data)
         }
@@ -170,118 +172,137 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   }, [reloadFlag])
   return (
     <div>
-      <div className="flex justify-content-between">
-        <div className="w-[30%] flex justify-between">
-          <Dropdown
-            id="statusChoose"
-            value={filter}
-            options={filterOption}
-            optionLabel="label"
-            optionValue="value"
-            onChange={(e) => setFilter(e.value)}
-            required
-          />{' '}
-          <Button label="Export CSV" className="py-1 px-5 flex gap-x-2" onClick={exportToCSV} />
-        </div>
+      {loadingStatus ? (
+        <>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: '#f8d20f',
+              height: '92vh',
+              width: '100%'
+            }}
+          >
+            <i className="pi pi-spin pi-spinner" style={{ fontSize: '5rem' }}></i>
+          </div>
+        </>
+      ) : (
         <div>
-          <Button
-            label="Add New Loan"
-            className="py-1 px-5 flex gap-x-2"
-            onClick={() => setNewData(true)}
-          />
-        </div>
-      </div>
+          <div className="flex justify-content-between">
+            <div className="w-[30%] flex justify-between">
+              <Dropdown
+                id="statusChoose"
+                value={filter}
+                options={filterOption}
+                optionLabel="label"
+                optionValue="value"
+                onChange={(e) => setFilter(e.value)}
+                required
+              />{' '}
+              <Button label="Export CSV" className="py-1 px-5 flex gap-x-2" onClick={exportToCSV} />
+            </div>
+            <div>
+              <Button
+                label="Add New Loan"
+                className="py-1 px-5 flex gap-x-2"
+                onClick={() => setNewData(true)}
+              />
+            </div>
+          </div>
 
-      <DataTable
-        value={filteredLoanList}
-        filters={filters}
-        onFilter={(e) => setFilters(e.filters)}
-        className="mt-3"
-        scrollHeight="380px"
-        showGridlines
-        size="small"
-        stripedRows
-        scrollable
-        paginator
-        rows={10}
-        rowsPerPageOptions={[10, 25, 50]}
-      >
-        <Column header="S.No" body={(_, options) => options.rowIndex + 1} />
-        <Column
-          field="refVendorName"
-          header="Vendor Name"
-          filter
-          filterField="refVendorName"
-          filterElement={
-            <Dropdown
-              value={filters.refVendorName.value}
-              options={vendorOptions}
-              onChange={onFilterChange}
-              placeholder="Select Vendor"
-              showClear
-              style={{ width: '100%' }}
+          <DataTable
+            value={filteredLoanList}
+            filters={filters}
+            onFilter={(e) => setFilters(e.filters)}
+            className="mt-3"
+            scrollHeight="380px"
+            showGridlines
+            size="small"
+            stripedRows
+            scrollable
+            paginator
+            rows={10}
+            rowsPerPageOptions={[10, 25, 50]}
+          >
+            <Column header="S.No" body={(_, options) => options.rowIndex + 1} />
+            <Column
+              field="refVendorName"
+              header="Vendor Name"
+              filter
+              filterField="refVendorName"
+              filterElement={
+                <Dropdown
+                  value={filters.refVendorName.value}
+                  options={vendorOptions}
+                  onChange={onFilterChange}
+                  placeholder="Select Vendor"
+                  showClear
+                  style={{ width: '100%' }}
+                />
+              }
+              body={nameBodyTemplate}
             />
-          }
-          body={nameBodyTemplate}
-        />
 
-        <Column
-          field="refVenderType"
-          header="Vendor Type"
-          body={(rowData) =>
-            rowData.refVenderType === 1
-              ? 'Outside Vendor'
-              : rowData.refVenderType === 2
-                ? 'Bank'
-                : 'Depositor'
-          }
-        />
-        <Column field="refLoanStartDate" header="Date" />
-        <Column
-          field="refLoanAmount"
-          header="Loan Amount"
-          body={(rowData) => `₹ ${rowData.refLoanAmount}`}
-        />
-        <Column
-          field="refLoanDuration"
-          header="Loan Duration"
-          body={(rowData) =>
-            `${rowData.refLoanDuration} ${rowData?.refProductDurationType === 1 ? 'Months' : rowData?.refProductDurationType === 2 ? 'Weeks' : 'Days'}`
-          }
-        />
-        <Column
-          field="refLoanInterest"
-          header="Loan Interest"
-          body={(rowData) => `${rowData.refLoanInterest} %`}
-        />
-        <Column field="refLoanStatus" header="Loan Status" />
-      </DataTable>
+            <Column
+              field="refVenderType"
+              header="Vendor Type"
+              body={(rowData) =>
+                rowData.refVenderType === 1
+                  ? 'Outside Vendor'
+                  : rowData.refVenderType === 2
+                    ? 'Bank'
+                    : 'Depositor'
+              }
+            />
+            <Column field="refLoanStartDate" header="Date" />
+            <Column
+              field="refLoanAmount"
+              header="Loan Amount"
+              body={(rowData) => `₹ ${rowData.refLoanAmount}`}
+            />
+            <Column
+              field="refLoanDuration"
+              header="Loan Duration"
+              body={(rowData) =>
+                `${rowData.refLoanDuration} ${rowData?.refProductDurationType === 1 ? 'Months' : rowData?.refProductDurationType === 2 ? 'Weeks' : 'Days'}`
+              }
+            />
+            <Column
+              field="refLoanInterest"
+              header="Loan Interest"
+              body={(rowData) => `${rowData.refLoanInterest} %`}
+            />
+            <Column field="refLoanStatus" header="Loan Status" />
+          </DataTable>
 
-      {/* Admin loan Creation Module */}
+          {/* Admin loan Creation Module */}
 
-      <Sidebar
-        visible={newData}
-        style={{ width: '80vw' }}
-        position="right"
-        onHide={closeSidebarNew}
-      >
-        {/* <AdminLoanCreation closeSidebarNew={closeSidebarNew} /> */}
-        <AdminNewLoanCreation closeSidebarNew={closeSidebarNew} />
-      </Sidebar>
+          <Sidebar
+            visible={newData}
+            style={{ width: '80vw' }}
+            position="right"
+            onHide={closeSidebarNew}
+          >
+            {/* <AdminLoanCreation closeSidebarNew={closeSidebarNew} /> */}
+            <AdminNewLoanCreation closeSidebarNew={closeSidebarNew} />
+          </Sidebar>
 
-      {/* view Loan Details Module */}
-      <Sidebar
-        visible={loanDetailsSidebar}
-        style={{ width: '80vw' }}
-        position="right"
-        onHide={closeSidebarNew}
-      >
-        <AdminLoanDetails
-          closeSidebarNew={closeSidebarNew}
-          userId={userId ?? 0}
-          loanId={loanId ?? 0}
-        />
-      </Sidebar>
+          {/* view Loan Details Module */}
+          <Sidebar
+            visible={loanDetailsSidebar}
+            style={{ width: '80vw' }}
+            position="right"
+            onHide={closeSidebarNew}
+          >
+            <AdminLoanDetails
+              closeSidebarNew={closeSidebarNew}
+              userId={userId ?? 0}
+              loanId={loanId ?? 0}
+            />
+          </Sidebar>
+        </div>
+      )}
     </div>
   )
 }

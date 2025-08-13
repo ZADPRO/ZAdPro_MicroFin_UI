@@ -13,8 +13,11 @@ import { Dropdown } from 'primereact/dropdown'
 import { Calendar } from 'primereact/calendar'
 import { Nullable } from 'primereact/ts-helpers'
 import AdminLoanRepaymentSideTab from '../../components/AdminLoanRepaymentSideTab/RepaymentSideTab'
+interface propsInterface {
+  reloadFlag: boolean
+}
 
-const AdminRepayments = () => {
+const AdminRepayments: React.FC<propsInterface> = (reloadFlag) => {
   const [userLists, setUserLists] = useState([])
   const [loadingStatus, setLoadingStatus] = useState(true)
   const [userListType, setUserListType] = useState({ name: 'Over All', code: 0 })
@@ -124,7 +127,7 @@ const AdminRepayments = () => {
 
   useEffect(() => {
     loadData()
-  }, [startDate, endDate, selectedMonth])
+  }, [startDate, endDate, selectedMonth, reloadFlag])
 
   const ProductBody = (rowData: any) => {
     return (
