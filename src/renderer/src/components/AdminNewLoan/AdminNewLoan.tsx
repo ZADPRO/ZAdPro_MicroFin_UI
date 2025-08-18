@@ -40,6 +40,9 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [userId, setUserId] = useState<number>()
   const [loanId, setLoanId] = useState<number>()
   const [loadingStatus, setLoadingStatus] = useState(true)
+console.log('AdminNewLoan.tsx / loadingStatus / 42 ------------------- > ', loadingStatus);
+
+console.log('AdminNewLoan.tsx / 44 ------------------- > ');
 
   const filterOption = [
     { label: 'All Loan', value: 0 },

@@ -132,7 +132,7 @@ export default function OpenCloseBalanceMain({}: Props) {
           <div className="flex flex-col gap-y-2">
             {/* Dynamic Fund Details */}
             {balanceData?.FundDetails.filter((item) =>
-              [2, 3, 5, 8, 9].includes(item.refFundTypeId)
+              [5, 3, 2, 10, 8, 9].includes(item.refFundTypeId)
             ).map((item, index) => (
               <div key={index} className="flex justify-between">
                 <p className="text-lg">{item.refFundTypeName}</p>
@@ -146,7 +146,7 @@ export default function OpenCloseBalanceMain({}: Props) {
             <p className="text-lg font-bold">
               ₹{' '}
               {balanceData?.FundDetails.filter((item) =>
-                [2, 3, 5, 8, 9].includes(item.refFundTypeId)
+                [5, 3, 2, 10, 8, 9].includes(item.refFundTypeId)
               ).reduce((acc, item) => acc + Number(item.Balance), 0)}
             </p>
           </div>
@@ -162,14 +162,14 @@ export default function OpenCloseBalanceMain({}: Props) {
           </div>
           <div className="flex flex-col gap-y-2">
             {/* Dynamic Fund Details */}
-            {balanceData?.FundDetails.filter((item) => [1, 4, 7].includes(item.refFundTypeId)).map(
-              (item, index) => (
-                <div key={index} className="flex justify-between">
-                  <p className="text-lg">{item.refFundTypeName}</p>
-                  <p className="text-lg font-bold">₹ {item.Balance}</p>
-                </div>
-              )
-            )}
+            {balanceData?.FundDetails.filter((item) =>
+              [1, 4, 12, 11, 7].includes(item.refFundTypeId)
+            ).map((item, index) => (
+              <div key={index} className="flex justify-between">
+                <p className="text-lg">{item.refFundTypeName}</p>
+                <p className="text-lg font-bold">₹ {item.Balance}</p>
+              </div>
+            ))}
           </div>
           <div className="flex flex-col justify-between">
             <Divider className="my-2" />
@@ -179,7 +179,7 @@ export default function OpenCloseBalanceMain({}: Props) {
               <p className="text-lg font-bold">
                 ₹{' '}
                 {balanceData?.FundDetails.filter((item) =>
-                  [1, 4, 7].includes(item.refFundTypeId)
+                  [1, 4, 12, 11, 7].includes(item.refFundTypeId)
                 ).reduce((acc, item) => acc + Number(item.Balance), 0)}
               </p>
             </div>

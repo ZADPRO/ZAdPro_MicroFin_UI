@@ -671,7 +671,8 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
 
   return (
     <div>
-      {loadingStatus ? (<div
+      {loadingStatus ? (
+        <div
           style={{
             display: 'flex',
             justifyContent: 'center',
@@ -682,758 +683,709 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
           }}
         >
           <i className="pi pi-spin pi-spinner" style={{ fontSize: '5rem' }}></i>
-        </div>) : ( <div>
-      {!viewSummary && (
-        <div className="flex flex-col gap-y-1">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              loanSummary()
-            }}
-          >
-            <div>
-              <b className="text-[1.1rem]">Mark the Taken Loan</b>
-            </div>
-            <div className="flex justify-between gap-x-5">
-              <div className="flex-3">
-                <label>
-                  {' '}
-                  <b>Select Vendor</b>{' '}
-                </label>
-                <Dropdown
-                  value={loanData?.vendorId}
-                  onChange={(e: DropdownChangeEvent) => {
-                    handelValueChange(e.target)
+        </div>
+      ) : (
+        <div>
+          {!viewSummary && (
+            <div className="flex flex-col gap-y-1">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  loanSummary()
+                }}
+              >
+                <div>
+                  <b className="text-[1.1rem]">Mark the Taken Loan</b>
+                </div>
+                <div className="flex justify-between gap-x-5">
+                  <div className="flex-3">
+                    <label>
+                      {' '}
+                      <b>Select Vendor</b>{' '}
+                    </label>
+                    <Dropdown
+                      value={loanData?.vendorId}
+                      onChange={(e: DropdownChangeEvent) => {
+                        handelValueChange(e.target)
 
-                    getOldLoan(e.target.value)
-                  }}
-                  filter
-                  options={vendorList}
-                  required
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select Vendor Who Give Loan"
-                  className="w-full"
-                  name="vendorId"
-                  checkmark={true}
-                  highlightOnSelect={true}
-                />
-              </div>
-              <div className="flex flex-1 flex-col">
-                <label>
-                  {' '}
-                  <b>Select Loan Taken Date</b>{' '}
-                </label>
-                <Calendar
-                  id="buttondisplay"
-                  value={loanData.todayDate}
-                  name="todayDate"
-                  onChange={async (e) => {
-                    await handelValueChange(e.target)
-                    getDateRange(e.target.value, loanCalSetting?.loanDueType ?? 1)
-                  }}
-                  maxDate={new Date()}
-                  required
-                  showIcon
-                  style={{ padding: '0px' }}
-                  className="p-0"
-                  dateFormat={'dd/mm/yy'}
-                />
-              </div>
-            </div>
-            <div className="flex justify-between gap-x-5">
-              <div className="flex-1">
-                <label>
-                  {' '}
-                  <b>Select Loan Taken As</b>{' '}
-                </label>
-                <Dropdown
-                  value={loanData?.loanTakenAs}
-                  onChange={(e: DropdownChangeEvent) => {
-                    handelValueChange(e.target)
-                    if (loanData.vendorId && e.target.value !== 1) {
-                      getOldLoan(loanData.vendorId)
-                    } else {
-                      const temp = { ...loanData, loanTakenAs: e.target.value, oldLoanId: null }
-                      setLoanData(temp)
-                    }
-                  }}
-                  options={loanType}
-                  required
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select Loan Taken As "
-                  className="w-full"
-                  name="loanTakenAs"
-                  checkmark={true}
-                  highlightOnSelect={true}
-                />
-              </div>
-              <div className="flex-1">
-                <label>
-                  {' '}
-                  <b>Select Old Loan Details</b>{' '}
-                </label>
-                <Dropdown
-                  value={loanData?.oldLoanId}
-                  onChange={(e: DropdownChangeEvent) => {
-                    console.log('\n\n\n\n=========\n\ne', e)
-                    handelValueChange(e.target)
-                  }}
-                  filter
-                  disabled={loanData.loanTakenAs === 1}
-                  options={oldLoanList}
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select Old Loan to Taken"
-                  className="w-full"
-                  name="oldLoanId"
-                  checkmark={true}
-                  highlightOnSelect={true}
-                />
-              </div>
-            </div>
-            <Divider className="my-2" />
-            <div className="flex gap-x-4 justify-end">
-              <div>
-                <Button
-                  className="py-1 px-5 flex gap-x-2"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setShowOldLoan(true)
-                  }}
-                >
-                  View Old Loan Details <LuSquareArrowOutUpRight />
-                </Button>
-              </div>
-              <div>
-                <Button
-                  className="py-1 px-5 flex gap-x-2"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setShowLoanCalculationSetting(true)
-                  }}
-                >
-                  Loan Calculation Configuration <LuSquareArrowOutUpRight />
-                </Button>
-              </div>
-            </div>
-            <Divider className="my-2" />
-
-            <div className="flex gap-x-5">
-              <div className="flex-1">
-                <label>
-                  {' '}
-                  <b>Select Repayment Type</b>{' '}
-                </label>
-                <Dropdown
-                  value={loanData?.rePaymentType}
-                  required
-                  onChange={(e: DropdownChangeEvent) => {
-                    handelValueChange(e.target)
-                    if (e.target.value === 3) {
-                      setLoanData({
-                        ...loanData,
-
-                        loanDuration: '1',
-                        rePaymentType: e.target.value
-                      })
-                    }
-                  }}
-                  //   filter
-                  options={loanRePaymentType}
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select Repayment Type"
-                  className="w-full"
-                  name="rePaymentType"
-                  checkmark={true}
-                  highlightOnSelect={true}
-                />
-              </div>
-              <div className="flex-1 flex gap-x-5">
-                <div className="flex-1 ">
-                  <label>
-                    {' '}
-                    <b>Enter Loan Interest %</b>{' '}
-                    <InputText
-                      value={loanData?.interestRate}
+                        getOldLoan(e.target.value)
+                      }}
+                      filter
+                      options={vendorList}
                       required
-                      onChange={(e) => {
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Select Vendor Who Give Loan"
+                      className="w-full"
+                      name="vendorId"
+                      checkmark={true}
+                      highlightOnSelect={true}
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col">
+                    <label>
+                      {' '}
+                      <b>Select Loan Taken Date</b>{' '}
+                    </label>
+                    <Calendar
+                      id="buttondisplay"
+                      value={loanData.todayDate}
+                      name="todayDate"
+                      onChange={async (e) => {
+                        await handelValueChange(e.target)
+                        getDateRange(e.target.value, loanCalSetting?.loanDueType ?? 1)
+                      }}
+                      maxDate={new Date()}
+                      required
+                      showIcon
+                      style={{ padding: '0px' }}
+                      className="p-0"
+                      dateFormat={'dd/mm/yy'}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between gap-x-5">
+                  <div className="flex-1">
+                    <label>
+                      {' '}
+                      <b>Select Loan Taken As</b>{' '}
+                    </label>
+                    <Dropdown
+                      value={loanData?.loanTakenAs}
+                      onChange={(e: DropdownChangeEvent) => {
+                        handelValueChange(e.target)
+                        if (loanData.vendorId && e.target.value !== 1) {
+                          getOldLoan(loanData.vendorId)
+                        } else {
+                          const temp = { ...loanData, loanTakenAs: e.target.value, oldLoanId: null }
+                          setLoanData(temp)
+                        }
+                      }}
+                      options={loanType}
+                      required
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Select Loan Taken As "
+                      className="w-full"
+                      name="loanTakenAs"
+                      checkmark={true}
+                      highlightOnSelect={true}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label>
+                      {' '}
+                      <b>Select Old Loan Details</b>{' '}
+                    </label>
+                    <Dropdown
+                      value={loanData?.oldLoanId}
+                      onChange={(e: DropdownChangeEvent) => {
+                        console.log('\n\n\n\n=========\n\ne', e)
                         handelValueChange(e.target)
                       }}
-                      placeholder="Enter Loan Interest %"
+                      filter
+                      disabled={loanData.loanTakenAs === 1}
+                      options={oldLoanList}
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Select Old Loan to Taken"
                       className="w-full"
-                      name="interestRate"
+                      name="oldLoanId"
+                      checkmark={true}
+                      highlightOnSelect={true}
                     />
-                  </label>
+                  </div>
                 </div>
-                {loanData.rePaymentType !== 3 && (
-                  <>
-                    <div className="flex-1">
+                <Divider className="my-2" />
+                <div className="flex gap-x-4 justify-end">
+                  <div>
+                    <Button
+                      className="py-1 px-5 flex gap-x-2"
+                      disabled={loanData?.oldLoanId === null || loanData?.oldLoanId === undefined}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setShowOldLoan(true)
+                      }}
+                    >
+                      View Old Loan Details <LuSquareArrowOutUpRight />
+                    </Button>
+                  </div>
+                  <div>
+                    <Button
+                      className="py-1 px-5 flex gap-x-2"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setShowLoanCalculationSetting(true)
+                      }}
+                    >
+                      Loan Calculation Configuration <LuSquareArrowOutUpRight />
+                    </Button>
+                  </div>
+                </div>
+                <Divider className="my-2" />
+
+                <div className="flex gap-x-5">
+                  <div className="flex-1">
+                    <label>
+                      {' '}
+                      <b>Select Repayment Type</b>{' '}
+                    </label>
+                    <Dropdown
+                      value={loanData?.rePaymentType}
+                      required
+                      onChange={(e: DropdownChangeEvent) => {
+                        handelValueChange(e.target)
+                        if (e.target.value === 3) {
+                          setLoanData({
+                            ...loanData,
+
+                            loanDuration: '1',
+                            rePaymentType: e.target.value
+                          })
+                        }
+                      }}
+                      //   filter
+                      options={loanRePaymentType}
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Select Repayment Type"
+                      className="w-full"
+                      name="rePaymentType"
+                      checkmark={true}
+                      highlightOnSelect={true}
+                    />
+                  </div>
+                  <div className="flex-1 flex gap-x-5">
+                    <div className="flex-1 ">
                       <label>
                         {' '}
-                        <b>Enter Loan Duration</b>{' '}
+                        <b>Enter Loan Interest %</b>{' '}
                         <InputText
-                          value={loanData?.loanDuration}
+                          value={loanData?.interestRate}
                           required
                           onChange={(e) => {
                             handelValueChange(e.target)
                           }}
-                          placeholder="Enter Loan Duration"
+                          placeholder="Enter Loan Interest %"
                           className="w-full"
-                          name="loanDuration"
+                          name="interestRate"
                         />
                       </label>
                     </div>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-x-5">
-              <div className="flex-1 flex gap-x-3">
-                <div className="flex-1">
-                  <label htmlFor="currency-india" className="font-bold block">
-                    Enter Loan Amount
-                  </label>
-                  <InputText
-                    // type="number"
-                    value={formatINRCurrencyText(Number(loanData.newLoanAmt))}
-                    required
-                    placeholder="Enter Loan Amount"
-                    onChange={(e) => {
-                      const numberValue = parseINRInput(e.target.value)
-                      handelValueChange({ name: 'newLoanAmt', value: numberValue })
-                    }}
-                    keyfilter="money"
-                  />{' '}
-                </div>
-                {Number(loanData.oldLoanId) > 0 && (
-                  <div className="flex flex-2 gap-x-3">
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Old Interest
-                      </label>
-                      <InputText
-                        disabled={loadDetailsResponse?.refIfCalculation}
-                        required
-                        name="oldInterestAmt"
-                        value={formatINRCurrencyText(Number(loanData.oldInterestAmt))}
-                        onChange={(e) => {
-                          const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({ name: 'oldInterestAmt', value: numberValue })
-                        }}
-                        placeholder="Enter Old Interest Amount"
-                        keyfilter="money"
-                      />{' '}
-                    </div>
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Old Principal
-                      </label>
-                      <InputText
-                        disabled={loadDetailsResponse?.refIfCalculation}
-                        required
-                        name="oldLoanAmt"
-                        value={formatINRCurrencyText(Number(loanData.oldLoanAmt))}
-                        onChange={(e) => {
-                          const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({ name: 'oldLoanAmt', value: numberValue })
-                        }}
-                        placeholder="Enter Loan Amount"
-                        keyfilter="money"
-                      />{' '}
-                    </div>
+                    {loanData.rePaymentType !== 3 && (
+                      <>
+                        <div className="flex-1">
+                          <label>
+                            {' '}
+                            <b>Enter Loan Duration</b>{' '}
+                            <InputText
+                              value={loanData?.loanDuration}
+                              required
+                              onChange={(e) => {
+                                handelValueChange(e.target)
+                              }}
+                              placeholder="Enter Loan Duration"
+                              className="w-full"
+                              name="loanDuration"
+                            />
+                          </label>
+                        </div>
+                      </>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <label>
-                  {' '}
-                  <b>Select Amount Transfer To</b>{' '}
-                </label>
-                <Dropdown
-                  value={loanData?.paymentFlowId}
-                  required
-                  onChange={(e: DropdownChangeEvent) => {
-                    handelValueChange(e.target)
-                  }}
-                  //   filter
-                  options={paymentFlowList}
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select Amount Transfer To"
-                  className="w-full"
-                  name="paymentFlowId"
-                  checkmark={true}
-                  highlightOnSelect={true}
-                />
-              </div>
-            </div>
-            <div className="flex gap-x-5">
-              <div className="flex-1">
-                <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
-                <Calendar
-                  placeholder="Repayment Schedule Date"
-                  required
-                  // disabled={step < 4}
-                  dateFormat="dd/mm/yy"
-                  className="w-full"
-                  value={loanData?.rePaymentDate}
-                  name="rePaymentDate"
-                  onFocus={async () => {
-                    await getDateRange(loanData.todayDate, loanCalSetting?.loanDueType ?? 1)
-                  }}
-                  onChange={async (e: any) => {
-                    handelValueChange(e.target)
-                  }}
-                  minDate={minDate ?? undefined}
-                  maxDate={maxDate ?? undefined}
-                  viewDate={viewDate}
-                />
-              </div>
-              <div className="flex-1 flex gap-x-5">
-                <div className="flex-1">
-                  <label htmlFor="currency-india" className="font-bold block">
-                    Due Interest First
-                  </label>
-                  <Dropdown
-                    value={loanData?.ifPayInterestFirst}
-                    onChange={(e: DropdownChangeEvent) => {
-                      if (!e.target.value) {
-                        setLoanData({
-                          ...loanData,
-                          [e.target.name]: e.target.value,
-                          paidInterestCount: null,
-                          interestAmtPaidFirst: null
-                        })
-                      } else {
-                        handelValueChange(e.target)
-                      }
-                    }}
-                    //   filter
-                    options={dueInterestFirstOption}
-                    required
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Select Due Interest First"
-                    className="w-full"
-                    name="ifPayInterestFirst"
-                    checkmark={true}
-                    highlightOnSelect={true}
-                  />
                 </div>
-                {Number(loanData.oldLoanId) > 0 && (
+                <div className="flex gap-x-5">
+                  <div className="flex-1 flex gap-x-3">
+                    <div className="flex-1">
+                      <label htmlFor="currency-india" className="font-bold block">
+                        Enter Loan Amount
+                      </label>
+                      <InputText
+                        // type="number"
+                        value={formatINRCurrencyText(Number(loanData.newLoanAmt))}
+                        required
+                        placeholder="Enter Loan Amount"
+                        onChange={(e) => {
+                          const numberValue = parseINRInput(e.target.value)
+                          handelValueChange({ name: 'newLoanAmt', value: numberValue })
+                        }}
+                        keyfilter="money"
+                      />{' '}
+                    </div>
+                    {Number(loanData.oldLoanId) > 0 && (
+                      <div className="flex flex-2 gap-x-3">
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Old Interest
+                          </label>
+                          <InputText
+                            disabled={loadDetailsResponse?.refIfCalculation}
+                            required
+                            name="oldInterestAmt"
+                            value={formatINRCurrencyText(Number(loanData.oldInterestAmt))}
+                            onChange={(e) => {
+                              const numberValue = parseINRInput(e.target.value)
+                              handelValueChange({ name: 'oldInterestAmt', value: numberValue })
+                            }}
+                            placeholder="Enter Old Interest Amount"
+                            keyfilter="money"
+                          />{' '}
+                        </div>
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Old Principal
+                          </label>
+                          <InputText
+                            disabled={loadDetailsResponse?.refIfCalculation}
+                            required
+                            name="oldLoanAmt"
+                            value={formatINRCurrencyText(Number(loanData.oldLoanAmt))}
+                            onChange={(e) => {
+                              const numberValue = parseINRInput(e.target.value)
+                              handelValueChange({ name: 'oldLoanAmt', value: numberValue })
+                            }}
+                            placeholder="Enter Loan Amount"
+                            keyfilter="money"
+                          />{' '}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex-1">
-                    <label className="font-bold block">No Of Due Interest Paid</label>
-                    <InputText
-                      type="number"
-                      disabled={!loanData.ifPayInterestFirst}
+                    <label>
+                      {' '}
+                      <b>Select Amount Transfer To</b>{' '}
+                    </label>
+                    <Dropdown
+                      value={loanData?.paymentFlowId}
                       required
-                      value={loanData?.paidInterestCount}
-                      placeholder="Number of Due Interest Paid"
-                      name="paidInterestCount"
+                      onChange={(e: DropdownChangeEvent) => {
+                        handelValueChange(e.target)
+                      }}
+                      //   filter
+                      options={paymentFlowList}
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Select Amount Transfer To"
+                      className="w-full"
+                      name="paymentFlowId"
+                      checkmark={true}
+                      highlightOnSelect={true}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-x-5">
+                  <div className="flex-1">
+                    <label className="font-bold block mb-2">Select Loan Re-Payment Date</label>
+                    <Calendar
+                      placeholder="Repayment Schedule Date"
+                      required
+                      // disabled={step < 4}
+                      dateFormat="dd/mm/yy"
+                      className="w-full"
+                      value={loanData?.rePaymentDate}
+                      name="rePaymentDate"
+                      onFocus={async () => {
+                        await getDateRange(loanData.todayDate, loanCalSetting?.loanDueType ?? 1)
+                      }}
+                      onChange={async (e: any) => {
+                        handelValueChange(e.target)
+                      }}
+                      minDate={minDate ?? undefined}
+                      maxDate={maxDate ?? undefined}
+                      viewDate={viewDate}
+                    />
+                  </div>
+                  <div className="flex-1 flex gap-x-5">
+                    <div className="flex-1">
+                      <label htmlFor="currency-india" className="font-bold block">
+                        Due Interest First
+                      </label>
+                      <Dropdown
+                        value={loanData?.ifPayInterestFirst}
+                        onChange={(e: DropdownChangeEvent) => {
+                          if (!e.target.value) {
+                            setLoanData({
+                              ...loanData,
+                              [e.target.name]: e.target.value,
+                              paidInterestCount: null,
+                              interestAmtPaidFirst: null
+                            })
+                          } else {
+                            handelValueChange(e.target)
+                          }
+                        }}
+                        //   filter
+                        options={dueInterestFirstOption}
+                        required
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select Due Interest First"
+                        className="w-full"
+                        name="ifPayInterestFirst"
+                        checkmark={true}
+                        highlightOnSelect={true}
+                      />
+                    </div>
+                    {Number(loanData.oldLoanId) > 0 && (
+                      <div className="flex-1">
+                        <label className="font-bold block">No Of Due Interest Paid</label>
+                        <InputText
+                          type="number"
+                          disabled={!loanData.ifPayInterestFirst}
+                          required
+                          value={loanData?.paidInterestCount}
+                          placeholder="Number of Due Interest Paid"
+                          name="paidInterestCount"
+                          onChange={(e) => {
+                            handelValueChange(e.target)
+                          }}
+                        />{' '}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-x-5">
+                  <div className="flex-1">
+                    <label className="font-bold block">Enter Documentation Fees</label>
+                    <InputText
+                      // type="number"
+                      value={formatINRCurrencyText(Number(loanData.docFee))}
+                      placeholder="Enter Documentation Fees"
+                      required
+                      onChange={(e) => {
+                        const numberValue = parseINRInput(e.target.value)
+                        handelValueChange({ name: 'docFee', value: numberValue })
+                      }}
+                      // keyfilter="money"
+                    />{' '}
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="currency-india" className="font-bold block">
+                      Notes (or) Security
+                    </label>
+                    <InputText
+                      value={loanData.notes}
+                      required
+                      placeholder="Enter Notes (or) Security"
+                      name="notes"
                       onChange={(e) => {
                         handelValueChange(e.target)
                       }}
                     />{' '}
                   </div>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-x-5">
-              <div className="flex-1">
-                <label className="font-bold block">Enter Documentation Fees</label>
-                <InputText
-                  // type="number"
-                  value={formatINRCurrencyText(Number(loanData.docFee))}
-                  placeholder="Enter Documentation Fees"
-                  required
-                  onChange={(e) => {
-                    const numberValue = parseINRInput(e.target.value)
-                    handelValueChange({ name: 'docFee', value: numberValue })
-                  }}
-                  // keyfilter="money"
-                />{' '}
-              </div>
-              <div className="flex-1">
-                <label htmlFor="currency-india" className="font-bold block">
-                  Notes (or) Security
-                </label>
-                <InputText
-                  value={loanData.notes}
-                  required
-                  placeholder="Enter Notes (or) Security"
-                  name="notes"
-                  onChange={(e) => {
-                    handelValueChange(e.target)
-                  }}
-                />{' '}
-              </div>
-            </div>
-            {!loanCalSetting?.ifCalculationNeeded && (
-              <div className="flex flex-col gap-y-1">
-                <Divider className="my-2" />
-                <p className="my-2">
-                  <b>Due Re-Payment Details</b>
-                </p>
-                <div className="flex w-full gap-x-5">
-                  <div className="flex-1 flex gap-x-5">
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Due Interest Amount
-                      </label>
-                      <InputText
-                        // type="number"
-                        value={formatINRCurrencyText(Number(loanData.loanDueInterestAmt))}
-                        placeholder="Due Interest Amount"
-                        name="loanDueInterestAmt"
-                        onChange={(e) => {
-                          const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({ name: 'loanDueInterestAmt', value: numberValue })
-                        }}
-                        keyfilter="money"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Due Principal Amount
-                      </label>
-                      <InputText
-                        // type="number"
-                        value={formatINRCurrencyText(Number(loanData.loanPrincipalAmt))}
-                        placeholder="Due Principal Amount"
-                        name="loanPrincipalAmt"
-                        onChange={(e) => {
-                          const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({ name: 'loanPrincipalAmt', value: numberValue })
-                        }}
-                        keyfilter="money"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 flex gap-x-5">
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Total Due Amount
-                      </label>
-                      <InputText
-                        // type="number"
-                        readOnly
-                        value={formatINRCurrencyText(
-                          Number(loanData.loanPrincipalAmt) + Number(loanData.loanDueInterestAmt)
-                        )}
-                        placeholder="Total Due Amount"
-                        name="loanPrincipalAmt"
-                        keyfilter="money"
-                      />
-                    </div>
-                  </div>
                 </div>
-                <div className="flex w-full gap-x-5">
-                  <div className="flex-1 flex gap-x-5">
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Interest Amount Paid First
-                      </label>
-                      <InputText
-                        // type="number"
-                        disabled={!loanData.ifPayInterestFirst}
-                        value={formatINRCurrencyText(Number(loanData.interestAmtPaidFirst))}
-                        placeholder="Due Interest Amount"
-                        name="interestAmtPaidFirst"
-                        onChange={(e) => {
-                          const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({ name: 'interestAmtPaidFirst', value: numberValue })
-                        }}
-                        keyfilter="money"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 flex gap-x-5">
-                    <div className="flex-1">
-                      <label htmlFor="currency-india" className="font-bold block">
-                        Loan Initial Interest Amount
-                      </label>
-                      <InputText
-                        // type="number"
-                        value={formatINRCurrencyText(Number(loanData.loanInitialInterestAmt))}
-                        placeholder="Due Initial Interest Amount"
-                        name="loanInitialInterestAmt"
-                        onChange={(e) => {
-                          const numberValue = parseINRInput(e.target.value)
-                          handelValueChange({
-                            name: 'loanInitialInterestAmt',
-                            value: numberValue
-                          })
-                        }}
-                        keyfilter="money"
-                      />
-                    </div>
-                    {/* <div className="flex-1"></div> */}
-                  </div>
-                </div>
-
-                <Divider className="my-2" />
-                <div className="flex justify-between align-items-center">
-                  <div>
+                {!loanCalSetting?.ifCalculationNeeded && (
+                  <div className="flex flex-col gap-y-1">
+                    <Divider className="my-2" />
                     <p className="my-2">
-                      <b>First Amount Entry</b>
+                      <b>Due Re-Payment Details</b>
                     </p>
+                    <div className="flex w-full gap-x-5">
+                      <div className="flex-1 flex gap-x-5">
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Due Interest Amount
+                          </label>
+                          <InputText
+                            // type="number"
+                            value={formatINRCurrencyText(Number(loanData.loanDueInterestAmt))}
+                            placeholder="Due Interest Amount"
+                            name="loanDueInterestAmt"
+                            onChange={(e) => {
+                              const numberValue = parseINRInput(e.target.value)
+                              handelValueChange({ name: 'loanDueInterestAmt', value: numberValue })
+                            }}
+                            keyfilter="money"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Due Principal Amount
+                          </label>
+                          <InputText
+                            // type="number"
+                            value={formatINRCurrencyText(Number(loanData.loanPrincipalAmt))}
+                            placeholder="Due Principal Amount"
+                            name="loanPrincipalAmt"
+                            onChange={(e) => {
+                              const numberValue = parseINRInput(e.target.value)
+                              handelValueChange({ name: 'loanPrincipalAmt', value: numberValue })
+                            }}
+                            keyfilter="money"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 flex gap-x-5">
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Total Due Amount
+                          </label>
+                          <InputText
+                            // type="number"
+                            readOnly
+                            value={formatINRCurrencyText(
+                              Number(loanData.loanPrincipalAmt) +
+                                Number(loanData.loanDueInterestAmt)
+                            )}
+                            placeholder="Total Due Amount"
+                            name="loanPrincipalAmt"
+                            keyfilter="money"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex w-full gap-x-5">
+                      <div className="flex-1 flex gap-x-5">
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Interest Amount Paid First
+                          </label>
+                          <InputText
+                            // type="number"
+                            disabled={!loanData.ifPayInterestFirst}
+                            value={formatINRCurrencyText(Number(loanData.interestAmtPaidFirst))}
+                            placeholder="Due Interest Amount"
+                            name="interestAmtPaidFirst"
+                            onChange={(e) => {
+                              const numberValue = parseINRInput(e.target.value)
+                              handelValueChange({
+                                name: 'interestAmtPaidFirst',
+                                value: numberValue
+                              })
+                            }}
+                            keyfilter="money"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 flex gap-x-5">
+                        <div className="flex-1">
+                          <label htmlFor="currency-india" className="font-bold block">
+                            Loan Initial Interest Amount
+                          </label>
+                          <InputText
+                            // type="number"
+                            value={formatINRCurrencyText(Number(loanData.loanInitialInterestAmt))}
+                            placeholder="Due Initial Interest Amount"
+                            name="loanInitialInterestAmt"
+                            onChange={(e) => {
+                              const numberValue = parseINRInput(e.target.value)
+                              handelValueChange({
+                                name: 'loanInitialInterestAmt',
+                                value: numberValue
+                              })
+                            }}
+                            keyfilter="money"
+                          />
+                        </div>
+                        {/* <div className="flex-1"></div> */}
+                      </div>
+                    </div>
+
+                    <Divider className="my-2" />
+                    <div className="flex justify-between align-items-center">
+                      <div>
+                        <p className="my-2">
+                          <b>First Amount Entry</b>
+                        </p>
+                      </div>
+                      <div className="flex gap-x-5">
+                        <p>
+                          <b>Pay Any Due Amount First : </b>
+                        </p>
+                        <InputSwitch
+                          checked={loanData.ifFirstPay ?? false}
+                          name="ifFirstPay"
+                          onChange={(e: InputSwitchChangeEvent) => handelValueChange(e.target)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col w-full gap-x-5">
+                      <div className="flex w-full gap-x-5">
+                        <div className="flex-1 flex gap-x-5">
+                          <div className="flex-1">
+                            <label htmlFor="currency-india" className="font-bold block">
+                              Paid Interest
+                            </label>
+                            <InputText
+                              // type="number"
+                              value={formatINRCurrencyText(Number(dueFirstEntry?.paidInterest))}
+                              placeholder="Due Interest Amount"
+                              name="paidInterest"
+                              disabled={!loanData.ifFirstPay}
+                              onChange={(e) => {
+                                const numberValue = parseINRInput(e.target.value)
+                                handelFirstDueEntry({ name: 'paidInterest', value: numberValue })
+                              }}
+                              keyfilter="money"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label htmlFor="currency-india" className="font-bold block">
+                              Paid Principal Amount
+                            </label>
+                            <InputText
+                              // type="number"
+                              disabled={!loanData.ifFirstPay}
+                              value={formatINRCurrencyText(Number(dueFirstEntry?.paidPrincipal))}
+                              placeholder="Due Principal Amount"
+                              name="paidPrincipal"
+                              onChange={(e) => {
+                                const numberValue = parseINRInput(e.target.value)
+                                handelFirstDueEntry({ name: 'paidPrincipal', value: numberValue })
+                              }}
+                              keyfilter="money"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 flex gap-x-5">
+                          <div className="flex-1">
+                            <label htmlFor="currency-india" className="font-bold block">
+                              Paid Initial Interest
+                            </label>
+                            <InputText
+                              disabled={!loanData.ifFirstPay}
+                              // type="number"
+                              value={formatINRCurrencyText(
+                                Number(dueFirstEntry?.paidInitialInterest)
+                              )}
+                              placeholder="Due Initial Interest"
+                              name="paidInitialInterest"
+                              onChange={(e) => {
+                                const numberValue = parseINRInput(e.target.value)
+                                handelFirstDueEntry({
+                                  name: 'paidInitialInterest',
+                                  value: numberValue
+                                })
+                              }}
+                              keyfilter="money"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label htmlFor="currency-india" className="font-bold block">
+                              Arears Amount
+                            </label>
+                            <InputText
+                              // type="number"
+                              disabled={!loanData.ifFirstPay}
+                              value={formatINRCurrencyText(Number(dueFirstEntry?.arears))}
+                              placeholder="Due Arears Amount"
+                              name="arears"
+                              onChange={(e) => {
+                                const numberValue = parseINRInput(e.target.value)
+                                handelFirstDueEntry({ name: 'arears', value: numberValue })
+                              }}
+                              keyfilter="money"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-x-9 m-2">
+                        <p>
+                          <b>
+                            Total Paid Amount :{' '}
+                            {formatINRCurrency(
+                              (dueFirstEntry?.paidInterest || 0) +
+                                (dueFirstEntry?.paidPrincipal || 0) +
+                                (dueFirstEntry?.paidInitialInterest || 0)
+                            )}
+                          </b>
+                        </p>
+                        <p>
+                          <b>Arears Amount : {formatINRCurrency(dueFirstEntry?.arears ?? 0)}</b>
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-x-5">
-                    <p>
-                      <b>Pay Any Due Amount First : </b>
-                    </p>
-                    <InputSwitch
-                      checked={loanData.ifFirstPay ?? false}
-                      name="ifFirstPay"
-                      onChange={(e: InputSwitchChangeEvent) => handelValueChange(e.target)}
+                )}
+
+                <div className="flex justify-center my-3">
+                  <Button className="py-1 px-5 flex gap-x-2" type="submit">
+                    View Loan Summary Details
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {viewSummary && (
+            <div>
+              <p>
+                <b className="text-[1.1rem]">Loan Summary</b>
+              </p>
+              <div className="flex shadow-3 p-2 rounded-lg my-2">
+                <div className="flex-1 flex-col justify-center w-full">
+                  <p className="my-2">
+                    <b>Loan Details</b>
+                  </p>
+                  <DataTable
+                    value={summaryData1}
+                    className="w-full text-center no-header"
+                    size="small"
+                    showGridlines
+                  >
+                    <Column
+                      field="label"
+                      body={(row) => <div className="font-bold">{row.label}</div>}
                     />
-                  </div>
+                    <Column field="value" body={(row) => <div className="">{row.value}</div>} />
+                  </DataTable>
                 </div>
-
-                <div className="flex flex-col w-full gap-x-5">
-                  <div className="flex w-full gap-x-5">
-                    <div className="flex-1 flex gap-x-5">
-                      <div className="flex-1">
-                        <label htmlFor="currency-india" className="font-bold block">
-                          Paid Interest
-                        </label>
-                        <InputText
-                          // type="number"
-                          value={formatINRCurrencyText(Number(dueFirstEntry?.paidInterest))}
-                          placeholder="Due Interest Amount"
-                          name="paidInterest"
-                          disabled={!loanData.ifFirstPay}
-                          onChange={(e) => {
-                            const numberValue = parseINRInput(e.target.value)
-                            handelFirstDueEntry({ name: 'paidInterest', value: numberValue })
-                          }}
-                          keyfilter="money"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <label htmlFor="currency-india" className="font-bold block">
-                          Paid Principal Amount
-                        </label>
-                        <InputText
-                          // type="number"
-                          disabled={!loanData.ifFirstPay}
-                          value={formatINRCurrencyText(Number(dueFirstEntry?.paidPrincipal))}
-                          placeholder="Due Principal Amount"
-                          name="paidPrincipal"
-                          onChange={(e) => {
-                            const numberValue = parseINRInput(e.target.value)
-                            handelFirstDueEntry({ name: 'paidPrincipal', value: numberValue })
-                          }}
-                          keyfilter="money"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex gap-x-5">
-                      <div className="flex-1">
-                        <label htmlFor="currency-india" className="font-bold block">
-                          Paid Initial Interest
-                        </label>
-                        <InputText
-                          disabled={!loanData.ifFirstPay}
-                          // type="number"
-                          value={formatINRCurrencyText(Number(dueFirstEntry?.paidInitialInterest))}
-                          placeholder="Due Initial Interest"
-                          name="paidInitialInterest"
-                          onChange={(e) => {
-                            const numberValue = parseINRInput(e.target.value)
-                            handelFirstDueEntry({ name: 'paidInitialInterest', value: numberValue })
-                          }}
-                          keyfilter="money"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <label htmlFor="currency-india" className="font-bold block">
-                          Arears Amount
-                        </label>
-                        <InputText
-                          // type="number"
-                          disabled={!loanData.ifFirstPay}
-                          value={formatINRCurrencyText(Number(dueFirstEntry?.arears))}
-                          placeholder="Due Arears Amount"
-                          name="arears"
-                          onChange={(e) => {
-                            const numberValue = parseINRInput(e.target.value)
-                            handelFirstDueEntry({ name: 'arears', value: numberValue })
-                          }}
-                          keyfilter="money"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-x-9 m-2">
-                    <p>
-                      <b>
-                        Total Paid Amount :{' '}
-                        {formatINRCurrency(
-                          (dueFirstEntry?.paidInterest || 0) +
-                            (dueFirstEntry?.paidPrincipal || 0) +
-                            (dueFirstEntry?.paidInitialInterest || 0)
-                        )}
-                      </b>
-                    </p>
-                    <p>
-                      <b>Arears Amount : {formatINRCurrency(dueFirstEntry?.arears ?? 0)}</b>
-                    </p>
-                  </div>
-                </div>
+                <Divider layout="vertical" className="m-2" />
+                <div className="flex-1 flex-col justify-center w-full">
+                  <p className="my-2">
+                    <b>Selected Loan Calculation</b>
+                  </p>
+                  <DataTable
+                    value={summaryData2}
+                    className="w-full text-center no-header"
+                    size="small"
+                    showGridlines
+                  >
+                    <Column
+                      field="label"
+                      body={(row) => <div className="font-bold">{row.label}</div>}
+                    />
+                    <Column field="value" body={(row) => <div className="">{row.value}</div>} />
+                  </DataTable>
+                </div>{' '}
               </div>
-            )}
-
-            <div className="flex justify-center my-3">
-              <Button className="py-1 px-5 flex gap-x-2" type="submit">
-                View Loan Summary Details
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {viewSummary && (
-        <div>
-          <p>
-            <b className="text-[1.1rem]">Loan Summary</b>
-          </p>
-          <div className="flex shadow-3 p-2 rounded-lg my-2">
-            <div className="flex-1 flex-col justify-center w-full">
-              <p className="my-2">
-                <b>Loan Details</b>
-              </p>
-              <DataTable
-                value={summaryData1}
-                className="w-full text-center no-header"
-                size="small"
-                showGridlines
-              >
-                <Column
-                  field="label"
-                  body={(row) => <div className="font-bold">{row.label}</div>}
-                />
-                <Column field="value" body={(row) => <div className="">{row.value}</div>} />
-              </DataTable>
-            </div>
-            <Divider layout="vertical" className="m-2" />
-            <div className="flex-1 flex-col justify-center w-full">
-              <p className="my-2">
-                <b>Selected Loan Calculation</b>
-              </p>
-              <DataTable
-                value={summaryData2}
-                className="w-full text-center no-header"
-                size="small"
-                showGridlines
-              >
-                <Column
-                  field="label"
-                  body={(row) => <div className="font-bold">{row.label}</div>}
-                />
-                <Column field="value" body={(row) => <div className="">{row.value}</div>} />
-              </DataTable>
-            </div>{' '}
-          </div>
-          <p className="mt-3">
-            <b>Due Re-Payment Amount Details</b>
-          </p>
-          <div className="shadow-3 flex flex-col p-2 gap-y-3 rounded-lg my-2 ">
-            <div className="flex ">
-              <div className="flex-1">
-                <p>
-                  Due Interest Amount :{' '}
-                  <b>{formatINRCurrency(Number(loanData.loanDueInterestAmt))}</b>
-                </p>
-              </div>
-              <div className="flex-1">
-                <p>
-                  Due Principal Amount :{' '}
-                  <b>{formatINRCurrency(Number(loanData.loanPrincipalAmt))}</b>
-                </p>
-              </div>
-              {/* <div className="flex-1">
-                <p>
-                  Due Interest Amount :{' '}
-                  <b>{formatINRCurrency(Number(loanData.loanInitialInterestAmt))}</b>
-                </p>
-              </div> */}
-              <div className="flex-1">
-                <p>
-                  Total Due Amount :{' '}
-                  <b>
-                    {formatINRCurrency(
-                      Number(
-                        Number(loanData.loanPrincipalAmt) + Number(loanData.loanDueInterestAmt)
-                      )
-                    )}
-                  </b>
-                </p>
-              </div>
-            </div>
-            <div className="flex">
-              {/* <div className="flex-1">
-                <p>
-                  Total Due Amount :{' '}
-                  <b>
-                    {formatINRCurrency(
-                      Number(
-                        Number(loanData.loanPrincipalAmt) + Number(loanData.loanDueInterestAmt)
-                      )
-                    )}
-                  </b>
-                </p>
-              </div> */}
-            </div>
-          </div>
-          {!loanCalSetting.ifCalculationNeeded && (
-            <>
               <p className="mt-3">
-                <b>First Due Paid</b>
+                <b>Due Re-Payment Amount Details</b>
               </p>
               <div className="shadow-3 flex flex-col p-2 gap-y-3 rounded-lg my-2 ">
                 <div className="flex ">
                   <div className="flex-1">
                     <p>
-                      Paid Interest Amount :{' '}
-                      <b>{formatINRCurrency(Number(dueFirstEntry?.paidInterest))}</b>
+                      Due Interest Amount :{' '}
+                      <b>{formatINRCurrency(Number(loanData.loanDueInterestAmt))}</b>
                     </p>
                   </div>
                   <div className="flex-1">
                     <p>
-                      Paid Principal Amount :{' '}
-                      <b>{formatINRCurrency(Number(dueFirstEntry?.paidPrincipal))}</b>
+                      Due Principal Amount :{' '}
+                      <b>{formatINRCurrency(Number(loanData.loanPrincipalAmt))}</b>
                     </p>
                   </div>
+                  {/* <div className="flex-1">
+                <p>
+                  Due Interest Amount :{' '}
+                  <b>{formatINRCurrency(Number(loanData.loanInitialInterestAmt))}</b>
+                </p>
+              </div> */}
                   <div className="flex-1">
                     <p>
-                      Paid Initial Interest Amount :{' '}
-                      <b>{formatINRCurrency(Number(dueFirstEntry?.paidPrincipal))}</b>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex ">
-                  <div className="flex-1">
-                    <p>
-                      Due Arears Amount : <b>{formatINRCurrency(Number(dueFirstEntry?.arears))}</b>
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p>
-                      Total Paid Amount :{' '}
+                      Total Due Amount :{' '}
                       <b>
                         {formatINRCurrency(
-                          (dueFirstEntry?.paidPrincipal || 0) +
-                            (dueFirstEntry?.paidInterest || 0) +
-                            (dueFirstEntry?.paidInitialInterest || 0)
+                          Number(
+                            Number(loanData.loanPrincipalAmt) + Number(loanData.loanDueInterestAmt)
+                          )
                         )}
                       </b>
                     </p>
                   </div>
-                  <div className="flex-1"></div>
                 </div>
                 <div className="flex">
                   {/* <div className="flex-1">
@@ -1450,353 +1402,417 @@ const AdminNewLoanCreation: React.FC<AddNewSupplierProps> = ({ closeSidebarNew }
               </div> */}
                 </div>
               </div>
-            </>
+              {!loanCalSetting.ifCalculationNeeded && (
+                <>
+                  <p className="mt-3">
+                    <b>First Due Paid</b>
+                  </p>
+                  <div className="shadow-3 flex flex-col p-2 gap-y-3 rounded-lg my-2 ">
+                    <div className="flex ">
+                      <div className="flex-1">
+                        <p>
+                          Paid Interest Amount :{' '}
+                          <b>{formatINRCurrency(Number(dueFirstEntry?.paidInterest))}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Paid Principal Amount :{' '}
+                          <b>{formatINRCurrency(Number(dueFirstEntry?.paidPrincipal))}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Paid Initial Interest Amount :{' '}
+                          <b>{formatINRCurrency(Number(dueFirstEntry?.paidPrincipal))}</b>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex ">
+                      <div className="flex-1">
+                        <p>
+                          Due Arears Amount :{' '}
+                          <b>{formatINRCurrency(Number(dueFirstEntry?.arears))}</b>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p>
+                          Total Paid Amount :{' '}
+                          <b>
+                            {formatINRCurrency(
+                              (dueFirstEntry?.paidPrincipal || 0) +
+                                (dueFirstEntry?.paidInterest || 0) +
+                                (dueFirstEntry?.paidInitialInterest || 0)
+                            )}
+                          </b>
+                        </p>
+                      </div>
+                      <div className="flex-1"></div>
+                    </div>
+                    <div className="flex">
+                      {/* <div className="flex-1">
+                <p>
+                  Total Due Amount :{' '}
+                  <b>
+                    {formatINRCurrency(
+                      Number(
+                        Number(loanData.loanPrincipalAmt) + Number(loanData.loanDueInterestAmt)
+                      )
+                    )}
+                  </b>
+                </p>
+              </div> */}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-between my-4">
+                <div>
+                  <Button
+                    severity="secondary"
+                    className="flex gap-x-2 px-6"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setSummary(false)
+                    }}
+                  >
+                    <TiArrowBack size={'1.5rem'} />
+                    Back To Edit
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    severity="success"
+                    className="flex gap-x-2 px-6"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handelSubmit()
+                    }}
+                  >
+                    <ImCalculator size={'1.5rem'} />
+                    Create Loan
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
 
-          <div className="flex justify-between my-4">
-            <div>
-              <Button
-                severity="secondary"
-                className="flex gap-x-2 px-6"
-                onClick={(e) => {
-                  e.preventDefault()
-                  setSummary(false)
-                }}
-              >
-                <TiArrowBack size={'1.5rem'} />
-                Back To Edit
-              </Button>
+          {/* Old Loan Details */}
+          <Dialog
+            header="Old Loan Details"
+            visible={showOldLoan}
+            style={{ width: '65vw' }}
+            onHide={() => {
+              if (!showOldLoan) return
+              setShowOldLoan(false)
+            }}
+          >
+            <>
+              <div className="flex">
+                <div className="flex-1">
+                  <p>
+                    Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p>
+                    Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p>
+                    Loan Duration :
+                    <b>
+                      {loadDetailsResponse?.repaymentType === 3
+                        ? loadDetailsResponse?.loanDueCount
+                        : loadDetailsResponse?.loanDuration}
+                      {loadDetailsResponse?.loanDueType === 1
+                        ? ' Months'
+                        : loadDetailsResponse?.loanDueType === 2
+                          ? ' Weeks'
+                          : ' Days'}
+                    </b>
+                  </p>
+                </div>
+              </div>
+              <div className="flex mt-3">
+                <div className="flex-1">
+                  <p>
+                    Initial Interest - Amt : <b>₹ {loadDetailsResponse?.initialInterest}</b>
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p>
+                    Interest Paid (First) :{' '}
+                    <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
+                  </p>
+                </div>
+
+                <div className="flex-1">
+                  <p>
+                    Interest Paid (First) :{' '}
+                    <b>
+                      {' '}
+                      {loadDetailsResponse?.interestFirstMonth}{' '}
+                      {loadDetailsResponse?.loanDueType === 1
+                        ? 'Months'
+                        : loadDetailsResponse?.loanDueType === 2
+                          ? 'Weeks'
+                          : 'Days'}
+                    </b>
+                  </p>
+                </div>
+              </div>
+              <div className="flex mt-3">
+                <div className="flex-1">
+                  <p>
+                    Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p>
+                    Total Interest Paid : <b>₹ {loadDetailsResponse?.totalInterest}</b>
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p>
+                    Balance Amount : <b>₹ {loadDetailsResponse?.loanBalance}</b>
+                  </p>
+                </div>
+              </div>
+            </>
+          </Dialog>
+          {/* Loan Calculation Configuration */}
+          <Dialog
+            header="Loan Calculation Configuration"
+            visible={showLoanCalculationSetting}
+            style={{ width: '80vw' }}
+            onHide={() => {
+              if (!showLoanCalculationSetting) return
+              setShowLoanCalculationSetting(false)
+            }}
+          >
+            <div className="flex w-full flex-col gap-y-3">
+              <div className="flex gap-x-5">
+                <div className="flex flex-1 align-items-center">
+                  <div className="flex flex-col">
+                    <label className="text-[1rem] ">Loan Calculation</label>
+                    <span className="text-[0.8rem]">
+                      Note : To Use the Automatic Loan Due Calculation that present in Our
+                      Application.
+                    </span>
+                  </div>
+                  <div>
+                    <InputSwitch
+                      checked={loanCalSetting?.ifCalculationNeeded ?? false}
+                      name="ifCalculationNeeded"
+                      onChange={(e: InputSwitchChangeEvent) => {
+                        handelLoanSettingChange(e.target)
+                        if (e.target.value === false) {
+                          setLoanCalSetting({
+                            ...loanCalSetting,
+                            ifCalculationNeeded: false,
+                            interestCalculationType: undefined,
+                            loanClosingCalculation: undefined,
+                            loanAdvanceAmtType: undefined,
+                            weekStart: undefined,
+                            weekEnd: undefined,
+                            loanDueType: undefined
+                          })
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <Divider layout="vertical" className="m-1" />
+                <div className="flex flex-1 align-items-center">
+                  <div className="flex flex-col">
+                    <label className="text-[1rem] ">Initial Interest</label>
+                    <span className="text-[0.8rem]">
+                      Note : To Use the Automatic Loan Due Calculation that present in Our
+                      Application.
+                    </span>
+                  </div>
+                  <div>
+                    <InputSwitch
+                      checked={loanCalSetting?.ifInitialInterest ?? false}
+                      name="ifInitialInterest"
+                      onChange={(e: InputSwitchChangeEvent) => {
+                        handelLoanSettingChange(e.target)
+                        if (e.target.value === false) {
+                          setLoanCalSetting({
+                            ...loanCalSetting,
+                            ifInitialInterest: false,
+                            initialInterestCollectType: undefined
+                          })
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-x-5">
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Initial Interest Collection Type</label>
+                  <Dropdown
+                    value={loanCalSetting?.initialInterestCollectType}
+                    onChange={(e: DropdownChangeEvent) => {
+                      handelLoanSettingChange(e.target)
+                    }}
+                    // filter
+                    options={interestCollectType}
+                    disabled={!loanCalSetting?.ifInitialInterest}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select Initial Interest Collection Type"
+                    className="w-full"
+                    name="initialInterestCollectType"
+                    checkmark={true}
+                    highlightOnSelect={true}
+                  />
+                </div>
+                <Divider layout="vertical" className="m-1" />
+
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Loan Due Type</label>
+                  <Dropdown
+                    value={loanCalSetting?.loanDueType}
+                    onChange={(e: DropdownChangeEvent) => {
+                      handelLoanSettingChange(e.target)
+                    }}
+                    // filter
+                    options={durationType}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select Due Type"
+                    className="w-full"
+                    name="loanDueType"
+                    checkmark={true}
+                    highlightOnSelect={true}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-x-5">
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Interest Calculation Type</label>
+                  <Dropdown
+                    value={loanCalSetting?.interestCalculationType}
+                    onChange={(e: DropdownChangeEvent) => {
+                      handelLoanSettingChange(e.target)
+                    }}
+                    // filter
+                    disabled={!loanCalSetting?.ifCalculationNeeded}
+                    options={interestCalculationType}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select Interest Calculation Type"
+                    className="w-full"
+                    name="interestCalculationType"
+                    checkmark={true}
+                    highlightOnSelect={true}
+                  />
+                </div>
+                <Divider layout="vertical" className="m-1" />
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Loan Closing Type</label>
+                  <Dropdown
+                    value={loanCalSetting?.loanClosingCalculation}
+                    onChange={(e: DropdownChangeEvent) => {
+                      handelLoanSettingChange(e.target)
+                    }}
+                    // filter
+                    disabled={!loanCalSetting?.ifCalculationNeeded}
+                    options={loanClosingList}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select Loan Closing Type"
+                    className="w-full"
+                    name="loanClosingCalculation"
+                    checkmark={true}
+                    highlightOnSelect={true}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-x-5">
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Loan Advance Amount Type</label>
+                  <Dropdown
+                    value={loanCalSetting?.loanAdvanceAmtType}
+                    onChange={(e: DropdownChangeEvent) => {
+                      handelLoanSettingChange(e.target)
+                    }}
+                    // filter
+                    disabled={!loanCalSetting?.ifCalculationNeeded}
+                    options={advanceAmtList}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select Advance Amount Type"
+                    className="w-full"
+                    name="loanAdvanceAmtType"
+                    checkmark={true}
+                    highlightOnSelect={true}
+                  />
+                </div>
+                <Divider layout="vertical" className="m-1" />
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Week Start and End Day</label>
+                  <div className="flex justify-between gap-x-2">
+                    <Dropdown
+                      className="flex-1 w-full md:h-[2.5rem] text-sm align-items-center"
+                      value={loanCalSetting?.weekStart}
+                      options={daysOfWeek}
+                      disabled={!loanCalSetting?.ifCalculationNeeded}
+                      onChange={(e: DropdownChangeEvent) => {
+                        handelLoanSettingChange(e.target)
+                      }}
+                      name="weekStart"
+                      placeholder="Select a Day"
+                      optionLabel="label"
+                      optionValue="code"
+                    />
+                    <Dropdown
+                      className="flex-1 w-full md:h-[2.5rem] text-sm align-items-center"
+                      disabled
+                      value={loanCalSetting?.weekEnd}
+                      options={daysOfWeek}
+                      name="weekEnd"
+                      placeholder="Select a Day"
+                      optionLabel="label"
+                      optionValue="code"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-x-5">
+                <div className="flex flex-1 flex-col">
+                  <label className="text-[1rem]">Due Re-Payment Collection Type</label>
+                  <Dropdown
+                    value={loanCalSetting?.dueRePaymentCollection}
+                    onChange={(e: DropdownChangeEvent) => {
+                      handelLoanSettingChange(e.target)
+                    }}
+                    // filter
+                    disabled={!loanCalSetting?.ifCalculationNeeded}
+                    options={loanDuePayList}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select Loan Due Re-Payment Collection Type"
+                    className="w-full"
+                    name="dueRePaymentCollection"
+                    checkmark={true}
+                    highlightOnSelect={true}
+                  />
+                </div>
+                <Divider layout="vertical" className="m-1" />
+                <div className="flex flex-1 flex-col"></div>
+              </div>
             </div>
-            <div>
-              <Button
-                severity="success"
-                className="flex gap-x-2 px-6"
-                onClick={(e) => {
-                  e.preventDefault()
-                  handelSubmit()
-                }}
-              >
-                <ImCalculator size={'1.5rem'} />
-                Create Loan
-              </Button>
-            </div>
-          </div>
+          </Dialog>
         </div>
       )}
-
-      {/* Old Loan Details */}
-      <Dialog
-        header="Old Loan Details"
-        visible={showOldLoan}
-        style={{ width: '65vw' }}
-        onHide={() => {
-          if (!showOldLoan) return
-          setShowOldLoan(false)
-        }}
-      >
-        <>
-          <div className="flex">
-            <div className="flex-1">
-              <p>
-                Total Loan: <b>₹ {loadDetailsResponse?.totalLoanAmt}</b>
-              </p>
-            </div>
-            <div className="flex-1">
-              <p>
-                Loan Interest : <b> {loadDetailsResponse?.loanInterest} %</b>
-              </p>
-            </div>
-            <div className="flex-1">
-              <p>
-                Loan Duration :
-                <b>
-                  {loadDetailsResponse?.repaymentType === 3
-                    ? loadDetailsResponse?.loanDueCount
-                    : loadDetailsResponse?.loanDuration}
-                  {loadDetailsResponse?.loanDueType === 1
-                    ? ' Months'
-                    : loadDetailsResponse?.loanDueType === 2
-                      ? ' Weeks'
-                      : ' Days'}
-                </b>
-              </p>
-            </div>
-          </div>
-          <div className="flex mt-3">
-            <div className="flex-1">
-              <p>
-                Initial Interest - Amt : <b>₹ {loadDetailsResponse?.initialInterest}</b>
-              </p>
-            </div>
-            <div className="flex-1">
-              <p>
-                Interest Paid (First) :{' '}
-                <b> {loadDetailsResponse?.interestFirst === true ? 'Yes' : 'No'}</b>
-              </p>
-            </div>
-
-            <div className="flex-1">
-              <p>
-                Interest Paid (First) :{' '}
-                <b>
-                  {' '}
-                  {loadDetailsResponse?.interestFirstMonth}{' '}
-                  {loadDetailsResponse?.loanDueType === 1
-                    ? 'Months'
-                    : loadDetailsResponse?.loanDueType === 2
-                      ? 'Weeks'
-                      : 'Days'}
-                </b>
-              </p>
-            </div>
-          </div>
-          <div className="flex mt-3">
-            <div className="flex-1">
-              <p>
-                Total Principal Paid : <b>₹ {loadDetailsResponse?.totalPrincipal}</b>
-              </p>
-            </div>
-            <div className="flex-1">
-              <p>
-                Total Interest Paid : <b>₹ {loadDetailsResponse?.totalInterest}</b>
-              </p>
-            </div>
-            <div className="flex-1">
-              <p>
-                Balance Amount : <b>₹ {loadDetailsResponse?.loanBalance}</b>
-              </p>
-            </div>
-          </div>
-        </>
-      </Dialog>
-      {/* Loan Calculation Configuration */}
-      <Dialog
-        header="Loan Calculation Configuration"
-        visible={showLoanCalculationSetting}
-        style={{ width: '80vw' }}
-        onHide={() => {
-          if (!showLoanCalculationSetting) return
-          setShowLoanCalculationSetting(false)
-        }}
-      >
-        <div className="flex w-full flex-col gap-y-3">
-          <div className="flex gap-x-5">
-            <div className="flex flex-1 align-items-center">
-              <div className="flex flex-col">
-                <label className="text-[1rem] ">Loan Calculation</label>
-                <span className="text-[0.8rem]">
-                  Note : To Use the Automatic Loan Due Calculation that present in Our Application.
-                </span>
-              </div>
-              <div>
-                <InputSwitch
-                  checked={loanCalSetting?.ifCalculationNeeded ?? false}
-                  name="ifCalculationNeeded"
-                  onChange={(e: InputSwitchChangeEvent) => {
-                    handelLoanSettingChange(e.target)
-                    if (e.target.value === false) {
-                      setLoanCalSetting({
-                        ...loanCalSetting,
-                        ifCalculationNeeded: false,
-                        interestCalculationType: undefined,
-                        loanClosingCalculation: undefined,
-                        loanAdvanceAmtType: undefined,
-                        weekStart: undefined,
-                        weekEnd: undefined,
-                        loanDueType: undefined
-                      })
-                    }
-                  }}
-                />
-              </div>
-            </div>
-            <Divider layout="vertical" className="m-1" />
-            <div className="flex flex-1 align-items-center">
-              <div className="flex flex-col">
-                <label className="text-[1rem] ">Initial Interest</label>
-                <span className="text-[0.8rem]">
-                  Note : To Use the Automatic Loan Due Calculation that present in Our Application.
-                </span>
-              </div>
-              <div>
-                <InputSwitch
-                  checked={loanCalSetting?.ifInitialInterest ?? false}
-                  name="ifInitialInterest"
-                  onChange={(e: InputSwitchChangeEvent) => {
-                    handelLoanSettingChange(e.target)
-                    if (e.target.value === false) {
-                      setLoanCalSetting({
-                        ...loanCalSetting,
-                        ifInitialInterest: false,
-                        initialInterestCollectType: undefined
-                      })
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-x-5">
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Initial Interest Collection Type</label>
-              <Dropdown
-                value={loanCalSetting?.initialInterestCollectType}
-                onChange={(e: DropdownChangeEvent) => {
-                  handelLoanSettingChange(e.target)
-                }}
-                // filter
-                options={interestCollectType}
-                disabled={!loanCalSetting?.ifInitialInterest}
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Initial Interest Collection Type"
-                className="w-full"
-                name="initialInterestCollectType"
-                checkmark={true}
-                highlightOnSelect={true}
-              />
-            </div>
-            <Divider layout="vertical" className="m-1" />
-
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Loan Due Type</label>
-              <Dropdown
-                value={loanCalSetting?.loanDueType}
-                onChange={(e: DropdownChangeEvent) => {
-                  handelLoanSettingChange(e.target)
-                }}
-                // filter
-                options={durationType}
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Due Type"
-                className="w-full"
-                name="loanDueType"
-                checkmark={true}
-                highlightOnSelect={true}
-              />
-            </div>
-          </div>
-          <div className="flex gap-x-5">
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Interest Calculation Type</label>
-              <Dropdown
-                value={loanCalSetting?.interestCalculationType}
-                onChange={(e: DropdownChangeEvent) => {
-                  handelLoanSettingChange(e.target)
-                }}
-                // filter
-                disabled={!loanCalSetting?.ifCalculationNeeded}
-                options={interestCalculationType}
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Interest Calculation Type"
-                className="w-full"
-                name="interestCalculationType"
-                checkmark={true}
-                highlightOnSelect={true}
-              />
-            </div>
-            <Divider layout="vertical" className="m-1" />
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Loan Closing Type</label>
-              <Dropdown
-                value={loanCalSetting?.loanClosingCalculation}
-                onChange={(e: DropdownChangeEvent) => {
-                  handelLoanSettingChange(e.target)
-                }}
-                // filter
-                disabled={!loanCalSetting?.ifCalculationNeeded}
-                options={loanClosingList}
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Loan Closing Type"
-                className="w-full"
-                name="loanClosingCalculation"
-                checkmark={true}
-                highlightOnSelect={true}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-x-5">
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Loan Advance Amount Type</label>
-              <Dropdown
-                value={loanCalSetting?.loanAdvanceAmtType}
-                onChange={(e: DropdownChangeEvent) => {
-                  handelLoanSettingChange(e.target)
-                }}
-                // filter
-                disabled={!loanCalSetting?.ifCalculationNeeded}
-                options={advanceAmtList}
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Advance Amount Type"
-                className="w-full"
-                name="loanAdvanceAmtType"
-                checkmark={true}
-                highlightOnSelect={true}
-              />
-            </div>
-            <Divider layout="vertical" className="m-1" />
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Week Start and End Day</label>
-              <div className="flex justify-between gap-x-2">
-                <Dropdown
-                  className="flex-1 w-full md:h-[2.5rem] text-sm align-items-center"
-                  value={loanCalSetting?.weekStart}
-                  options={daysOfWeek}
-                  disabled={!loanCalSetting?.ifCalculationNeeded}
-                  onChange={(e: DropdownChangeEvent) => {
-                    handelLoanSettingChange(e.target)
-                  }}
-                  name="weekStart"
-                  placeholder="Select a Day"
-                  optionLabel="label"
-                  optionValue="code"
-                />
-                <Dropdown
-                  className="flex-1 w-full md:h-[2.5rem] text-sm align-items-center"
-                  disabled
-                  value={loanCalSetting?.weekEnd}
-                  options={daysOfWeek}
-                  name="weekEnd"
-                  placeholder="Select a Day"
-                  optionLabel="label"
-                  optionValue="code"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-x-5">
-            <div className="flex flex-1 flex-col">
-              <label className="text-[1rem]">Due Re-Payment Collection Type</label>
-              <Dropdown
-                value={loanCalSetting?.dueRePaymentCollection}
-                onChange={(e: DropdownChangeEvent) => {
-                  handelLoanSettingChange(e.target)
-                }}
-                // filter
-                disabled={!loanCalSetting?.ifCalculationNeeded}
-                options={loanDuePayList}
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select Loan Due Re-Payment Collection Type"
-                className="w-full"
-                name="dueRePaymentCollection"
-                checkmark={true}
-                highlightOnSelect={true}
-              />
-            </div>
-            <Divider layout="vertical" className="m-1" />
-            <div className="flex flex-1 flex-col"></div>
-          </div>
-        </div>
-      </Dialog>
-    </div>)}
     </div>
-   
   )
 }
 
