@@ -353,10 +353,10 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                 <p>Payment Month : {loanDetails?.refPaymentDate}</p>
               </div>
               <div className="w-[30%]">
-                <p>Total Amount : &#8377; {loanDetails?.refLoanAmount}</p>
+                <p>Total Amount :  {formatINRCurrency(Number(loanDetails?.refLoanAmount))}</p>
               </div>
               <div className="w-[30%]">
-                <p>Balance Amount : &#8377; {loanDetails?.refBalanceAmt}</p>
+                <p>Balance Amount :{formatINRCurrency(Number(loanDetails?.refBalanceAmt))}</p>
               </div>
               {!rePaymentInfo ? (
                 <div className="w-[10%]">
@@ -410,7 +410,7 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
                     <p>No of Month Paid First : {loanDetails?.refInterestMonthCount} Month</p>
                   </div>
                   <div className="w-[30%]">
-                    <p>Initial Interest : ₹ {loanDetails?.refInitialInterest}</p>
+                    <p>Initial Interest :  {formatINRCurrency(Number(loanDetails?.refInitialInterest))}</p>
                   </div>
                 </div>
                 <div className="m-3 w-full flex ">
@@ -432,10 +432,10 @@ const RepaymentSideTab = ({ custId, id, closeSidebarUpdate, loanId, rePayId }) =
 
                 <div className="m-3 w-full flex ">
                   <div className="w-[30%]">
-                    <p>Total Interest Paid : &#8377; {loanDetails?.totalInterest}</p>
+                    <p>Total Interest Paid : {formatINRCurrency(Number(loanDetails?.totalInterest))}</p>
                   </div>
                   <div className="w-[30%]">
-                    <p>Total Principal Paid : &#8377; {loanDetails?.totalPrincipal}</p>
+                    <p>Total Principal Paid : {formatINRCurrency(Number(loanDetails?.totalPrincipal))}</p>
                   </div>
                   <div className="w-[30%]">
                     <p>

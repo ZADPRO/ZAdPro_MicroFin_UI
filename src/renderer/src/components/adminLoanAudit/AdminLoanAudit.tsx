@@ -4,6 +4,7 @@ import axios from 'axios'
 import decrypt from '../Helper/Helper'
 import { useEffect, useState } from 'react'
 import { Panel } from 'primereact/panel'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 interface followupData {
   FollowId: number
@@ -66,14 +67,24 @@ const LoanAudit = ({ loanId }: { loanId: number }) => {
 
   const auditColumns = [
     { field: 'Month', header: 'Due Date' },
-    { field: 'Interest', header: 'Interest' },
-    { field: 'Principal', header: 'Principal Amount' },
+    {
+      field: 'Interest',
+      header: 'Interest',
+      body: (rowData) => formatINRCurrency(Number(rowData.Interest))
+    },
+    { field: 'Principal', header: 'Principal Amount',
+            body: (rowData) => formatINRCurrency(Number(rowData.Principal))
+
+     },
     {
       field: 'verifiedPaidAmount',
-      body: (rowData) => Number(rowData.paidInterest) + Number(rowData.paidPrincipal),
+      body: (rowData) => formatINRCurrency(Number(rowData.paidInterest) + Number(rowData.paidPrincipal)),
       header: 'Paid Amount'
     },
-    { field: 'arearsAmt', header: 'Arrears Amount' },
+    { field: 'arearsAmt', header: 'Arrears Amount',
+            body: (rowData) => formatINRCurrency(Number(rowData.arearsAmt))
+
+     },
     {
       field: 'dueStatus',
       body: (rowData) => {

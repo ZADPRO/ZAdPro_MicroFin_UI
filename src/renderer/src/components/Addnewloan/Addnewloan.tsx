@@ -7,6 +7,7 @@ import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import { Divider } from 'primereact/divider'
 import CloseLoan from '../CloseLoan/CloseLoan'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -134,12 +135,12 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                         </div>
                         <div className="w-[30%]">
                           <p>
-                            Total Amount :<b> &#8377; {loanDetails[index]?.refLoanAmount}</b>{' '}
+                            Total Amount :<b> {formatINRCurrency(Number(loanDetails[index]?.refLoanAmount))}</b>{' '}
                           </p>
                         </div>
                         <div className="w-[30%]">
                           <p>
-                            Balance Amount :<b> &#8377; {loanDetails[index]?.refBalanceAmt}</b>{' '}
+                            Balance Amount :<b> {formatINRCurrency(Number(loanDetails[index]?.refBalanceAmt))}</b>{' '}
                           </p>
                         </div>
                         {!rePaymentInfo[index] ? (
@@ -217,7 +218,7 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             <div className="w-[30%]">
                               <p>
                                 Initial Interest :{' '}
-                                <b>₹ {loanDetails[index]?.refInitialInterest}</b>{' '}
+                                <b> {formatINRCurrency(Number(loanDetails[index]?.refInitialInterest))}</b>{' '}
                               </p>
                             </div>
                           </div>
@@ -260,13 +261,13 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                             <div className="w-[30%]">
                               <p>
                                 Total Interest Paid :{' '}
-                                <b>&#8377; {loanDetails[index]?.totalInterest}</b>
+                                <b>{formatINRCurrency(Number(loanDetails[index]?.totalInterest))}</b>
                               </p>
                             </div>
                             <div className="w-[30%]">
                               <p>
                                 Total Principal Paid :{' '}
-                                <b>&#8377; {loanDetails[index]?.totalPrincipal}</b>
+                                <b>{formatINRCurrency(Number(loanDetails[index]?.totalPrincipal))}</b>
                               </p>
                             </div>
                             <div className="w-[30%]">
@@ -284,10 +285,10 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                               <p>
                                 Documentation Fees :{' '}
                                 <b>
-                                  &#8377;{' '}
-                                  {loanDetails[index]?.refDocFee === null
+                                 
+                                  {formatINRCurrency(Number(loanDetails[index]?.refDocFee === null
                                     ? 0.0
-                                    : loanDetails[index]?.refDocFee}
+                                    : loanDetails[index]?.refDocFee))}
                                 </b>
                               </p>
                             </div>
@@ -306,10 +307,10 @@ const Addnewloan = ({ custId, id, closeSidebarUpdate, loanNo }) => {
                               <p>
                                 Loan Closing Balance :{' '}
                                 <b>
-                                  &#8377;{' '}
-                                  {loanDetails[index]?.loanClosingBalance === null
+                                  
+                                  {formatINRCurrency(Number(loanDetails[index]?.loanClosingBalance === null
                                     ? 0.0
-                                    : loanDetails[index]?.loanClosingBalance}
+                                    : loanDetails[index]?.loanClosingBalance))}
                                 </b>
                               </p>
                             </div>

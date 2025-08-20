@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 import { AddExpense } from '../../components/AddExpense/AddExpense'
 import { UpdateExpense } from '@renderer/components/UpdateExpense/UpdateExpense'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 export interface expense {
   refExpenseDate: string
@@ -231,7 +232,7 @@ export default function Expense({}: Props) {
               <Column
                 field="refAmount"
                 header="Amount"
-                body={(rowData) => `₹ ${rowData.refAmount}`}
+                body={(rowData) => ` ${formatINRCurrency(Number(rowData.refAmount))}`}
               />
               <Column field="refBankName" header="Amount Source"></Column>
               <Column field="refAccountTypeName" header="Type"></Column>

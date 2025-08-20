@@ -7,6 +7,7 @@ import { BsInfoCircle } from 'react-icons/bs'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import AdminLoanAudit from '../adminLoanAudit/AdminLoanAudit'
 import AdminCloseLoan from '../AdminCloseLoan/AdminCloseLoan'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 interface AddNewSupplierProps {
   closeSidebarNew: () => void
@@ -124,12 +125,14 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      Total Amount :<b> &#8377; {loanDetails?.refLoanAmount}</b>{' '}
+                      Total Amount :
+                      <b> {formatINRCurrency(Number(loanDetails?.refLoanAmount))}</b>{' '}
                     </p>
                   </div>
                   <div className="w-[30%]">
                     <p>
-                      Balance Amount :<b> &#8377; {loanDetails?.refBalanceAmt}</b>{' '}
+                      Balance Amount :
+                      <b> {formatINRCurrency(Number(loanDetails?.refBalanceAmt))}</b>{' '}
                     </p>
                   </div>
                   {!rePaymentInfo ? (
@@ -187,7 +190,8 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                       </div>
                       <div className="w-[30%]">
                         <p>
-                          Initial Interest : <b>₹ {loanDetails?.refInitialInterest}</b>{' '}
+                          Initial Interest :{' '}
+                          <b> {formatINRCurrency(Number(loanDetails?.refInitialInterest))}</b>{' '}
                         </p>
                       </div>
                     </div>
@@ -218,12 +222,14 @@ const AdminLoanDetails: React.FC<AddNewSupplierProps> = ({ closeSidebarNew, loan
                     <div className="m-3 w-full flex ">
                       <div className="w-[30%]">
                         <p>
-                          Total Interest Paid : <b>&#8377; {loanDetails?.totalInterest}</b>
+                          Total Interest Paid :{' '}
+                          <b> {formatINRCurrency(Number(loanDetails?.totalInterest))}</b>
                         </p>
                       </div>
                       <div className="w-[30%]">
                         <p>
-                          Total Principal Paid : <b>&#8377; {loanDetails?.totalPrincipal}</b>
+                          Total Principal Paid :{' '}
+                          <b> {formatINRCurrency(Number(loanDetails?.totalPrincipal))}</b>
                         </p>
                       </div>
                       <div className="w-[30%]">

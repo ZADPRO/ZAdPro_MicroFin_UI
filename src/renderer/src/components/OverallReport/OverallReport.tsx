@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { MultiSelect, MultiSelectChangeEvent } from 'primereact/multiselect'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { LiaFileDownloadSolid, LiaFilePdfSolid } from 'react-icons/lia'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { BsFiletypePdf } from 'react-icons/bs'
+import { BsFiletypeCsv } from 'react-icons/bs'
 
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -238,10 +239,10 @@ export default function OverallReport() {
     const reportDate = now.toLocaleDateString('en-GB')
 
     // ✅ Title
-    doc.setFontSize(10)
-    doc.text('Sri Murugan Thunai', 140, 10, { align: 'center' })
+    // doc.setFontSize(10)
+    // doc.text('Sri Murugan Thunai', 140, 10, { align: 'center' })
     doc.setFontSize(14)
-    doc.text('OM MURUGA FINANCE', 140, 16, { align: 'center' })
+    doc.text('ZA Micro-Fi', 140, 16, { align: 'center' })
     doc.setFontSize(10)
     doc.text(`Over All Loan Report`, 140, 22, { align: 'center' })
     doc.text(`Date : ${reportDate}`, 10, 10)
@@ -265,16 +266,10 @@ export default function OverallReport() {
             'Repayment',
             'Loan Amount',
             'Initial Interest',
-            'Interest First',
             'Loan Interest',
-            'Loan Duration',
             'Total Principal Paid',
             'Total Interest Paid',
             'Balance Amount',
-            'Interest Paid',
-            'Principal Paid',
-            'Total Month Paid',
-            'Un-Paid Month',
             'Loan Status',
             'Document Fee',
             'Security'
@@ -289,19 +284,13 @@ export default function OverallReport() {
           row.refRepaymentTypeName,
           Number(row.refLoanAmount).toLocaleString('en-IN'),
           Number(row.refInitialInterest).toLocaleString('en-IN'),
-          `${row.refInterestMonthCount} Month`,
-          `${row.refProductInterest} %`,
-          `${row.refProductDuration} Month`,
+          `${row.refProductInterest}`,
           Number(row.TotalPrincipalPaid).toLocaleString('en-IN'),
           Number(row.TotalInterestPaid).toLocaleString('en-IN'),
           Number(row.BalancePrincipalAmount).toLocaleString('en-IN'),
-          `${row.InterestPaidCount} Month`,
-          `${row.PrincipalPaidCount} Month`,
-          `${row.TotalMonthPaidCount} Month`,
-          `${row.UnPaidMonthCount} Month`,
           row.refLoanStatus,
           Number(row.refDocFee ?? 0).toLocaleString('en-IN'),
-          row.refSecurity ?? 'No Document'
+          row.refSecurity ?? '-'
         ]),
         startY: y,
         styles: { fontSize: 8, halign: 'center' },
@@ -500,7 +489,7 @@ export default function OverallReport() {
                     exportCustomCSV()
                   }}
                 >
-                  <LiaFileDownloadSolid className="text-[2rem]" />
+                  <BsFiletypeCsv className="text-[2rem]" />
                 </button>
               </div>
               <div className="relative inline-block">
@@ -508,7 +497,7 @@ export default function OverallReport() {
                   className="bg-[red] p-2 hover:bg-[white] border-2 hover:text-[red] text-[white] rounded-md"
                   onClick={() => exportOverAllPDF(overAllData)}
                 >
-                  <LiaFilePdfSolid className="text-[2rem]" />
+                  <BsFiletypePdf className="text-[2rem]" />
                 </button>
               </div>
             </div>

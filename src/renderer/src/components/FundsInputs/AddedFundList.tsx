@@ -8,6 +8,7 @@ import { InputText } from 'primereact/inputtext'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { FilterMatchMode } from 'primereact/api'
 import decrypt from '../Helper/Helper'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 export interface BankFundRecord {
   refBankFId: number
@@ -20,7 +21,7 @@ export interface BankFundRecord {
   refFundType?: string
 }
 
-export default function AddedFundList({ }: { closeSidebarNew: () => void }) {
+export default function AddedFundList({}: { closeSidebarNew: () => void }) {
   const [date, setDate] = useState<Date>(new Date())
   const [fundData, setFundData] = useState<BankFundRecord[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -204,11 +205,11 @@ export default function AddedFundList({ }: { closeSidebarNew: () => void }) {
           body={(rowData) =>
             rowData.refBankFId === editingId ? (
               <InputText
-                value={editRow.refbfTransactionAmount}
+                value={formatINRCurrency(Number(editRow.refbfTransactionAmount))}
                 onChange={(e) => onEditChange('refbfTransactionAmount', e.target.value)}
               />
             ) : (
-              rowData.refbfTransactionAmount
+              formatINRCurrency(Number(rowData.refbfTransactionAmount))
             )
           }
         />

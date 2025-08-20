@@ -13,6 +13,7 @@ import { Dropdown } from 'primereact/dropdown'
 import { Calendar } from 'primereact/calendar'
 import { Nullable } from 'primereact/ts-helpers'
 import AdminLoanRepaymentSideTab from '../../components/AdminLoanRepaymentSideTab/RepaymentSideTab'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 interface propsInterface {
   reloadFlag: boolean
 }
@@ -324,7 +325,7 @@ const AdminRepayments: React.FC<propsInterface> = (reloadFlag) => {
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refLoanAmount"
-                body={(rowData) => `₹ ${rowData.refLoanAmount}`}
+                body={(rowData) => ` ${formatINRCurrency(Number(rowData.refLoanAmount))}`}
                 header="Principal Amount"
               ></Column>
             </DataTable>

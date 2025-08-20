@@ -198,79 +198,7 @@ const AdminLoanRepaymentSideTab = ({
       })
   }
 
-  // const updateRepayment_old1 = () => {
-  //   const selectedBank = bankOption.find((bank) => bank.value === selectBank?.value)
-
-  //   if (Number(rePaymentForm.BalanceAmount) > Number(selectedBank?.balance)) {
-  //     console.log('Selected Amount Source with less Balance')
-  //     toast.error(`Selected Amount Source with less Balance`, {
-  //       position: 'top-right',
-  //       autoClose: 2999,
-  //       hideProgressBar: false,
-  //       closeOnClick: false,
-  //       pauseOnHover: true,
-  //       draggable: true,
-  //       progress: undefined,
-  //       theme: 'light',
-  //       transition: Slide
-  //     })
-  //   } else {
-  //     axios
-  //       .post(
-  //         import.meta.env.VITE_API_URL + '/AdminRePayment/updateRePayment',
-  //         {
-  //           todayDate: date,
-  //           priAmt: rePaymentForm.BalanceAmount,
-  //           interest: rePaymentForm.interestAmt,
-  //           bankId: selectBank,
-  //           paymentType: paymentType === 'online' ? 1 : 2,
-  //           rePayId: rePayId
-  //         },
-  //         {
-  //           headers: {
-  //             Authorization: localStorage.getItem('token'),
-  //             'Content-Type': 'application/json'
-  //           }
-  //         }
-  //       )
-  //       .then((response) => {
-  //         const data = decrypt(
-  //           response.data[1],
-  //           response.data[0],
-  //           import.meta.env.VITE_ENCRYPTION_KEY
-  //         )
-  //         console.log('data line ------ 246', data)
-  //         localStorage.setItem('token', 'Bearer ' + data.token)
-
-  //         if (data.success) {
-  //           toast.success('Re-Payment Updated Successfully', {
-  //             position: 'top-right',
-  //             autoClose: 2999,
-  //             hideProgressBar: false,
-  //             closeOnClick: false,
-  //             pauseOnHover: true,
-  //             draggable: true,
-  //             progress: undefined,
-  //             theme: 'light',
-  //             transition: Slide
-  //           })
-  //           closeSidebarUpdate()
-  //         } else {
-  //           toast.error(`${data.error}`, {
-  //             position: 'top-right',
-  //             autoClose: 2999,
-  //             hideProgressBar: false,
-  //             closeOnClick: false,
-  //             pauseOnHover: true,
-  //             draggable: true,
-  //             progress: undefined,
-  //             theme: 'light',
-  //             transition: Slide
-  //           })
-  //         }
-  //       })
-  //   }
-  // }
+  
   const updateRepayment = () => {
     const selectedBank = bankOption.find((bank) => bank.value === selectBank?.value)
 
@@ -352,11 +280,6 @@ const AdminLoanRepaymentSideTab = ({
     }
   }
 
-  // const filteredBankOptions = bankOption.filter((bank) => {
-  //   if (paymentType === 'online') return bank?.type === 1
-  //   if (paymentType === 'cash') return bank?.type === 2
-  //   return false
-  // })
 
   const updateFollowUp = () => {
     axios
@@ -461,10 +384,10 @@ const AdminLoanRepaymentSideTab = ({
                 <p>Payment Month : {loanDetails?.refPaymentDate}</p>
               </div>
               <div className="w-[30%]">
-                <p>Total Amount : &#8377; {loanDetails?.refLoanAmount}</p>
+                <p>Total Amount : {formatINRCurrency(Number(loanDetails?.refLoanAmount))}</p>
               </div>
               <div className="w-[30%]">
-                <p>Balance Amount : &#8377; {loanDetails?.refBalanceAmt}</p>
+                <p>Balance Amount :  {formatINRCurrency(Number(loanDetails?.refBalanceAmt))}</p>
               </div>
               {!rePaymentInfo ? (
                 <div className="w-[10%]">
@@ -526,7 +449,7 @@ const AdminLoanRepaymentSideTab = ({
                     </p>
                   </div>
                   <div className="w-[30%]">
-                    <p>Initial Interest : ₹ {loanDetails?.refInitialInterest}</p>
+                    <p>Initial Interest :  {formatINRCurrency(Number(loanDetails?.refInitialInterest))}</p>
                   </div>
                 </div>
                 <div className="m-3 w-full flex ">
@@ -562,10 +485,10 @@ const AdminLoanRepaymentSideTab = ({
 
                 <div className="m-3 w-full flex ">
                   <div className="w-[30%]">
-                    <p>Total Interest Paid : &#8377; {loanDetails?.totalInterest}</p>
+                    <p>Total Interest Paid : {formatINRCurrency(Number(loanDetails?.totalInterest))}</p>
                   </div>
                   <div className="w-[30%]">
-                    <p>Total Principal Paid : &#8377; {loanDetails?.totalPrincipal}</p>
+                    <p>Total Principal Paid : {formatINRCurrency(Number(loanDetails?.totalPrincipal))}</p>
                   </div>
                 </div>
               </>

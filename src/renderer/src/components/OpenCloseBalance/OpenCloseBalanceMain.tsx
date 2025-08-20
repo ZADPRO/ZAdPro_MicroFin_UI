@@ -3,6 +3,7 @@ import { Calendar } from 'primereact/calendar'
 import { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { Divider } from 'primereact/divider'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 type Props = {}
 
@@ -115,7 +116,7 @@ export default function OpenCloseBalanceMain({}: Props) {
                 color: (balanceData?.openingBalance ?? 0) < 0 ? 'red' : 'green'
               }}
             >
-              ₹ {balanceData?.openingBalance}
+              {formatINRCurrency(Number(balanceData?.openingBalance))}
             </p>
           </b>
         </div>
@@ -136,7 +137,7 @@ export default function OpenCloseBalanceMain({}: Props) {
             ).map((item, index) => (
               <div key={index} className="flex justify-between">
                 <p className="text-lg">{item.refFundTypeName}</p>
-                <p className="text-lg font-bold">₹ {item.Balance}</p>
+                <p className="text-lg font-bold"> {formatINRCurrency(Number(item.Balance))}</p>
               </div>
             ))}
           </div>
@@ -144,10 +145,11 @@ export default function OpenCloseBalanceMain({}: Props) {
           <div className="flex justify-between">
             <p className="text-lg font-bold">Total</p>
             <p className="text-lg font-bold">
-              ₹{' '}
-              {balanceData?.FundDetails.filter((item) =>
-                [5, 3, 2, 10, 8, 9].includes(item.refFundTypeId)
-              ).reduce((acc, item) => acc + Number(item.Balance), 0)}
+              {formatINRCurrency(
+                balanceData?.FundDetails.filter((item) =>
+                  [5, 3, 2, 10, 8, 9].includes(item.refFundTypeId)
+                ).reduce((acc, item) => acc + Number(item.Balance), 0)
+              )}
             </p>
           </div>
         </div>
@@ -167,7 +169,7 @@ export default function OpenCloseBalanceMain({}: Props) {
             ).map((item, index) => (
               <div key={index} className="flex justify-between">
                 <p className="text-lg">{item.refFundTypeName}</p>
-                <p className="text-lg font-bold">₹ {item.Balance}</p>
+                <p className="text-lg font-bold">{formatINRCurrency(Number(item.Balance))}</p>
               </div>
             ))}
           </div>
@@ -177,10 +179,11 @@ export default function OpenCloseBalanceMain({}: Props) {
             <div className="flex justify-between">
               <p className="text-lg font-bold">Total</p>
               <p className="text-lg font-bold">
-                ₹{' '}
-                {balanceData?.FundDetails.filter((item) =>
-                  [1, 4, 12, 11, 7].includes(item.refFundTypeId)
-                ).reduce((acc, item) => acc + Number(item.Balance), 0)}
+                {formatINRCurrency(
+                  balanceData?.FundDetails.filter((item) =>
+                    [1, 4, 12, 11, 7].includes(item.refFundTypeId)
+                  ).reduce((acc, item) => acc + Number(item.Balance), 0)
+                )}
               </p>
             </div>
           </div>
@@ -195,7 +198,7 @@ export default function OpenCloseBalanceMain({}: Props) {
               color: (balanceData?.clossingBalance ?? 0) < 0 ? 'red' : 'green'
             }}
           >
-            ₹ {balanceData?.clossingBalance}{' '}
+            {formatINRCurrency(Number(balanceData?.clossingBalance))}{' '}
           </p>
         </div>
       </div>

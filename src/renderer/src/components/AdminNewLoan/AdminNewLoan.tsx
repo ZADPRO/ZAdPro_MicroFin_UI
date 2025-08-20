@@ -9,6 +9,7 @@ import axios from 'axios'
 import decrypt from '../Helper/Helper'
 import { FilterMatchMode } from 'primereact/api'
 import AdminNewLoanCreation from '../AdminLoanCreation/AdminNewLoanCreation'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 interface LoanData {
   refLoanId: number
@@ -262,7 +263,7 @@ console.log('AdminNewLoan.tsx / 44 ------------------- > ');
             <Column
               field="refLoanAmount"
               header="Loan Amount"
-              body={(rowData) => `₹ ${rowData.refLoanAmount}`}
+              body={(rowData) => ` ${formatINRCurrency(Number(rowData.refLoanAmount))}`}
             />
             <Column
               field="refLoanDuration"

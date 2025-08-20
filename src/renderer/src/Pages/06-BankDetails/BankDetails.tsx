@@ -13,6 +13,7 @@ import { FilterMatchMode } from 'primereact/api'
 import { Button } from 'primereact/button'
 import BankInputNew from '@renderer/components/BankInputs/BankInputNew'
 import BankInputsUpdate from '@renderer/components/BankInputs/BankInputsUpdate'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 const BankDetails = () => {
   const [userLists, setUserLists] = useState([])
@@ -104,7 +105,7 @@ const BankDetails = () => {
   const BankBalance = (rowData: any) => {
     return (
       <>
-        <div>₹ {rowData.refBalance}</div>
+        <div> {formatINRCurrency(Number(rowData.refBalance))}</div>
       </>
     )
   }

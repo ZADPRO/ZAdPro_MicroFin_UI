@@ -11,6 +11,7 @@ import AddnewFund from '@renderer/components/FundsInputs/AddnewFund'
 import { Calendar } from 'primereact/calendar'
 import { TabPanel, TabView } from 'primereact/tabview'
 import OpenCloseBalanceMain from '@renderer/components/OpenCloseBalance/OpenCloseBalanceMain'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
 
 interface FundData {
   refbfTransactionDate: string
@@ -98,7 +99,7 @@ const Funds = () => {
   }
 
   const TransactionAmount = (rowData: any) => {
-    return <div>₹ {rowData.refbfTransactionAmount}</div>
+    return <div> {formatINRCurrency(Number(rowData.refbfTransactionAmount))}</div>
   }
 
   const [newData, setNewData] = useState(false)

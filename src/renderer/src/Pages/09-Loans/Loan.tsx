@@ -12,9 +12,23 @@ import { FilterMatchMode } from 'primereact/api'
 import Addnewloan from '@renderer/components/Addnewloan/Addnewloan'
 import { Slide, toast, ToastContainer } from 'react-toastify'
 import CreateNewLoan from '@renderer/components/CreateNewLoan/CreateNewLoan'
+import { formatINRCurrency } from '@renderer/helper/amountFormat'
+import { MultiSelect } from 'primereact/multiselect'
+interface UserLoan {
+  refCustLoanId: number
+  refCustId: number
+  refUserFname: string
+  refUserLname: string
+  refLoanStartDate: string
+  refLoanAmount: string
+  refProductDuration: number
+  refProductDurationType: number
+  refProductInterest: number
+  refLoanStatus: string
+}
 
 const Loan = () => {
-  const [userLists, setUserLists] = useState([])
+  const [userLists, setUserLists] = useState<UserLoan[]>([])
 
   const [username, setUsername] = useState('')
 
@@ -100,7 +114,8 @@ const Loan = () => {
   //   Filter Data - Start
 
   const [filters, setFilters] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    refLoanStatus: { value: ['opened'], matchMode: FilterMatchMode.IN } // use IN for multiple values
   })
 
   const [globalFilterValue, setGlobalFilterValue] = useState('')
@@ -155,6 +170,10 @@ const Loan = () => {
     setNewLoan(false)
   }
 
+  const statusOptions = Array.from(new Set(userLists.map((u) => u.refLoanStatus))).map(
+    (status) => ({ label: status, value: status })
+  )
+
   return (
     <>
       <ToastContainer />
@@ -192,19 +211,33 @@ const Loan = () => {
               </button>
             </div>
 
-            <div className="flex w-[50%] align-items-center justify-around">
-              <IconField style={{ width: '60%' }} iconPosition="left">
+            <div className="flex w-[100%] align-items-center justify-around gap-x-5">
+              <IconField style={{ width: '40%' }} iconPosition="left">
                 <InputIcon className="pi pi-search"></InputIcon>
                 <InputText
                   placeholder="Search Customers"
                   value={globalFilterValue}
                   onChange={onGlobalFilterChange}
-                  m-1
-                  px-5
-                  text-white
-                  rounded-lg
                 />
               </IconField>
+
+              {/* ✅ Status Filter Dropdown */}
+              <MultiSelect
+                value={filters.refLoanStatus.value}
+                options={statusOptions}
+                onChange={(e) => {
+                  let _filters = { ...filters }
+                  _filters.refLoanStatus.value = e.value
+                  setFilters(_filters)
+                }}
+                placeholder="Filter by Status"
+                display="chip" // shows selected values as chips
+                // className="p-column-filter "
+                className="-column-filter md:h-[2.5rem] text-sm align-items-center" // smaller text, padding
+                style={{ width: '250px' }}
+                showClear
+              />
+
               <div>
                 <button
                   className="bg-[green] hover:bg-[#008000ec] px-7 text-[white] rounded-md py-2"
@@ -223,12 +256,17 @@ const Loan = () => {
 
           <div>
             <DataTable
-              filters={filters}
+              value={userLists}
               paginator
               size="small"
               rows={10}
               rowsPerPageOptions={[5, 10, 25, 50]}
-              value={userLists}
+              filters={filters}
+              // onFilter={(e) => {
+              //   console.log('e', e)
+
+              //   setFilters(e.filters)
+              // }}
               showGridlines
               scrollable
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
@@ -260,6 +298,9 @@ const Loan = () => {
                 style={{ minWidth: '8rem' }}
                 field="refLoanAmount"
                 header="Loan Amount"
+                body={(rowData) => {
+                  return <>{formatINRCurrency(Number(rowData.refLoanAmount))}</>
+                }}
               ></Column>
               <Column
                 style={{ minWidth: '8rem' }}
@@ -292,7 +333,7 @@ const Loan = () => {
                 }}
                 header="Loan Interest"
               ></Column>
-              <Column style={{ minWidth: '8rem' }} field="refLoanStatus" header="Status"></Column>
+              <Column style={{ minWidth: '8rem' }} field="refLoanStatus" header="Status" />
             </DataTable>
           </div>
 
