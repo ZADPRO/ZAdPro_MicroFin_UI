@@ -1,7 +1,7 @@
 import Navbar from '../00-Navbar/Navbar'
 import { Route, Routes } from 'react-router-dom'
 import Login from '../02-LoginPage/Login'
-import Dashboard from '../03-Dashboard/Dashboard'
+// import Dashboard from '../03-Dashboard/Dashboard'
 import Agents from '../04-Agents/Agents'
 import Customers from '../05-Customers/Customers'
 import BankDetails from '../06-BankDetails/BankDetails'
@@ -13,6 +13,7 @@ import AdminLoan from '../11-AdminLoan/AdminLoan'
 import Expense from '../13-Expense/Expense'
 import Report from '../14-Report/Report'
 import Customize from '../15 - Customize/Customize'
+import LatestDashboard from '../03-Dashboard/LatestDashboard'
 
 export const MainRoutes = () => {
   return (
@@ -20,7 +21,9 @@ export const MainRoutes = () => {
       <Navbar>
         <Routes>
           <Route index path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+          <Route path="/dashboard" element={<LatestDashboard />} />
+
           <Route path="/agents" element={<Agents />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/banks" element={<BankDetails />} />
