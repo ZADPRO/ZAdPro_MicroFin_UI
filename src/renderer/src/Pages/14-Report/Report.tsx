@@ -105,7 +105,7 @@ export default function Report({}: Props) {
                 </p>
               </div>
             </div>
-            <div
+            {/* <div
               className="w-[10%] h-[10%] flex flex-col align-items-center"
               onClick={() => {
                 setMonthlyReport(true)
@@ -118,6 +118,21 @@ export default function Report({}: Props) {
               <div>
                 <p>
                   <b>Monthly Report</b>
+                </p>
+              </div>
+            </div> */}
+            <div
+              className="w-[10%] flex flex-col align-items-center"
+              onClick={() => {
+                setRePaymentReport(true)
+              }}
+            >
+              <div className="m-3 invoice-icon p-5 w-[100%] flex justify-center flex-col align-items-center ">
+                <TbFileReport />
+              </div>
+              <div>
+                <p>
+                  <b>Due Report</b>
                 </p>
               </div>
             </div>
@@ -136,21 +151,6 @@ export default function Report({}: Props) {
                 </p>
               </div>
             </div>
-            <div
-              className="w-[10%] flex flex-col align-items-center"
-              onClick={() => {
-                setRePaymentReport(true)
-              }}
-            >
-              <div className="m-3 invoice-icon p-5 w-[100%] flex justify-center flex-col align-items-center ">
-                <TbFileReport />
-              </div>
-              <div>
-                <p>
-                  <b>Re-Payment Report</b>
-                </p>
-              </div>
-            </div>
           </div>
           <Sidebar
             visible={overallReport}
@@ -160,14 +160,14 @@ export default function Report({}: Props) {
           >
             <OverallReport />
           </Sidebar>
-          <Sidebar
+          {/* <Sidebar
             visible={monthlyReport}
             style={{ width: '90vw' }}
             position="right"
             onHide={closeSidebarNew}
           >
             <MonthlyReport />
-          </Sidebar>
+          </Sidebar> */}
           <Sidebar
             visible={expenseReport}
             style={{ width: '90vw' }}

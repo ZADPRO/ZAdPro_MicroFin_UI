@@ -10,6 +10,8 @@ import decrypt from '../Helper/Helper'
 import { FilterMatchMode } from 'primereact/api'
 import AdminNewLoanCreation from '../AdminLoanCreation/AdminNewLoanCreation'
 import { formatINRCurrency } from '@renderer/helper/amountFormat'
+import { InputText } from 'primereact/inputtext'
+import { MultiSelect } from 'primereact/multiselect'
 
 interface LoanData {
   refLoanId: number
@@ -37,13 +39,13 @@ const AdminNewLoan: React.FC<propsInterface> = (reloadFlag) => {
   const [newData, setNewData] = useState(false)
   const [loanDetailsSidebar, setLoanDetailsSidebar] = useState(false)
   const [loanList, setLoanList] = useState<LoanData[]>([])
-  const [filter, setFilter] = useState(0)
+  const [filter, setFilter] = useState(1)
   const [userId, setUserId] = useState<number>()
   const [loanId, setLoanId] = useState<number>()
   const [loadingStatus, setLoadingStatus] = useState(true)
-console.log('AdminNewLoan.tsx / loadingStatus / 42 ------------------- > ', loadingStatus);
+  console.log('AdminNewLoan.tsx / loadingStatus / 42 ------------------- > ', loadingStatus)
 
-console.log('AdminNewLoan.tsx / 44 ------------------- > ');
+  console.log('AdminNewLoan.tsx / 44 ------------------- > ')
 
   const filterOption = [
     { label: 'All Loan', value: 0 },
@@ -105,31 +107,18 @@ console.log('AdminNewLoan.tsx / 44 ------------------- > ');
     document.body.removeChild(link)
   }
 
-  const vendorOptions = Array.from(new Set(loanList.map((item) => item.refVendorName))).map(
-    (name) => ({ label: name, value: name })
-  )
-
   const [filters, setFilters] = useState<any>({
-    refVendorName: {
-      value: null,
-      matchMode: FilterMatchMode.EQUALS // Set EQUALS by default
-    }
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    refLoanStatus: { value: ['opened'], matchMode: FilterMatchMode.IN }
   })
 
-  const onFilterChange = (e: any) => {
-    const value = e.value
-    setFilters((prev) => ({
-      ...prev,
-      refVendorName: {
-        ...prev.refVendorName,
-        value
-      }
-    }))
-  }
+  const statusOptions = Array.from(new Set(loanList.map((item) => item.refLoanStatus))).map(
+    (status) => ({ label: status, value: status })
+  )
 
   const nameBodyTemplate = (rowData: any) => (
     <span
-      style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
+      style={{ color: '#f8d20f', textDecoration: 'underline', cursor: 'pointer' }}
       onClick={() => {
         console.log('rowData line ----- 135', rowData)
         setLoanId(rowData.refLoanId)
@@ -193,20 +182,39 @@ console.log('AdminNewLoan.tsx / 44 ------------------- > ');
         </>
       ) : (
         <div>
-          <div className="flex justify-content-between">
-            <div className="w-[30%] flex justify-between">
-              <Dropdown
-                id="statusChoose"
-                value={filter}
-                options={filterOption}
-                optionLabel="label"
-                optionValue="value"
-                onChange={(e) => setFilter(e.value)}
-                required
-              />{' '}
-              <Button label="Export CSV" className="py-1 px-5 flex gap-x-2" onClick={exportToCSV} />
+          <div className="flex justify-content-between align-items-center">
+            <div className="flex flex-1 justify-content-between items-center gap-3 mt-2">
+              {/* Left side: Status Filter */}
+              <MultiSelect
+                value={filters.refLoanStatus.value}
+                options={statusOptions}
+                className="-column-filter md:h-[2.5rem] text-sm align-items-center flex-1" // smaller text, padding
+                onChange={(e) =>
+                  setFilters((prev: any) => ({
+                    ...prev,
+                    refLoanStatus: { ...prev.refLoanStatus, value: e.value }
+                  }))
+                }
+                placeholder="Filter by Status"
+                display="chip"
+              />
+
+              {/* Right side: Global Search */}
+              <span className="p-input-icon-left flex-2">
+                <InputText
+                  value={filters.global.value || ''}
+                  className="w-[100%]"
+                  onChange={(e) =>
+                    setFilters((prev: any) => ({
+                      ...prev,
+                      global: { ...prev.global, value: e.target.value }
+                    }))
+                  }
+                  placeholder="Search Vendor"
+                />
+              </span>
             </div>
-            <div>
+            <div className="flex-1 flex justify-end">
               <Button
                 label="Add New Loan"
                 className="py-1 px-5 flex gap-x-2"
@@ -216,37 +224,24 @@ console.log('AdminNewLoan.tsx / 44 ------------------- > ');
           </div>
 
           <DataTable
-            value={filteredLoanList}
+            value={loanList}
             filters={filters}
             onFilter={(e) => setFilters(e.filters)}
-            className="mt-3"
+            globalFilterFields={['refVendorName', 'refVendorEmailId', 'refLoanStatus']}
+            paginator
+            rows={10}
             scrollHeight="380px"
-            showGridlines
+            rowsPerPageOptions={[10, 25, 50]}
             size="small"
             stripedRows
             scrollable
-            paginator
-            rows={10}
-            rowsPerPageOptions={[10, 25, 50]}
+            className="mt-3"
+            showGridlines
+            emptyMessage="No Records Found"
           >
             <Column header="S.No" body={(_, options) => options.rowIndex + 1} />
-            <Column
-              field="refVendorName"
-              header="Vendor Name"
-              filter
-              filterField="refVendorName"
-              filterElement={
-                <Dropdown
-                  value={filters.refVendorName.value}
-                  options={vendorOptions}
-                  onChange={onFilterChange}
-                  placeholder="Select Vendor"
-                  showClear
-                  style={{ width: '100%' }}
-                />
-              }
-              body={nameBodyTemplate}
-            />
+
+            <Column field="refVendorName" body={nameBodyTemplate} header="Vendor Name" />
 
             <Column
               field="refVenderType"

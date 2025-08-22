@@ -27,6 +27,7 @@ export default function ExpenseReport() {
   const dt = useRef<any>(null)
 
   const [startDate, setStartDate] = useState<Nullable<Date>>(null)
+  const [endDate, setEndDate] = useState<Nullable<Date>>(null)
 
   const [overAllData, setOverAllData] = useState<ExpenseDetails[]>([])
 
@@ -37,13 +38,14 @@ export default function ExpenseReport() {
     return `${year}-${month}`
   }
 
-  const getData = (month) => {
+  const getData = (startMonth, endMonth) => {
     try {
       axios
         .post(
           import.meta.env.VITE_API_URL + '/report/expenseReport',
           {
-            month: formatToYearMonth(month)
+            start: formatToYearMonth(startMonth),
+            end: formatToYearMonth(endMonth)
           },
           {
             headers: {
@@ -70,7 +72,8 @@ export default function ExpenseReport() {
   }
   useEffect(() => {
     setStartDate(new Date())
-    getData(new Date())
+    setEndDate(new Date())
+    getData(new Date(), new Date())
   }, [])
 
   const exportCustomCSV = () => {
@@ -103,51 +106,6 @@ export default function ExpenseReport() {
     link.click()
     document.body.removeChild(link)
   }
-
-  // const exportCustomPDF = () => {
-  //   const doc = new jsPDF('landscape')
-
-  //   const now = new Date()
-  //   const reportDate = now.toLocaleDateString('en-GB')
-
-  //   // ✅ Title
-  //   // doc.setFontSize(10)
-  //   // doc.text('Sri Murugan Thunai', 140, 10, { align: 'center' })
-  //   doc.setFontSize(14)
-  //   doc.text('Za Micro-Fi', 140, 16, { align: 'center' })
-  //   doc.setFontSize(10)
-  //   doc.text(`Expense Report`, 140, 22, { align: 'center' })
-  //   doc.text(`Date : ${reportDate}`, 10, 10)
-  //   doc.text('Page : 1', 270, 10)
-
-  //   // ✅ Table
-  //   autoTable(doc, {
-  //     head: [
-  //       ['S.No', 'Date', 'Voucher Id', 'Expense', 'Category', 'Amount', 'Amount Source', 'Type']
-  //     ],
-  //     body: overAllData.map((row, i) => [
-  //       i + 1,
-  //       row.refExpenseDate,
-  //       row.refVoucherNo,
-  //       row.refExpenseCategory,
-  //       row.refSubCategory,
-  //       `INR ${Number(row.refAmount).toLocaleString('en-IN')}`,
-  //       row.refBankName,
-  //       row.refAccountTypeName
-  //     ]),
-  //     styles: { fontSize: 8, halign: 'center' },
-  //     headStyles: {
-  //       fillColor: [248, 248, 248],
-  //       textColor: [0, 0, 0],
-  //       fontStyle: 'bold'
-  //     },
-  //     margin: { left: 14, right: 14 },
-  //     theme: 'grid',
-  //     startY: 30
-  //   })
-
-  //   doc.save(`Monthly_Expense_Report_${formatToYearMonth(startDate || new Date())}.pdf`)
-  // }
 
   const exportCustomPDF = () => {
     const doc = new jsPDF('landscape')
@@ -263,17 +221,32 @@ export default function ExpenseReport() {
     <div>
       <div>
         <p className="text-[1.3rem] font-bold">Expense Report</p>
-        
       </div>
       <div className="w-full flex align-items-center justify-center">
-        <div className="w-[90%] flex align-items-center justify-start my-2">
-          <div className="flex flex-col w-[30%]">
+        <div className="w-[90%] flex gap-x-6 align-items-center justify-start my-2">
+          <div className="flex flex-col w-[20%]">
+            <label>Start Month</label>
             <Calendar
               value={startDate}
               placeholder="Select Start Range"
               onChange={(e) => {
                 setStartDate(e.value)
-                getData(e.value)
+                getData(e.value, endDate)
+              }}
+              view="month"
+              dateFormat="mm/yy"
+              maxDate={new Date()}
+            />
+          </div>
+          <div className="flex flex-col w-[20%]">
+            <label>End Month</label>
+
+            <Calendar
+              value={endDate}
+              placeholder="Select Start Range"
+              onChange={(e) => {
+                setEndDate(e.value)
+                getData(startDate, e.value)
               }}
               view="month"
               dateFormat="mm/yy"

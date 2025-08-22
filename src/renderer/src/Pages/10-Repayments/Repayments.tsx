@@ -276,8 +276,12 @@ const Repayments = () => {
             interest = data.data[0].refProductInterest
             loanTakenAmt = data.data[0].refLoanAmount
 
+            const bankData = data.paymentInfo
+
             // Create table headers
-            let message = `📢 Loan Payment Reminder – ZaMicro-Fi
+            let message = `📢 Loan Payment Reminder – ${data.paymentInfo.clientName}
+${bankData.showBank ? 'Bank Account Number : ' + bankData.accountNo : 'The Loan Due Re-Payment must be pay as only in cash.'}
+${bankData.showBank ? 'IFCS Code : ' + bankData.ifcsCode : ''}
 
 Dear ${name},
 
@@ -305,7 +309,7 @@ This is a gentle reminder regarding your loan details:
             message += `
 Kindly ensure payment is made by the due date to avoid any penalties.
 
-Thank you for choosing ZaMicro-Fi.
+Thank you for choosing ${data.paymentInfo.clientName}.
 Your financial wellbeing is our priority. 💼`
 
             navigator.clipboard
@@ -380,18 +384,6 @@ Your financial wellbeing is our priority. 💼`
               />
               {userListType.code === 1 && (
                 <>
-                  {/* <Calendar
-                    value={startDate}
-                    placeholder="Select Start Range"
-                    onChange={(e) => {
-                      setStartDate(e.value)
-                      if (endDate && e.value && endDate < e.value) {
-                        setEndDate(e.value)
-                      }
-                    }}
-                    view="month"
-                    dateFormat="mm/yy"
-                  /> */}
                   <Calendar
                     value={startDate}
                     onChange={(e) => {
@@ -411,15 +403,6 @@ Your financial wellbeing is our priority. 💼`
                     minDate={startDate || undefined}
                     disabled={!startDate}
                   />
-                  {/* <Calendar
-                    value={endDate}
-                    placeholder="Select End Range"
-                    onChange={(e) => setEndDate(e.value)}
-                    view="month"
-                    dateFormat="mm/yy"
-                    minDate={startDate || undefined}
-                    disabled={!startDate}
-                  />{' '} */}
                 </>
               )}
               {userListType.code === 2 && (

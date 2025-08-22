@@ -25,6 +25,7 @@ interface UserLoan {
   refProductDurationType: number
   refProductInterest: number
   refLoanStatus: string
+  originalLoanAmount: string
 }
 
 const Loan = () => {
@@ -262,11 +263,6 @@ const Loan = () => {
               rows={10}
               rowsPerPageOptions={[5, 10, 25, 50]}
               filters={filters}
-              // onFilter={(e) => {
-              //   console.log('e', e)
-
-              //   setFilters(e.filters)
-              // }}
               showGridlines
               scrollable
               emptyMessage={<div style={{ textAlign: 'center' }}>No Records Found</div>}
@@ -294,16 +290,25 @@ const Loan = () => {
                 field="refLoanStartDate"
                 header="Loan Date"
               ></Column>
+              {/* <Column
+                style={{ minWidth: '8rem' }}
+                field="originalLoanAmount"
+                header="Loan Amount"
+                body={(rowData) => {
+                  return <>{formatINRCurrency(Number(rowData.originalLoanAmount))}</>
+                }}
+              ></Column> */}
               <Column
                 style={{ minWidth: '8rem' }}
                 field="refLoanAmount"
-                header="Loan Amount"
+                header="Out Standing"
                 body={(rowData) => {
                   return <>{formatINRCurrency(Number(rowData.refLoanAmount))}</>
                 }}
               ></Column>
+
               <Column
-                style={{ minWidth: '8rem' }}
+                style={{ minWidth: '6rem' }}
                 field="refProductDuration"
                 body={(rowData) => {
                   return (
@@ -319,10 +324,10 @@ const Loan = () => {
                     </>
                   )
                 }}
-                header="Loan Duration"
+                header="Duration"
               ></Column>
               <Column
-                style={{ minWidth: '8rem' }}
+                style={{ minWidth: '5rem' }}
                 field="refProductInterest"
                 body={(rowData) => {
                   return (
@@ -331,9 +336,9 @@ const Loan = () => {
                     </>
                   )
                 }}
-                header="Loan Interest"
+                header="Interest"
               ></Column>
-              <Column style={{ minWidth: '8rem' }} field="refLoanStatus" header="Status" />
+              <Column style={{ minWidth: '5rem' }} field="refLoanStatus" header="Status" />
             </DataTable>
           </div>
 

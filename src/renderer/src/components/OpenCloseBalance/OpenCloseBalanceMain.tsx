@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import decrypt from '../Helper/Helper'
 import { Divider } from 'primereact/divider'
 import { formatINRCurrency } from '@renderer/helper/amountFormat'
+import { TbReload } from 'react-icons/tb'
 
 type Props = {}
 
@@ -23,10 +24,9 @@ export default function OpenCloseBalanceMain({}: Props) {
   const [startDate, setStartDate] = useState<Date>(new Date())
   const [endDate, setEndDate] = useState<Date>(new Date())
   const [balanceData, setBalanceData] = useState<BalanceSummary>()
+  const [reCalculatestatus, setReCalculatestatus] = useState<boolean>(false)
 
   const getData = async (startDate: Date, endDate: Date) => {
-    console.log('endDate', endDate)
-    console.log('startDate', startDate)
     try {
       await axios
         .post(
@@ -66,6 +66,12 @@ export default function OpenCloseBalanceMain({}: Props) {
     }
     callData()
   }, [])
+
+  const reCalculate = async () => {
+    setReCalculatestatus(true)
+
+    setReCalculatestatus(false)
+  }
 
   return (
     <div className="flex flex-col gap-y-5">
@@ -108,7 +114,17 @@ export default function OpenCloseBalanceMain({}: Props) {
             />
           </div>
         </div>
-        <div>
+        <div className="flex justify-center align-items-center gap-x-2">
+          <TbReload
+            size="1.5rem"
+            color="#0478df"
+            title="Re-Calculate the Balance"
+            onClick={async (e) => {
+              e.preventDefault()
+              await reCalculate()
+            }}
+            className={reCalculatestatus ? 'animate-spin-slow' : ''}
+          />
           <b className="flex gap-2 text-lg">
             Opening Balance :{' '}
             <p
